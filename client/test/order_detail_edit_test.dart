@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:motorix_client/providers/auth_provider.dart';
 import 'package:motorix_client/providers/orders_provider.dart';
+import 'package:motorix_client/providers/payments_provider.dart';
 import 'package:motorix_client/screens/order_detail_screen.dart';
 import 'package:motorix_client/utils/app_theme.dart';
 import 'package:provider/provider.dart';
@@ -79,6 +80,7 @@ Future<List<http.Request>> abrirDetalle(
       providers: [
         ChangeNotifierProvider<AuthProvider>.value(value: auth),
         ChangeNotifierProvider(create: (_) => OrdersProvider(api)),
+        ChangeNotifierProvider(create: (_) => PaymentsProvider(api)),
       ],
       child: MaterialApp(
         theme: buildAppTheme(useGoogleFonts: false),

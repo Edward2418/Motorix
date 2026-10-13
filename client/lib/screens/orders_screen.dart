@@ -140,15 +140,17 @@ class _OrdersScreenState extends State<OrdersScreen> {
     return TableScroll(
       child: DataTable(
         showCheckboxColumn: false,
-        columns: const [
-          DataColumn(label: Text('Folio')),
-          DataColumn(label: Text('Cliente')),
-          DataColumn(label: Text('Vehículo')),
-          DataColumn(label: Text('Mecánico')),
-          DataColumn(label: Text('Estado')),
-          DataColumn(label: Text('Total'), numeric: true),
-          DataColumn(label: Text('Recibida')),
-          DataColumn(label: Text('Acciones')),
+        columns: [
+          const DataColumn(label: Text('Folio')),
+          const DataColumn(label: Text('Cliente')),
+          const DataColumn(label: Text('Vehículo')),
+          const DataColumn(label: Text('Mecánico')),
+          const DataColumn(label: Text('Estado')),
+          // El estado de pago solo lo recibe administración y recepción.
+          if (canCreate) const DataColumn(label: Text('Pago')),
+          const DataColumn(label: Text('Total'), numeric: true),
+          const DataColumn(label: Text('Recibida')),
+          const DataColumn(label: Text('Acciones')),
         ],
         rows: [
           for (final order in orders.items)
@@ -160,6 +162,12 @@ class _OrdersScreenState extends State<OrdersScreen> {
                 DataCell(CellText(order.vehicleLabel, maxWidth: AppSizes.cellWide)),
                 DataCell(CellText(order.mechanicName, maxWidth: AppSizes.cellNarrow)),
                 DataCell(StatusBadge.order(order.status)),
+                if (canCreate)
+                  DataCell(
+                    order.paymentStatus == null
+                        ? const Text('—')
+                        : StatusBadge.orderPayment(order.paymentStatus!),
+                  ),
                 DataCell(Text(formatMoney(order.total))),
                 DataCell(Text(formatDate(order.createdAt))),
                 DataCell(

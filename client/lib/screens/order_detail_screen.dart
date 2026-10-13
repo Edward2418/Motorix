@@ -17,6 +17,7 @@ import '../widgets/maintenance_dialog.dart';
 import '../widgets/confirm_dialog.dart';
 import '../widgets/order_line_dialog.dart';
 import '../widgets/order_part_dialog.dart';
+import '../widgets/payments_section.dart';
 import '../widgets/reason_dialog.dart';
 import '../widgets/service_mileage_dialog.dart';
 import '../widgets/section_navigator.dart';
@@ -456,6 +457,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 child: Text('Total: ${formatMoney(order.total)}', style: theme.textTheme.titleLarge),
               ),
             ),
+            // Pagos: solo administración y recepción, cuando la orden ya está terminada o entregada.
+            if (canManage && (status == OrderStatus.finished || status == OrderStatus.delivered))
+              PaymentsSection(
+                orderId: order.id,
+                isAdmin: user.role == UserRole.admin,
+                onChanged: _load,
+              ),
             _TextSection(
               title: 'Observaciones',
               text: order.notes,

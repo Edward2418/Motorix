@@ -6,6 +6,7 @@ import 'providers/appointments_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/clients_provider.dart';
 import 'providers/maintenance_provider.dart';
+import 'providers/payments_provider.dart';
 import 'providers/orders_provider.dart';
 import 'providers/parts_provider.dart';
 import 'providers/sidebar_provider.dart';
@@ -41,6 +42,7 @@ class MotorixApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AppointmentsProvider(api)),
         ChangeNotifierProvider(create: (_) => PartsProvider(api)),
         ChangeNotifierProvider(create: (_) => MaintenanceProvider(api)),
+        ChangeNotifierProvider(create: (_) => PaymentsProvider(api)),
       ],
       child: MaterialApp(
         title: 'Motorix',
