@@ -1,0 +1,866 @@
+openapi: 3.0.3
+info:
+  title: API de Motorix - Sprint 3 (historial, mantenimiento e inventario)
+  version: 1.2.0
+  description: >
+    Amplía el contrato del Sprint 2 (ver ../../002-citas-ordenes-servicio/contracts/api.yaml) con el historial
+    del vehículo, los mantenimientos programados, el catálogo e inventario de refacciones y las refacciones
+    usadas en las órdenes. Todas las rutas cuelgan de /api y requieren un token JWT (Bearer). Respuestas y
+    errores usan los formatos de siempre ({ data }, { data, meta } y { error }). No existe ninguna operación
+    DELETE sobre refacciones, movimientos ni mantenimientos; solo se quitan las líneas de refacciones de una orden.
+    Los permisos por rol y por propiedad se validan en el servidor.
+    Cambios en rutas del Sprint 2 - POST /orders/{id}/status con status TERMINADO exige serviceMileage; al
+    cancelar una orden se devuelven sus refacciones al inventario y se cancelan sus mantenimientos pendientes;
+    el detalle de la orden agrega serviceMileage, parts, partsTotal y maintenance, y el total incluye las refacciones.
+servers:
+  - url: http://localhost:3000/api
+security:
+  - bearerAuth: []
+tags:
+  - name: Historial
+  - name: Mantenimientos
+  - name: Refacciones
+  - name: Movimientos de inventario
+  - name: Refacciones de la orden
+  - name: Órdenes (cambios del Sprint 3)
+
+paths:
+  /vehicles/{id}/history:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      tags: [Historial]
+      summary: Historial de servicios del vehículo (ADMIN, RECEPTIONIST, MECHANIC; solo lectura)
+      description: >
+        Órdenes en TERMINADO o ENTREGADO del vehículo, de la más reciente a la más antigua. Es una consulta
+        derivada de las órdenes; no se captura nada aparte. Las órdenes abiertas o canceladas no aparecen.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Página del historial
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/HistoryEntry' }
+                  meta: { $ref: '#/components/schemas/PageMeta' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+
+  /orders/{id}/service-mileage:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    put:
+      tags: [Órdenes (cambios del Sprint 3)]
+      summary: Corrige el kilometraje del servicio de una orden finalizada (solo ADMIN)
+      description: >
+        Solo para órdenes en TERMINADO o ENTREGADO. El motivo es obligatorio y queda registrado junto con
+        quien corrige. No puede ser menor al kilometraje de entrada. No modifica el kilometraje actual del vehículo.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [serviceMileage, reason]
+              properties:
+                serviceMileage: { type: integer, minimum: 0 }
+                reason: { type: string, minLength: 1, maxLength: 255 }
+      responses:
+        '200':
+          description: Orden actualizada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/OrderDetail' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+
+  /orders/{id}/status:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    post:
+      tags: [Órdenes (cambios del Sprint 3)]
+      summary: Cambia el estado de la orden (cambios respecto al Sprint 2)
+      description: >
+        Igual que en el Sprint 2, con tres diferencias. 1) Para pasar a TERMINADO, serviceMileage es obligatorio
+        (entero no menor al kilometraje de entrada); el kilometraje actual del vehículo se actualiza solo si el
+        del servicio es mayor. 2) Al pasar a CANCELADA, todas las refacciones de la orden regresan al inventario
+        con movimientos de ENTRADA y los mantenimientos PROGRAMADO de la orden pasan a CANCELADO con el motivo
+        «Orden cancelada». 3) Todo ocurre en una sola transacción.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { $ref: '#/components/schemas/OrderStatus' }
+                reason: { type: string, maxLength: 255, description: Obligatorio si status es CANCELADA }
+                serviceMileage: { type: integer, minimum: 0, description: Obligatorio si status es TERMINADO }
+      responses:
+        '200':
+          description: Estado actualizado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/OrderDetail' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+
+  /orders/{id}/maintenance:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    post:
+      tags: [Mantenimientos]
+      summary: Programa el próximo mantenimiento del vehículo desde una orden
+      description: >
+        ADMIN y RECEPTIONIST desde cualquier orden no cancelada; MECHANIC solo desde sus órdenes. Se requiere al
+        menos dueDate o dueMileage. dueDate debe ser hoy o posterior; dueMileage mayor al kilometraje actual del
+        vehículo. Si ya existe un mantenimiento PROGRAMADO del mismo vehículo con la misma descripción, responde 409.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MaintenanceCreate' }
+      responses:
+        '201':
+          description: Mantenimiento programado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Maintenance' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+
+  /maintenance:
+    get:
+      tags: [Mantenimientos]
+      summary: Lista mantenimientos (ADMIN, RECEPTIONIST, MECHANIC)
+      description: >
+        Por defecto solo los PROGRAMADO. Cada elemento trae el estado visual (NORMAL, PROXIMO, VENCIDO) calculado
+        al consultar con la fecha de hoy, el kilometraje actual del vehículo y los umbrales del servidor.
+        Orden - vencidos, luego próximos y luego normales; dentro de cada grupo, los más urgentes primero.
+      parameters:
+        - name: visualStatus
+          in: query
+          schema: { $ref: '#/components/schemas/MaintenanceVisualStatus' }
+        - name: status
+          in: query
+          description: Ciclo de vida; PROGRAMADO por defecto
+          schema: { $ref: '#/components/schemas/MaintenanceStatus' }
+        - name: clientId
+          in: query
+          schema: { type: integer, minimum: 1 }
+        - name: vehicleId
+          in: query
+          schema: { type: integer, minimum: 1 }
+        - name: q
+          in: query
+          description: Busca por placa, descripción o nombre del cliente
+          schema: { type: string, maxLength: 100 }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Página de mantenimientos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Maintenance' }
+                  meta: { $ref: '#/components/schemas/PageMeta' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+
+  /maintenance/{id}/fulfill:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    post:
+      tags: [Mantenimientos]
+      summary: Marca el mantenimiento como atendido (ADMIN, RECEPTIONIST, MECHANIC dueño de la orden de origen)
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                orderId: { type: integer, minimum: 1, description: Orden que lo cumplió (opcional; debe ser del mismo vehículo) }
+      responses:
+        '200':
+          description: Mantenimiento atendido
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Maintenance' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+
+  /maintenance/{id}/cancel:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    post:
+      tags: [Mantenimientos]
+      summary: Cancela un mantenimiento pendiente con motivo (ADMIN, RECEPTIONIST, MECHANIC dueño de la orden de origen)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason: { type: string, minLength: 1, maxLength: 255 }
+      responses:
+        '200':
+          description: Mantenimiento cancelado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Maintenance' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+
+  /parts:
+    get:
+      tags: [Refacciones]
+      summary: Lista refacciones (ADMIN completo; MECHANIC solo activas y sin precio de compra)
+      parameters:
+        - name: q
+          in: query
+          description: Busca por código, nombre o marca
+          schema: { type: string, maxLength: 100 }
+        - name: category
+          in: query
+          schema: { type: string, maxLength: 60 }
+        - name: active
+          in: query
+          description: Solo ADMIN. Si se omite, devuelve activas e inactivas
+          schema: { type: boolean }
+        - name: stockLevel
+          in: query
+          schema: { $ref: '#/components/schemas/StockLevel' }
+        - name: lowStock
+          in: query
+          description: true devuelve solo BAJO y AGOTADO (solo ADMIN)
+          schema: { type: boolean }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Página de refacciones
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Part' }
+                  meta: { $ref: '#/components/schemas/PageMeta' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+    post:
+      tags: [Refacciones]
+      summary: Registra una refacción (solo ADMIN)
+      description: >
+        Si initialStock es mayor que cero genera el movimiento ENTRADA «Stock inicial». El código es único sin
+        distinguir mayúsculas ni espacios laterales; responde 409 DUPLICATE_PART_CODE si ya existe.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PartCreate' }
+      responses:
+        '201':
+          description: Refacción registrada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Part' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+
+  /parts/categories:
+    get:
+      tags: [Refacciones]
+      summary: Categorías existentes, para el filtro (ADMIN, MECHANIC)
+      responses:
+        '200':
+          description: Categorías ordenadas alfabéticamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { type: string }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+
+  /parts/alerts:
+    get:
+      tags: [Refacciones]
+      summary: Refacciones activas con stock bajo o agotado (solo ADMIN)
+      description: Stock igual o menor al mínimo. Las desactivadas no generan alerta. Ordena primero las agotadas.
+      responses:
+        '200':
+          description: Refacciones en alerta
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Part' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+
+  /parts/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      tags: [Refacciones]
+      summary: Detalle de una refacción (ADMIN; MECHANIC solo si está activa y sin precio de compra)
+      responses:
+        '200':
+          description: Refacción
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Part' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+    put:
+      tags: [Refacciones]
+      summary: Edita datos descriptivos, precios y stock mínimo (solo ADMIN)
+      description: No cambia el stock actual (solo los movimientos lo cambian) ni los registros ya hechos en las órdenes.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PartUpdate' }
+      responses:
+        '200':
+          description: Refacción actualizada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Part' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+
+  /parts/{id}/status:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    patch:
+      tags: [Refacciones]
+      summary: Desactiva o reactiva una refacción (solo ADMIN)
+      description: Nunca se elimina. Una refacción desactivada no puede agregarse a órdenes nuevas ni genera alertas.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [active]
+              properties:
+                active: { type: boolean }
+      responses:
+        '200':
+          description: Estado actualizado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Part' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+
+  /parts/{id}/movements:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      tags: [Movimientos de inventario]
+      summary: Historial de movimientos de una refacción (solo ADMIN)
+      description: El más reciente primero, paginado.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Página de movimientos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/InventoryMovement' }
+                  meta: { $ref: '#/components/schemas/PageMeta' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+    post:
+      tags: [Movimientos de inventario]
+      summary: Registra una ENTRADA o un AJUSTE manual (solo ADMIN)
+      description: >
+        ENTRADA suma quantity al stock. AJUSTE fija el stock al valor contado (countedStock); el servidor calcula
+        la diferencia bajo bloqueo y rechaza (409 NO_ADJUSTMENT_NEEDED) un ajuste sin diferencia. Las SALIDAS no se
+        registran aquí; solo las genera el uso de refacciones en órdenes. El stock nunca queda negativo.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: object
+                  required: [type, quantity, reason]
+                  properties:
+                    type: { type: string, enum: [ENTRADA] }
+                    quantity: { type: integer, minimum: 1, maximum: 99999 }
+                    reason: { type: string, minLength: 1, maxLength: 255 }
+                - type: object
+                  required: [type, countedStock, reason]
+                  properties:
+                    type: { type: string, enum: [AJUSTE] }
+                    countedStock: { type: integer, minimum: 0, maximum: 99999999 }
+                    reason: { type: string, minLength: 1, maxLength: 255 }
+      responses:
+        '201':
+          description: Movimiento registrado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/InventoryMovement' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+
+  /orders/{id}/parts:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    post:
+      tags: [Refacciones de la orden]
+      summary: Agrega una refacción a la orden y descuenta el inventario
+      description: >
+        MECHANIC asignado y ADMIN, en estados RECIBIDO a ESPERANDO_REFACCION. En TERMINADO solo ADMIN con reason
+        obligatorio. Nunca en ENTREGADO ni CANCELADA ni para recepción. La refacción debe estar activa. Copia el
+        precio de venta vigente a la línea y genera un movimiento SALIDA ligado a la orden, todo en una transacción.
+        409 INSUFFICIENT_STOCK si no alcanza (el mensaje indica la existencia disponible); 409 PART_ALREADY_IN_ORDER
+        si la refacción ya está en la orden; 409 PART_INACTIVE si está desactivada.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [partId, quantity]
+              properties:
+                partId: { type: integer, minimum: 1 }
+                quantity: { type: integer, minimum: 1, maximum: 99999 }
+                reason: { type: string, maxLength: 255, description: Obligatorio si la orden está en TERMINADO }
+      responses:
+        '201':
+          description: Orden actualizada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/OrderDetail' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+
+  /orders/{id}/parts/{lineId}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+      - $ref: '#/components/parameters/LineId'
+    put:
+      tags: [Refacciones de la orden]
+      summary: Cambia la cantidad de una refacción de la orden
+      description: >
+        Registra el movimiento por la diferencia (SALIDA si aumenta; ENTRADA con motivo de devolución si
+        disminuye). Mismas reglas de permisos y estados que al agregar.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [quantity]
+              properties:
+                quantity: { type: integer, minimum: 1, maximum: 99999 }
+                reason: { type: string, maxLength: 255, description: Obligatorio si la orden está en TERMINADO }
+      responses:
+        '200':
+          description: Orden actualizada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/OrderDetail' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+    delete:
+      tags: [Refacciones de la orden]
+      summary: Quita la refacción de la orden y devuelve las unidades al inventario
+      description: >
+        Solo quita la línea; los movimientos originales se conservan y se agrega una ENTRADA con motivo de
+        devolución. Mismas reglas de permisos y estados que al agregar. El motivo (reason) viaja en el cuerpo.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason: { type: string, maxLength: 255, description: Obligatorio si la orden está en TERMINADO }
+      responses:
+        '200':
+          description: Orden actualizada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/OrderDetail' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer, minimum: 1 }
+    LineId:
+      name: lineId
+      in: path
+      required: true
+      schema: { type: integer, minimum: 1 }
+    Page:
+      name: page
+      in: query
+      schema: { type: integer, minimum: 1, default: 1 }
+    PageSize:
+      name: pageSize
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+
+  responses:
+    Validacion:
+      description: Datos inválidos
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NoAutenticado:
+      description: Falta la sesión o es inválida o venció
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    SinPermiso:
+      description: El rol, o la propiedad de la orden, no permite la acción
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NoEncontrado:
+      description: El recurso no existe
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Conflicto:
+      description: >
+        Regla de negocio incumplida o estado incompatible. Códigos de este sprint - INSUFFICIENT_STOCK,
+        PART_ALREADY_IN_ORDER, PART_INACTIVE, DUPLICATE_PART_CODE, DUPLICATE_MAINTENANCE, NO_ADJUSTMENT_NEEDED,
+        INVALID_TRANSITION y CONFLICT
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { type: string }
+            message: { type: string, description: Mensaje claro en español }
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field: { type: string }
+                  message: { type: string }
+
+    PageMeta:
+      type: object
+      properties:
+        page: { type: integer }
+        pageSize: { type: integer }
+        total: { type: integer }
+
+    OrderStatus:
+      type: string
+      enum: [RECIBIDO, DIAGNOSTICO, EN_REPARACION, ESPERANDO_REFACCION, TERMINADO, ENTREGADO, CANCELADA]
+
+    StockLevel:
+      type: string
+      enum: [NORMAL, BAJO, AGOTADO]
+
+    MaintenanceStatus:
+      type: string
+      enum: [PROGRAMADO, ATENDIDO, CANCELADO]
+
+    MaintenanceVisualStatus:
+      type: string
+      enum: [NORMAL, PROXIMO, VENCIDO]
+
+    Money:
+      type: number
+      format: double
+      description: Importe con dos decimales
+
+    HistoryLine:
+      type: object
+      properties:
+        description: { type: string }
+        amount: { $ref: '#/components/schemas/Money' }
+
+    HistoryPart:
+      type: object
+      properties:
+        partId: { type: integer }
+        code: { type: string }
+        name: { type: string }
+        quantity: { type: integer }
+        unitPrice: { $ref: '#/components/schemas/Money' }
+
+    HistoryEntry:
+      type: object
+      properties:
+        orderId: { type: integer }
+        folio: { type: string }
+        status: { $ref: '#/components/schemas/OrderStatus' }
+        serviceDate: { type: string, format: date-time, description: Cuándo la orden pasó a TERMINADO }
+        serviceMileage: { type: integer }
+        mechanicName: { type: string }
+        reportedProblem: { type: string }
+        diagnosis: { type: string, nullable: true }
+        notes: { type: string, nullable: true }
+        recommendations: { type: string, nullable: true }
+        services:
+          type: array
+          items: { $ref: '#/components/schemas/HistoryLine' }
+        labor:
+          type: array
+          items: { $ref: '#/components/schemas/HistoryLine' }
+        parts:
+          type: array
+          items: { $ref: '#/components/schemas/HistoryPart' }
+        total: { $ref: '#/components/schemas/Money' }
+
+    MaintenanceCreate:
+      type: object
+      required: [description]
+      description: Al menos uno de dueDate o dueMileage
+      properties:
+        description: { type: string, minLength: 1, maxLength: 255 }
+        dueDate: { type: string, format: date, nullable: true }
+        dueMileage: { type: integer, minimum: 1, nullable: true }
+        notes: { type: string, maxLength: 1000, nullable: true }
+
+    Maintenance:
+      type: object
+      properties:
+        id: { type: integer }
+        vehicleId: { type: integer }
+        vehicleLabel: { type: string, description: Marca, modelo y placa }
+        currentMileage: { type: integer }
+        clientId: { type: integer }
+        clientName: { type: string }
+        clientPhone: { type: string }
+        orderId: { type: integer, description: Orden de origen }
+        orderFolio: { type: string }
+        description: { type: string }
+        dueDate: { type: string, format: date, nullable: true }
+        dueMileage: { type: integer, nullable: true }
+        notes: { type: string, nullable: true }
+        status: { $ref: '#/components/schemas/MaintenanceStatus' }
+        visualStatus:
+          allOf:
+            - $ref: '#/components/schemas/MaintenanceVisualStatus'
+          nullable: true
+          description: Solo para PROGRAMADO
+        remainingDays: { type: integer, nullable: true, description: Negativo si ya venció }
+        remainingKm: { type: integer, nullable: true, description: Cero o negativo si ya se alcanzó }
+        cancelReason: { type: string, nullable: true }
+        fulfilledOrderId: { type: integer, nullable: true }
+        closedAt: { type: string, format: date-time, nullable: true }
+        createdAt: { type: string, format: date-time }
+
+    PartCreate:
+      type: object
+      required: [code, name, category, brand, minStock, purchasePrice, salePrice]
+      properties:
+        code: { type: string, minLength: 1, maxLength: 40 }
+        name: { type: string, minLength: 1, maxLength: 120 }
+        category: { type: string, minLength: 1, maxLength: 60 }
+        brand: { type: string, minLength: 1, maxLength: 60 }
+        initialStock: { type: integer, minimum: 0, maximum: 99999999, default: 0 }
+        minStock: { type: integer, minimum: 0, maximum: 99999999 }
+        purchasePrice: { type: number, minimum: 0, maximum: 99999999.99 }
+        salePrice: { type: number, minimum: 0, maximum: 99999999.99 }
+
+    PartUpdate:
+      type: object
+      description: Los campos que se envían reemplazan a los actuales
+      properties:
+        code: { type: string, minLength: 1, maxLength: 40 }
+        name: { type: string, minLength: 1, maxLength: 120 }
+        category: { type: string, minLength: 1, maxLength: 60 }
+        brand: { type: string, minLength: 1, maxLength: 60 }
+        minStock: { type: integer, minimum: 0, maximum: 99999999 }
+        purchasePrice: { type: number, minimum: 0, maximum: 99999999.99 }
+        salePrice: { type: number, minimum: 0, maximum: 99999999.99 }
+
+    Part:
+      type: object
+      properties:
+        id: { type: integer }
+        code: { type: string }
+        name: { type: string }
+        category: { type: string }
+        brand: { type: string }
+        stock: { type: integer }
+        minStock: { type: integer }
+        stockLevel: { $ref: '#/components/schemas/StockLevel' }
+        purchasePrice:
+          allOf:
+            - $ref: '#/components/schemas/Money'
+          description: Ausente para el rol MECHANIC
+        salePrice: { $ref: '#/components/schemas/Money' }
+        active: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    InventoryMovement:
+      type: object
+      properties:
+        id: { type: integer }
+        partId: { type: integer }
+        type: { type: string, enum: [ENTRADA, SALIDA, AJUSTE] }
+        quantity: { type: integer, description: Con signo; positivo suma y negativo resta }
+        stockAfter: { type: integer }
+        reason: { type: string }
+        orderId: { type: integer, nullable: true }
+        orderFolio: { type: string, nullable: true }
+        createdByName: { type: string }
+        createdAt: { type: string, format: date-time }
+
+    OrderPartLine:
+      type: object
+      properties:
+        id: { type: integer }
+        partId: { type: integer }
+        code: { type: string }
+        name: { type: string }
+        quantity: { type: integer }
+        unitPrice: { $ref: '#/components/schemas/Money' }
+        subtotal: { $ref: '#/components/schemas/Money' }
+
+    OrderDetail:
+      description: >
+        Detalle de la orden del Sprint 2 con los campos nuevos. El total incluye las refacciones
+        (servicesTotal + laborTotal + partsTotal).
+      allOf:
+        - $ref: '../../002-citas-ordenes-servicio/contracts/api.yaml#/components/schemas/OrderDetail'
+        - type: object
+          properties:
+            serviceMileage: { type: integer, nullable: true }
+            serviceMileageCorrectionReason: { type: string, nullable: true }
+            partsTotal: { $ref: '#/components/schemas/Money' }
+            parts:
+              type: array
+              items: { $ref: '#/components/schemas/OrderPartLine' }
+            maintenance:
+              type: array
+              description: Mantenimientos programados desde esta orden
+              items: { $ref: '#/components/schemas/Maintenance' }
