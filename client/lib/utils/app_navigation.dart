@@ -5,6 +5,7 @@ import '../models/user.dart';
 import '../screens/appointments_screen.dart';
 import '../screens/clients_screen.dart';
 import '../screens/inventory_screen.dart';
+import '../screens/maintenance_screen.dart';
 import '../screens/orders_screen.dart';
 import '../screens/users_screen.dart';
 import '../screens/vehicles_screen.dart';
@@ -61,6 +62,12 @@ final List<NavDestination> allDestinations = [
     builder: (_) => const SectionNavigator(root: _ordersRoot),
   ),
   NavDestination(
+    label: 'Mantenimientos',
+    icon: LucideIcons.calendarClock,
+    roles: UserRole.values.toSet(),
+    builder: (_) => const SectionNavigator(root: _maintenanceRoot),
+  ),
+  NavDestination(
     label: 'Inventario',
     icon: LucideIcons.package,
     roles: {UserRole.admin},
@@ -88,3 +95,5 @@ Widget _ordersRoot(BuildContext context) => const OrdersScreen();
 Widget _appointmentsRoot(BuildContext context) => const AppointmentsScreen();
 
 Widget _inventoryRoot(BuildContext context) => const InventoryScreen();
+
+Widget _maintenanceRoot(BuildContext context) => const MaintenanceScreen();
