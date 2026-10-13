@@ -15,6 +15,8 @@ const summaryShape = {
   mechanicName: expect.any(String),
   entryMileage: expect.any(Number),
   total: expect.any(Number),
+  // Solo para administración y recepción (la prueba usa recepción).
+  paymentStatus: 'SIN_PAGO',
   createdAt: expect.any(String),
   updatedAt: expect.any(String)
 };
@@ -47,8 +49,11 @@ describe('contrato de GET /api/orders', () => {
 
     const res = await request(app).get(`/api/orders/${orden.id}`).set(bearer(token));
     expect(res.status).toBe(200);
+    // El detalle lleva el resumen completo en `payment`, no `paymentStatus`.
+    const { paymentStatus, ...detalleBase } = summaryShape;
     expect(res.body.data).toMatchObject({
-      ...summaryShape,
+      ...detalleBase,
+      payment: expect.objectContaining({ status: 'SIN_PAGO' }),
       reportedProblem: expect.any(String),
       services: [],
       labor: [],

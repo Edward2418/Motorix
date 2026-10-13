@@ -33,6 +33,16 @@ const orderDetailShape = {
   servicesTotal: 0,
   laborTotal: 0,
   total: 0,
+  // Resumen de pagos: solo para administración y recepción (la prueba usa recepción).
+  payment: {
+    total: 0,
+    collected: 0,
+    reserved: 0,
+    balance: 0,
+    available: 0,
+    creditBalance: 0,
+    status: 'SIN_PAGO'
+  },
   history: [
     {
       fromStatus: null,
