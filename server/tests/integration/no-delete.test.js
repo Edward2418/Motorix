@@ -1,6 +1,6 @@
 import request from 'supertest';
 import app from '../../app.js';
-import { pool, resetTables, closePool, createClient, createVehicle, createAppointment } from '../helpers/db.js';
+import { pool, resetTables, closePool, createClient, createVehicle, createAppointment, createPart, createOrderPart, createMaintenance } from '../helpers/db.js';
 import { bearer } from '../helpers/auth.js';
 import { escenarioOrden } from '../helpers/orders.js';
 
@@ -61,5 +61,61 @@ describe('citas y órdenes: nada se elimina', () => {
       const res = await request(app)[metodo](`/api/orders/${orden.id}/history`).set(bearer(tokens.admin)).send({});
       expect({ metodo, status: res.status }).toEqual({ metodo, status: 404 });
     }
+  });
+});
+
+describe('refacciones, movimientos y mantenimientos: nada se elimina', () => {
+  beforeEach(resetTables);
+
+  test('no existe ninguna ruta DELETE ni de edición sobre refacciones, movimientos ni mantenimientos', async () => {
+    const { orden, tokens } = await escenarioOrden('EN_REPARACION');
+    const pieza = await createPart({ code: 'BUJ-01', stock: 10 });
+    const mantenimiento = await createMaintenance({ vehicleId: orden.vehicleId, orderId: orden.id, description: 'Cambio de aceite' });
+    const movimientos = await request(app).get(`/api/parts/${pieza.id}/movements`).set(bearer(tokens.admin));
+    const movimientoId = movimientos.body.data[0].id;
+
+    const rutas = [
+      ['delete', '/api/parts'],
+      ['delete', `/api/parts/${pieza.id}`],
+      ['delete', `/api/parts/${pieza.id}/movements`],
+      ['delete', `/api/parts/${pieza.id}/movements/${movimientoId}`],
+      ['put', `/api/parts/${pieza.id}/movements/${movimientoId}`],
+      ['patch', `/api/parts/${pieza.id}/movements/${movimientoId}`],
+      ['delete', '/api/maintenance'],
+      ['delete', `/api/maintenance/${mantenimiento.id}`],
+      ['put', `/api/maintenance/${mantenimiento.id}`],
+      ['patch', `/api/maintenance/${mantenimiento.id}`]
+    ];
+    for (const rol of ['admin', 'recepcion', 'mecanico']) {
+      for (const [metodo, ruta] of rutas) {
+        const res = await request(app)[metodo](ruta).set(bearer(tokens[rol])).send({});
+        expect({ rol, metodo, ruta, status: res.status }).toEqual({ rol, metodo, ruta, status: 404 });
+      }
+    }
+  });
+
+  test('la base impide borrar refacciones, órdenes o vehículos que tienen movimientos, líneas o mantenimientos', async () => {
+    const { orden, vehicle, client } = await escenarioOrden('EN_REPARACION');
+    const pieza = await createPart({ code: 'BUJ-01', stock: 10 });
+    await createOrderPart({ orderId: orden.id, partId: pieza.id, quantity: 2 });
+    await createMaintenance({ vehicleId: vehicle.id, orderId: orden.id, description: 'Cambio de aceite' });
+
+    const restringido = { code: 'ER_ROW_IS_REFERENCED_2' };
+    await expect(pool.query('DELETE FROM parts WHERE id = ?', [pieza.id])).rejects.toMatchObject(restringido);
+    await expect(pool.query('DELETE FROM service_orders WHERE id = ?', [orden.id])).rejects.toMatchObject(restringido);
+    await expect(pool.query('DELETE FROM vehicles WHERE id = ?', [vehicle.id])).rejects.toMatchObject(restringido);
+    await expect(pool.query('DELETE FROM clients WHERE id = ?', [client.id])).rejects.toMatchObject(restringido);
+  });
+
+  test('desactivar una refacción conserva sus movimientos y líneas', async () => {
+    const { orden, tokens } = await escenarioOrden('EN_REPARACION');
+    const pieza = await createPart({ code: 'BUJ-01', stock: 10 });
+    await createOrderPart({ orderId: orden.id, partId: pieza.id, quantity: 2 });
+    await request(app).patch(`/api/parts/${pieza.id}/status`).set(bearer(tokens.admin)).send({ active: false });
+
+    const [[movimientos]] = await pool.query('SELECT COUNT(*) AS total FROM inventory_movements WHERE part_id = ?', [pieza.id]);
+    const [[lineas]] = await pool.query('SELECT COUNT(*) AS total FROM order_parts WHERE part_id = ?', [pieza.id]);
+    expect(movimientos.total).toBe(2);
+    expect(lineas.total).toBe(1);
   });
 });

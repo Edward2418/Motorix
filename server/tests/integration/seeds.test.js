@@ -4,6 +4,8 @@ import { fileURLToPath } from 'node:url';
 import { pool, resetTables, closePool } from '../helpers/db.js';
 import { runSeeds } from '../../scripts/sqlRunner.js';
 import { comparePassword } from '../../utils/hash.js';
+import * as orderModel from '../../models/orderModel.js';
+import { listMaintenance } from '../../services/maintenanceService.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 
@@ -31,7 +33,11 @@ const conteos = async () => ({
   orders: await count('service_orders'),
   services: await count('order_services'),
   labor: await count('order_labor'),
-  history: await count('order_status_history')
+  history: await count('order_status_history'),
+  parts: await count('parts'),
+  movements: await count('inventory_movements'),
+  orderParts: await count('order_parts'),
+  maintenance: await count('maintenance')
 });
 
 afterAll(closePool);
@@ -45,7 +51,17 @@ describe('seeds', () => {
     await runSeeds(pool, () => {});
     const segunda = await conteos();
 
-    expect(primera).toMatchObject({ users: 4, clients: 8, vehicles: 12, appointments: 6, orders: 8 });
+    expect(primera).toMatchObject({
+      users: 4,
+      clients: 8,
+      vehicles: 12,
+      appointments: 6,
+      orders: 8,
+      parts: 13,
+      movements: 25,
+      orderParts: 7,
+      maintenance: 8
+    });
     expect(primera.services).toBeGreaterThan(0);
     expect(primera.labor).toBeGreaterThan(0);
     expect(segunda).toEqual(primera);
@@ -192,5 +208,125 @@ describe('citas y órdenes de ejemplo', () => {
     await runSeeds(pool, () => {});
     const { nextFolio } = await import('../../services/folioService.js');
     expect(await nextFolio(pool, new Date(2026, 5, 1))).toBe('OS-2026-0009');
+  });
+});
+
+describe('refacciones e inventario de ejemplo', () => {
+  beforeEach(resetTables);
+
+  test('el stock de cada refacción es la suma de sus movimientos y nunca es negativo', async () => {
+    await runSeeds(pool, () => {});
+    const [partes] = await pool.query('SELECT id, code, stock FROM parts');
+    expect(partes.length).toBeGreaterThan(0);
+    for (const parte of partes) {
+      const [[suma]] = await pool.query('SELECT COALESCE(SUM(quantity), 0) AS total FROM inventory_movements WHERE part_id = ?', [parte.id]);
+      expect({ code: parte.code, stock: parte.stock, suma: Number(suma.total) }).toEqual({
+        code: parte.code,
+        stock: parte.stock,
+        suma: parte.stock
+      });
+      expect(parte.stock).toBeGreaterThanOrEqual(0);
+    }
+  });
+
+  test('el stock posterior de cada movimiento es coherente con los anteriores', async () => {
+    await runSeeds(pool, () => {});
+    const [partes] = await pool.query('SELECT id FROM parts');
+    for (const parte of partes) {
+      const [movimientos] = await pool.query('SELECT quantity, stock_after FROM inventory_movements WHERE part_id = ? ORDER BY created_at, id', [parte.id]);
+      let acumulado = 0;
+      for (const movimiento of movimientos) {
+        acumulado += movimiento.quantity;
+        expect(movimiento.stock_after).toBe(acumulado);
+      }
+    }
+  });
+
+  test('hay refacciones en nivel normal, bajo y agotado, y una desactivada que no genera alerta', async () => {
+    await runSeeds(pool, () => {});
+    const [partes] = await pool.query('SELECT code, stock, min_stock, active FROM parts');
+    const nivel = (p) => (p.stock === 0 ? 'AGOTADO' : p.stock <= p.min_stock ? 'BAJO' : 'NORMAL');
+    const activas = partes.filter((p) => p.active);
+    expect(new Set(activas.map(nivel))).toEqual(new Set(['NORMAL', 'BAJO', 'AGOTADO']));
+    const inactivas = partes.filter((p) => !p.active);
+    expect(inactivas.length).toBeGreaterThanOrEqual(1);
+    expect(inactivas.some((p) => p.stock <= p.min_stock)).toBe(true);
+
+    const [alertas] = await pool.query('SELECT code FROM parts WHERE active = 1 AND stock <= min_stock');
+    expect(alertas.length).toBeGreaterThanOrEqual(3);
+  });
+
+  test('cada refacción usada en una orden tiene su movimiento de salida ligado a esa orden', async () => {
+    await runSeeds(pool, () => {});
+    const [lineas] = await pool.query('SELECT order_id, part_id, quantity, unit_price FROM order_parts');
+    expect(lineas.length).toBeGreaterThan(0);
+    for (const linea of lineas) {
+      const [[salida]] = await pool.query(
+        "SELECT COUNT(*) AS total FROM inventory_movements WHERE order_id = ? AND part_id = ? AND type = 'SALIDA' AND quantity = ?",
+        [linea.order_id, linea.part_id, -linea.quantity]
+      );
+      expect(salida.total).toBe(1);
+      const [[parte]] = await pool.query('SELECT sale_price FROM parts WHERE id = ?', [linea.part_id]);
+      expect(Number(linea.unit_price)).toBe(Number(parte.sale_price));
+    }
+  });
+
+  test('el total de las órdenes incluye servicios, mano de obra y refacciones', async () => {
+    await runSeeds(pool, () => {});
+    const [ordenes] = await pool.query('SELECT id FROM service_orders');
+    let conRefacciones = 0;
+    for (const { id } of ordenes) {
+      const orden = await orderModel.findById(id);
+      const [[refacciones]] = await pool.query('SELECT COALESCE(SUM(quantity * unit_price), 0) AS total FROM order_parts WHERE order_id = ?', [id]);
+      if (Number(refacciones.total) > 0) {
+        conRefacciones += 1;
+      }
+      expect(orden.partsTotal).toBe(Number(refacciones.total));
+      expect(orden.total).toBe(Math.round((orden.servicesTotal + orden.laborTotal + orden.partsTotal) * 100) / 100);
+    }
+    expect(conRefacciones).toBeGreaterThanOrEqual(3);
+  });
+
+  test('las órdenes terminadas y entregadas tienen kilometraje del servicio coherente con el del vehículo', async () => {
+    await runSeeds(pool, () => {});
+    const [ordenes] = await pool.query(
+      "SELECT o.folio, o.entry_mileage, o.service_mileage, v.current_mileage FROM service_orders o JOIN vehicles v ON v.id = o.vehicle_id WHERE o.status IN ('TERMINADO','ENTREGADO')"
+    );
+    expect(ordenes.length).toBeGreaterThanOrEqual(3);
+    for (const orden of ordenes) {
+      expect(orden.service_mileage).not.toBeNull();
+      expect(orden.service_mileage).toBeGreaterThanOrEqual(orden.entry_mileage);
+      expect(orden.current_mileage).toBeGreaterThanOrEqual(orden.service_mileage);
+    }
+  });
+});
+
+describe('mantenimientos de ejemplo', () => {
+  beforeEach(resetTables);
+
+  test('hay mantenimientos Normal, Próximo y Vencido, uno atendido y uno cancelado', async () => {
+    await runSeeds(pool, () => {});
+    const filtros = { status: 'PROGRAMADO', q: '', page: 1, pageSize: 50 };
+    const pendientes = await listMaintenance(filtros);
+    expect(new Set(pendientes.data.map((m) => m.visualStatus))).toEqual(new Set(['NORMAL', 'PROXIMO', 'VENCIDO']));
+    // Vencidos por fecha y por kilometraje.
+    const vencidos = pendientes.data.filter((m) => m.visualStatus === 'VENCIDO');
+    expect(vencidos.some((m) => m.dueDate !== null && m.remainingDays < 0)).toBe(true);
+    expect(vencidos.some((m) => m.dueMileage !== null && m.remainingKm <= 0)).toBe(true);
+    // Los más urgentes aparecen primero.
+    expect(pendientes.data[0].visualStatus).toBe('VENCIDO');
+
+    const [[atendidos]] = await pool.query("SELECT COUNT(*) AS total FROM maintenance WHERE status = 'ATENDIDO'");
+    const [[cancelados]] = await pool.query("SELECT COUNT(*) AS total FROM maintenance WHERE status = 'CANCELADO' AND cancel_reason IS NOT NULL");
+    expect(atendidos.total).toBe(1);
+    expect(cancelados.total).toBe(1);
+  });
+
+  test('ningún vehículo repite un mantenimiento pendiente con la misma descripción', async () => {
+    await runSeeds(pool, () => {});
+    const [repetidos] = await pool.query(
+      "SELECT vehicle_id, description, COUNT(*) AS total FROM maintenance WHERE status = 'PROGRAMADO' GROUP BY vehicle_id, description HAVING COUNT(*) > 1"
+    );
+    expect(repetidos).toHaveLength(0);
   });
 });
