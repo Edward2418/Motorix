@@ -166,3 +166,67 @@ export function validateStatusBody(body) {
 export function likePattern(search) {
   return `%${search.replace(/[\\%_]/g, (char) => `\\${char}`)}%`;
 }
+
+// Fecha y hora en texto ISO 8601 con zona horaria (por ejemplo 2026-10-20T15:30:00.000Z).
+export function parseDateTime(errors, value, field, label) {
+  if (typeof value !== 'string' || value.trim() === '') {
+    errors.add(field, `${label} es obligatoria.`);
+    return undefined;
+  }
+  const date = new Date(value.trim());
+  if (Number.isNaN(date.getTime()) || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value.trim())) {
+    errors.add(field, `${label} no tiene un formato de fecha y hora válido.`);
+    return undefined;
+  }
+  return date;
+}
+
+// Fecha sin hora (YYYY-MM-DD), para los filtros de listados.
+export function parseDateOnly(value, label) {
+  if (value === undefined) {
+    return undefined;
+  }
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value) || Number.isNaN(new Date(`${value}T00:00:00`).getTime())) {
+    throw AppError.validation(`${label} debe tener el formato AAAA-MM-DD.`);
+  }
+  return value;
+}
+
+export const MAX_AMOUNT = 99999999.99;
+
+// Importe monetario: número ≥ 0 y ≤ 99 999 999.99 con máximo dos decimales.
+export function parseAmount(errors, value, field, label) {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    errors.add(field, `${label} debe ser un número.`);
+    return undefined;
+  }
+  if (value < 0) {
+    errors.add(field, `${label} no puede ser negativo.`);
+    return undefined;
+  }
+  if (value > MAX_AMOUNT) {
+    errors.add(field, `${label} no puede superar 99,999,999.99.`);
+    return undefined;
+  }
+  if (Math.round(value * 100) / 100 !== value) {
+    errors.add(field, `${label} admite como máximo dos decimales.`);
+    return undefined;
+  }
+  return value;
+}
+
+// Valor dentro de una lista de valores permitidos.
+export function parseEnum(value, allowed, label) {
+  if (typeof value !== 'string' || !allowed.includes(value)) {
+    throw AppError.validation(`${label} debe ser uno de: ${allowed.join(', ')}.`);
+  }
+  return value;
+}
+
+// Texto largo opcional: devuelve undefined si el campo no viene, null si viene vacío.
+export function optionalLongText(errors, body, field, label, maxLength) {
+  if (!Object.prototype.hasOwnProperty.call(body, field)) {
+    return undefined;
+  }
+  return optionalText(errors, body, field, label, maxLength);
+}

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
 import 'providers/auth_provider.dart';
@@ -37,6 +38,10 @@ class MotorixApp extends StatelessWidget {
         title: 'Motorix',
         debugShowCheckedModeBanner: false,
         theme: buildAppTheme(useGoogleFonts: useGoogleFonts),
+        // Selectores de fecha y hora en español.
+        locale: const Locale('es', 'MX'),
+        supportedLocales: const [Locale('es', 'MX'), Locale('es')],
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
         home: const _SessionGate(),
       ),
     );
