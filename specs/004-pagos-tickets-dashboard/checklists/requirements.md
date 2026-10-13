@@ -31,6 +31,6 @@
 
 ## Notas
 
-- Las cuatro decisiones que el insumo del sprint deja para `/speckit-clarify` (formato de tickets y PDF, alcance de Mercado Pago, indicadores del panel y política de reembolsos o cancelaciones) se resolvieron con valores por defecto razonables, registrados en «Supuestos». Conviene confirmarlos en la clarificación.
+- Clarificación del 2026-10-13: Mercado Pago se resuelve solo por consulta de estado, sin PDF, con cuatro indicadores principales y gráfica de órdenes por estado, los pagos pendientes reservan saldo y el ticket se arma siempre con datos vigentes. Quedan como supuestos confirmables en la planificación: pagos parciales, entrega sin exigir pago, cancelación de pagos y datos del taller como configuración.
 - Decisiones propias que también conviene confirmar: pagos parciales y múltiples, entregar una orden sin exigir pago, ticket único por orden con contenido armado al consultarlo, datos del taller como configuración del servidor y panel exclusivo de la administración.
 - Mercado Pago es una dependencia externa nueva: la constitución exige justificar cualquier dependencia antes de agregarla; la decisión (cliente propio sobre HTTP o librería oficial) se toma en la planificación.
