@@ -61,3 +61,43 @@ cd client && flutter test
 ## 5. Medición de rendimiento (SC-012)
 
 Con un script de datos sintéticos contra `motorix_test` (2 000 órdenes y 5 000 movimientos), medir el tiempo de respuesta del historial, de los mantenimientos y del listado de inventario; deben ser menores a 2 segundos. Registrar el resultado y las limitaciones al final de este archivo.
+
+## 6. Resultado de la validación (2026-10-13)
+
+### Escenarios por API (T097)
+
+Se ejecutaron los escenarios 1 a 22 con un script contra el servidor real y una base local recreada desde cero
+(migraciones y datos de ejemplo): **45 de 45 comprobaciones pasaron**. Cubren el historial, el kilometraje del servicio y su
+corrección, los mantenimientos (alta por fecha, por kilometraje y por ambos, duplicados, cambio de estado al subir el
+kilometraje, atender y cancelar), el catálogo (alta con stock inicial, código repetido, edición y desactivación), las entradas y los
+ajustes, las refacciones en la orden (agregar, stock insuficiente, cambiar, quitar, orden terminada con motivo y orden entregada), la
+concurrencia sobre la última unidad, la cancelación de una orden con refacciones y mantenimientos, las alertas, los permisos por rol y
+la repetición de los seeds. Además pasan las pruebas automatizadas del backend y del frontend.
+
+### Rendimiento (T096, SC-012)
+
+Con 2 000 órdenes, 5 000 movimientos, 200 refacciones y 1 000 mantenimientos sintéticos (1 000 de las órdenes en un solo vehículo y
+3 000 movimientos en una sola refacción, los peores casos), cinco mediciones por consulta:
+
+| Consulta | Tiempo máximo |
+|----------|---------------|
+| Historial de un vehículo con 1 000 servicios (página de 5) | 557 ms |
+| Historial de un vehículo típico | 20 ms |
+| Mantenimientos pendientes (1 000) | 39 ms |
+| Listado de inventario y búsqueda | 17 ms |
+| Alertas de stock bajo | 16 ms |
+| Movimientos de una refacción con 3 000 movimientos | 41 ms |
+| Listado de órdenes (2 000) | 45 ms |
+| Detalle de una orden con refacciones | 29 ms |
+
+Todas quedan muy por debajo de los 2 segundos. Durante la medición se detectó que el listado de órdenes tardaba 1 422 ms porque
+calculaba los totales de todas las órdenes antes de ordenar; ahora primero obtiene los identificadores de la página y después solo esas
+filas (45 ms).
+
+### Limitaciones
+
+- Los tiempos son del servidor. Los criterios de éxito medidos con una persona (SC-001, SC-003, SC-004, SC-006, SC-009 y SC-010) no se
+  pudieron cronometrar porque compilar la aplicación en Windows exige activar el Modo de desarrollador; no se dan por cumplidos. Las pantallas
+  están cubiertas por pruebas de widgets, pero falta el recorrido manual y la revisión visual en pantalla.
+- Los mantenimientos se clasifican, filtran y paginan en memoria (decisión de `research.md` §3); con miles de pendientes habría que pasar
+  el cálculo a SQL.

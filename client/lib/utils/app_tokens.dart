@@ -68,6 +68,9 @@ class AppDurations {
   static const Duration appear = Duration(milliseconds: 200);
   static const Duration navigation = Duration(milliseconds: 250);
   static const Duration sidebar = Duration(milliseconds: 200);
+
+  /// Espera tras la última pulsación antes de buscar.
+  static const Duration search = Duration(milliseconds: 350);
 }
 
 class AppSizes {

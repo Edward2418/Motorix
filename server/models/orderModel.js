@@ -166,12 +166,25 @@ export async function list({ status, mechanicId, clientId, search, page, pageSiz
      ${where}`,
     params
   );
-  const rows = await query(`${ORDER_SELECT} ${where} ORDER BY o.created_at DESC, o.id DESC LIMIT ? OFFSET ?`, [
-    ...params,
-    pageSize,
-    (page - 1) * pageSize
-  ]);
-  return { items: rows.map(toOrder), total: Number(total) };
+  // Dos pasos: primero los identificadores de la página (ordenar es barato) y después solo esas filas completas.
+  // Calcular los totales de todas las órdenes antes de ordenar tardaba más de 1 s con 2 000 órdenes.
+  const pageIds = await query(
+    `SELECT o.id
+     FROM service_orders o
+     JOIN clients c ON c.id = o.client_id
+     JOIN vehicles v ON v.id = o.vehicle_id
+     ${where}
+     ORDER BY o.created_at DESC, o.id DESC
+     LIMIT ? OFFSET ?`,
+    [...params, pageSize, (page - 1) * pageSize]
+  );
+  if (pageIds.length === 0) {
+    return { items: [], total: Number(total) };
+  }
+  const ids = pageIds.map((row) => row.id);
+  const rows = await query(`${ORDER_SELECT} WHERE o.id IN (?)`, [ids]);
+  const byId = new Map(rows.map((row) => [row.id, row]));
+  return { items: ids.map((id) => toOrder(byId.get(id))), total: Number(total) };
 }
 
 // Cambia el estado solo si la orden sigue en `fromStatus` (bloqueo optimista). Devuelve true si se aplicó.

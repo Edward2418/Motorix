@@ -99,7 +99,7 @@ class _OrderPartDialogState extends State<_OrderPartDialog> {
 
   void _onSearchChanged(String value) {
     _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 300), () => _runSearch(value));
+    _debounce = Timer(AppDurations.search, () => _runSearch(value));
   }
 
   Future<void> _runSearch(String text) async {

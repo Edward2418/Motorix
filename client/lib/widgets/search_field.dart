@@ -27,7 +27,7 @@ class _SearchFieldState extends State<SearchField> {
 
   void _onChanged(String value) {
     _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 350), () => widget.onChanged(value));
+    _debounce = Timer(AppDurations.search, () => widget.onChanged(value));
   }
 
   @override
