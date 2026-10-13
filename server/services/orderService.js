@@ -1,6 +1,7 @@
 import { withTransaction } from '../config/db.js';
 import * as appointmentModel from '../models/appointmentModel.js';
 import * as clientModel from '../models/clientModel.js';
+import * as maintenanceModel from '../models/maintenanceModel.js';
 import * as orderHistoryModel from '../models/orderHistoryModel.js';
 import * as orderItemModel from '../models/orderItemModel.js';
 import * as orderModel from '../models/orderModel.js';
@@ -9,6 +10,7 @@ import * as userModel from '../models/userModel.js';
 import * as vehicleModel from '../models/vehicleModel.js';
 import { AppError } from '../utils/AppError.js';
 import { nextFolio } from './folioService.js';
+import { listByOrder as listMaintenanceByOrder } from './maintenanceService.js';
 import { returnAllParts } from './orderPartService.js';
 import { allowedTransitions, canTransition, isFinalStatus } from './orderStateMachine.js';
 
@@ -20,10 +22,11 @@ function fieldError(field, message) {
 
 // Detalle completo de la orden: líneas, totales, historial y las transiciones que el actor puede hacer.
 export async function buildOrderDetail(order, actor, conn) {
-  const [services, labor, parts, history] = await Promise.all([
+  const [services, labor, parts, maintenance, history] = await Promise.all([
     orderItemModel.listServices(order.id, conn),
     orderItemModel.listLabor(order.id, conn),
     orderPartModel.listByOrder(order.id, conn),
+    listMaintenanceByOrder(order.id, conn),
     orderHistoryModel.listByOrder(order.id, conn)
   ]);
   return {
@@ -31,6 +34,7 @@ export async function buildOrderDetail(order, actor, conn) {
     services,
     labor,
     parts,
+    maintenance,
     history,
     allowedTransitions: allowedTransitions({
       from: order.status,
@@ -265,6 +269,8 @@ export async function changeStatus(id, { status, reason, serviceMileage }, actor
     if (status === 'CANCELADA') {
       // Las refacciones de la orden regresan al inventario en la misma transacción (una sola vez).
       await returnAllParts(order, actor, conn);
+      // Sus mantenimientos pendientes también se cancelan (cierre automático).
+      await maintenanceModel.cancelPendingByOrder(id, 'Orden cancelada', conn);
     }
     if (status === 'TERMINADO') {
       // El kilometraje actual del vehículo solo sube; nunca baja.

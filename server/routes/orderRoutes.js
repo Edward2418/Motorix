@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import * as maintenanceController from '../controllers/maintenanceController.js';
 import * as orderController from '../controllers/orderController.js';
 import * as orderPartController from '../controllers/orderPartController.js';
 import { authenticate } from '../middlewares/authenticate.js';
@@ -24,6 +25,9 @@ router.put('/:id/service-mileage', authorize(ROLES.ADMIN), asyncHandler(orderCon
 
 // Contenido técnico, servicios y mano de obra: los permisos por rol y por propiedad los valida el servicio.
 router.patch('/:id', asyncHandler(orderController.updateContent));
+// Próximo mantenimiento del vehículo, programado desde la orden (la propiedad la valida el servicio).
+router.post('/:id/maintenance', asyncHandler(maintenanceController.createFromOrder));
+
 // Refacciones usadas: el servicio valida rol, propiedad y estado; cada cambio mueve el inventario.
 router.post('/:id/parts', asyncHandler(orderPartController.add));
 router.put('/:id/parts/:lineId', asyncHandler(orderPartController.updateQuantity));

@@ -20,6 +20,7 @@ const orderDetailShape = {
   serviceMileageCorrectionReason: null,
   partsTotal: 0,
   parts: [],
+  maintenance: [],
   appointmentId: null,
   reportedProblem: expect.any(String),
   diagnosis: null,

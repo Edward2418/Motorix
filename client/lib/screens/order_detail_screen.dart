@@ -2,18 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 
+import '../models/maintenance.dart';
 import '../models/service_order.dart';
 import '../models/user.dart';
 import '../providers/appointments_provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/maintenance_provider.dart';
 import '../providers/orders_provider.dart';
 import '../services/api_client.dart';
 import '../utils/app_tokens.dart';
 import '../utils/formatters.dart';
 import '../widgets/cancel_order_dialog.dart';
+import '../widgets/maintenance_dialog.dart';
 import '../widgets/confirm_dialog.dart';
 import '../widgets/order_line_dialog.dart';
 import '../widgets/order_part_dialog.dart';
+import '../widgets/reason_dialog.dart';
 import '../widgets/service_mileage_dialog.dart';
 import '../widgets/section_navigator.dart';
 import '../widgets/status_badge.dart';
@@ -247,6 +251,60 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     await _run((orders) => orders.removeLine(kind, _order!.id, line.id), 'Se quitó el ${kind.label}.');
   }
 
+  Future<void> _scheduleMaintenance() async {
+    final order = _order!;
+    final saved = await showMaintenanceDialog(
+      context,
+      referenceMileage: order.serviceMileage ?? order.entryMileage,
+      onSubmit: (input) async {
+        await context.read<MaintenanceProvider>().create(order.id, input);
+      },
+    );
+    if (saved && mounted) {
+      showFeedback(context, 'Mantenimiento programado.');
+      await _load();
+    }
+  }
+
+  Future<void> _fulfillMaintenance(Maintenance item) async {
+    final confirmed = await showConfirmDialog(
+      context,
+      message: '¿Seguro que quieres marcar como atendido «${item.description}»?',
+    );
+    if (!confirmed || !mounted) {
+      return;
+    }
+    await _closeMaintenance(() => context.read<MaintenanceProvider>().fulfill(item.id), 'Mantenimiento atendido.');
+  }
+
+  Future<void> _cancelMaintenance(Maintenance item) async {
+    final reason = await showReasonDialog(
+      context,
+      title: 'Cancelar mantenimiento',
+      message: '¿Seguro que quieres cancelar «${item.description}»? Dejará de aparecer entre los pendientes.',
+      label: 'Motivo de la cancelación',
+    );
+    if (reason == null || !mounted) {
+      return;
+    }
+    await _closeMaintenance(() => context.read<MaintenanceProvider>().cancel(item.id, reason), 'Mantenimiento cancelado.');
+  }
+
+  Future<void> _closeMaintenance(Future<Maintenance> Function() action, String success) async {
+    try {
+      await action();
+      if (!mounted) {
+        return;
+      }
+      showFeedback(context, success);
+      await _load();
+    } on ApiException catch (e) {
+      if (mounted) {
+        showFeedback(context, e.message, error: true);
+      }
+    }
+  }
+
   /// En una orden terminada, la administración debe indicar el motivo de cada cambio de refacciones.
   bool get _partsNeedReason => _order?.status == OrderStatus.finished;
 
@@ -326,6 +384,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     // Refacciones: el técnico en estados abiertos; en una orden terminada solo la administración (con motivo).
     final canEditParts = canEditLines || (user.role == UserRole.admin && status == OrderStatus.finished);
     final canEditNotes = canEditTechnical && !status.isFinal;
+    // Mantenimientos: administración, recepción y el mecánico asignado, mientras la orden no esté cancelada.
+    final canMaintain = (canManage || assigned) && status != OrderStatus.cancelled;
     final theme = Theme.of(context);
 
     return PagePadding(
@@ -413,6 +473,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               onEdit: canEditNotes
                   ? () => _editText(field: 'recommendations', title: 'Editar recomendaciones', current: order.recommendations)
                   : null,
+            ),
+            _MaintenanceSection(
+              items: order.maintenance,
+              canSchedule: canMaintain,
+              canClose: canMaintain,
+              onSchedule: _scheduleMaintenance,
+              onFulfill: _fulfillMaintenance,
+              onCancel: _cancelMaintenance,
             ),
             _HistorySection(history: order.history),
           ],
@@ -690,6 +758,100 @@ class _LinesSection extends StatelessWidget {
                     child: Text('Subtotal: ${formatMoney(subtotal)}', style: theme.textTheme.titleMedium),
                   ),
                 ),
+              ],
+            ),
+    );
+  }
+}
+
+/// Próximos mantenimientos programados desde esta orden, con su estado y las acciones permitidas.
+class _MaintenanceSection extends StatelessWidget {
+  const _MaintenanceSection({
+    required this.items,
+    required this.canSchedule,
+    required this.canClose,
+    required this.onSchedule,
+    required this.onFulfill,
+    required this.onCancel,
+  });
+
+  final List<Maintenance> items;
+  final bool canSchedule;
+  final bool canClose;
+  final VoidCallback onSchedule;
+  final void Function(Maintenance item) onFulfill;
+  final void Function(Maintenance item) onCancel;
+
+  String _target(Maintenance item) {
+    final parts = [
+      if (item.dueDate != null) formatDate(item.dueDate!),
+      if (item.dueMileage != null) formatMileage(item.dueMileage!),
+    ];
+    return parts.join(' o ');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return _SectionFrame(
+      title: 'Próximo mantenimiento',
+      action: canSchedule
+          ? OutlinedButton.icon(
+              onPressed: onSchedule,
+              icon: const Icon(LucideIcons.calendarPlus, size: AppSizes.icon),
+              label: const Text('Programar mantenimiento'),
+            )
+          : null,
+      child: items.isEmpty
+          ? Padding(
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              child: Text(
+                'No se ha programado ningún mantenimiento desde esta orden.',
+                style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+              ),
+            )
+          : Column(
+              children: [
+                for (final item in items) ...[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.sm),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(item.description, style: theme.textTheme.bodyLarge),
+                              Text(
+                                item.status == MaintenanceStatus.cancelled && item.cancelReason != null
+                                    ? '${_target(item)} · Motivo: ${item.cancelReason}'
+                                    : _target(item),
+                                style: theme.textTheme.bodySmall,
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (item.visualStatus != null)
+                          StatusBadge.maintenance(item.visualStatus!)
+                        else
+                          StatusBadge(label: item.status.label, color: AppColors.textSecondary),
+                        if (canClose && item.status == MaintenanceStatus.scheduled) ...[
+                          IconButton(
+                            tooltip: 'Marcar atendido ${item.description}',
+                            onPressed: () => onFulfill(item),
+                            icon: const Icon(LucideIcons.check, size: AppSizes.icon),
+                          ),
+                          IconButton(
+                            tooltip: 'Cancelar mantenimiento ${item.description}',
+                            onPressed: () => onCancel(item),
+                            icon: const Icon(LucideIcons.ban, size: AppSizes.icon),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const Divider(),
+                ],
               ],
             ),
     );
