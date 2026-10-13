@@ -135,6 +135,22 @@ export function validateOrderContent(body) {
   return fields;
 }
 
+// Cambio de estado: el estado destino y, para la cancelación, un motivo obligatorio.
+export function validateStatusChange(body) {
+  const data = requireBody(body);
+  const errors = new FieldErrors();
+  if (typeof data.status !== 'string' || !ORDER_STATUSES.includes(data.status)) {
+    errors.add('status', `El estado debe ser uno de: ${ORDER_STATUSES.join(', ')}.`);
+  }
+  let reason = optionalLongText(errors, data, 'reason', 'El motivo', 255);
+  reason = reason === undefined ? null : reason;
+  if (data.status === 'CANCELADA' && reason === null) {
+    errors.add('reason', 'El motivo de la cancelación es obligatorio.');
+  }
+  errors.throwIfAny();
+  return { status: data.status, reason: data.status === 'CANCELADA' ? reason : null };
+}
+
 // Servicio o línea de mano de obra: descripción e importe (en la API siempre se llama `amount`).
 export function validateLine(body) {
   const data = requireBody(body);

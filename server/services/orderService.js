@@ -8,7 +8,7 @@ import * as userModel from '../models/userModel.js';
 import * as vehicleModel from '../models/vehicleModel.js';
 import { AppError } from '../utils/AppError.js';
 import { nextFolio } from './folioService.js';
-import { allowedTransitions, isFinalStatus } from './orderStateMachine.js';
+import { allowedTransitions, canTransition, isFinalStatus } from './orderStateMachine.js';
 
 const formatKm = (km) => Number(km).toLocaleString('en-US');
 
@@ -180,6 +180,50 @@ export async function reassignMechanic(orderId, mechanicId, actor) {
   await requireActiveMechanic(mechanicId);
   await orderModel.updateMechanic(orderId, mechanicId);
   return buildOrderDetail(await orderModel.findById(orderId), actor);
+}
+
+// Cambia el estado de la orden dentro de una transacción: bloquea la orden, valida la transición y el rol,
+// guarda el cambio (solo si el estado sigue siendo el leído), registra el historial y actualiza la cita vinculada.
+export async function changeStatus(id, { status, reason }, actor) {
+  await withTransaction(async (conn) => {
+    const order = await orderModel.lockById(id, conn);
+    if (!order) {
+      throw AppError.notFound('La orden no existe.');
+    }
+    const check = canTransition({
+      from: order.status,
+      to: status,
+      role: actor.role,
+      isAssignedMechanic: order.mechanic_id === actor.id
+    });
+    if (!check.ok) {
+      throw check.code === 'FORBIDDEN' ? AppError.forbidden(check.reason) : AppError.invalidTransition(check.reason);
+    }
+
+    const applied = await orderModel.updateStatus(
+      id,
+      order.status,
+      status,
+      { cancelReason: status === 'CANCELADA' ? reason : null, deliveredAt: status === 'ENTREGADO' ? new Date() : null },
+      conn
+    );
+    if (!applied) {
+      throw AppError.conflict('El estado de la orden cambió mientras se procesaba tu solicitud. Vuelve a intentarlo.');
+    }
+    await orderHistoryModel.insert(
+      { orderId: id, fromStatus: order.status, toStatus: status, changedBy: actor.id, reason: status === 'CANCELADA' ? reason : null },
+      conn
+    );
+
+    if (order.appointment_id) {
+      if (status === 'ENTREGADO') {
+        await appointmentModel.updateStatus(order.appointment_id, 'COMPLETADA', null, conn);
+      } else if (status === 'CANCELADA') {
+        await appointmentModel.updateStatus(order.appointment_id, 'CANCELADA', reason, conn);
+      }
+    }
+  });
+  return buildOrderDetail(await orderModel.findById(id), actor);
 }
 
 // ---------- Edición del contenido y de las líneas (FR-016, FR-017 y FR-017a) ----------

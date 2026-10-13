@@ -169,6 +169,18 @@ export async function list({ status, mechanicId, clientId, search, page, pageSiz
   return { items: rows.map(toOrder), total: Number(total) };
 }
 
+// Cambia el estado solo si la orden sigue en `fromStatus` (bloqueo optimista). Devuelve true si se aplicó.
+export async function updateStatus(id, fromStatus, toStatus, { cancelReason = null, deliveredAt = null } = {}, conn) {
+  const result = await query(
+    `UPDATE service_orders
+     SET status = ?, cancel_reason = COALESCE(?, cancel_reason), delivered_at = COALESCE(?, delivered_at)
+     WHERE id = ? AND status = ?`,
+    [toStatus, cancelReason, deliveredAt, id, fromStatus],
+    conn
+  );
+  return result.affectedRows === 1;
+}
+
 // Campos de contenido editables y su columna. Solo se actualizan los que vienen en `fields`.
 const CONTENT_COLUMNS = Object.freeze({
   reportedProblem: 'reported_problem',

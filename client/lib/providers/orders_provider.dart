@@ -166,6 +166,17 @@ class OrdersProvider extends ChangeNotifier {
     return order;
   }
 
+  /// Cambia el estado de la orden. La cancelación exige [reason]. El servidor valida la transición y el rol.
+  Future<ServiceOrder> changeStatus(int orderId, OrderStatus status, {String? reason}) async {
+    final response = await _api.post('/orders/$orderId/status', body: {
+      'status': status.apiValue,
+      'reason': ?reason,
+    });
+    final order = ServiceOrder.fromJson(response['data'] as Map<String, dynamic>);
+    notifyListeners();
+    return order;
+  }
+
   /// Edita el contenido de la orden. Solo se envían los campos indicados; un texto vacío se guarda como nulo.
   Future<ServiceOrder> updateContent(int orderId, Map<String, String?> fields) async {
     final response = await _api.patch('/orders/$orderId', body: fields);

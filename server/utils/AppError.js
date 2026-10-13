@@ -30,6 +30,11 @@ export class AppError extends Error {
     return new AppError(429, 'TOO_MANY_ATTEMPTS', message);
   }
 
+  // Transición de estado que el flujo no permite (409); el mensaje indica los estados permitidos.
+  static invalidTransition(message) {
+    return new AppError(409, 'INVALID_TRANSITION', message);
+  }
+
   static notFound(message = 'El recurso solicitado no existe.') {
     return new AppError(404, 'NOT_FOUND', message);
   }

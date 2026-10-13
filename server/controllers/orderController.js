@@ -4,7 +4,8 @@ import {
   validateMechanicChange,
   validateOrderContent,
   validateOrderCreate,
-  validateOrderListQuery
+  validateOrderListQuery,
+  validateStatusChange
 } from '../validators/orderValidator.js';
 import { parseId } from '../validators/common.js';
 import { sendData, sendPage } from '../utils/response.js';
@@ -28,6 +29,11 @@ export async function reassignMechanic(req, res) {
   const id = orderId(req);
   const { mechanicId } = validateMechanicChange(req.body);
   sendData(res, await orderService.reassignMechanic(id, mechanicId, req.user));
+}
+
+export async function changeStatus(req, res) {
+  const id = orderId(req);
+  sendData(res, await orderService.changeStatus(id, validateStatusChange(req.body), req.user));
 }
 
 export async function updateContent(req, res) {

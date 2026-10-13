@@ -240,19 +240,19 @@ void main() {
     expect(find.text('Agregar mano de obra'), findsNothing);
   });
 
-  testWidgets('en ENTREGADO y CANCELADA desaparecen todos los controles de edición', (tester) async {
-    for (final estado in ['ENTREGADO', 'CANCELADA']) {
+  for (final estado in ['ENTREGADO', 'CANCELADA']) {
+    testWidgets('en $estado desaparecen todos los controles de edición', (tester) async {
       await abrirDetalle(
         tester,
         role: 'ADMIN',
         handler: devuelve(orden(estado: estado, servicios: [linea(11, 'Alineación', 400)])),
       );
-      expect({estado: find.text('Editar diagnóstico').evaluate().length}, {estado: 0});
-      expect({estado: find.text('Agregar servicio').evaluate().length}, {estado: 0});
-      expect({estado: find.text('Editar observaciones').evaluate().length}, {estado: 0});
-      expect({estado: find.text('Editar problema reportado').evaluate().length}, {estado: 0});
-      expect({estado: find.byTooltip('Quitar Alineación').evaluate().length}, {estado: 0});
-      expect({estado: find.text('Reasignar mecánico').evaluate().length}, {estado: 0});
-    }
-  });
+      expect(find.text('Editar diagnóstico'), findsNothing);
+      expect(find.text('Agregar servicio'), findsNothing);
+      expect(find.text('Editar observaciones'), findsNothing);
+      expect(find.text('Editar problema reportado'), findsNothing);
+      expect(find.byTooltip('Quitar Alineación'), findsNothing);
+      expect(find.text('Reasignar mecánico'), findsNothing);
+    });
+  }
 }

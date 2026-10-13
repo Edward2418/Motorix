@@ -9,6 +9,7 @@ import '../providers/orders_provider.dart';
 import '../services/api_client.dart';
 import '../utils/app_tokens.dart';
 import '../utils/formatters.dart';
+import '../widgets/cancel_order_dialog.dart';
 import '../widgets/confirm_dialog.dart';
 import '../widgets/order_line_dialog.dart';
 import '../widgets/section_navigator.dart';
@@ -72,6 +73,43 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         showFeedback(context, e.message, error: true);
       }
     }
+  }
+
+  /// Texto del botón que lleva la orden desde el estado actual hasta [target].
+  String _actionLabel(OrderStatus from, OrderStatus target) => switch (target) {
+        OrderStatus.diagnosis => 'Iniciar diagnóstico',
+        OrderStatus.inRepair => from == OrderStatus.waitingPart ? 'Reanudar reparación' : 'Iniciar reparación',
+        OrderStatus.waitingPart => 'Esperar refacción',
+        OrderStatus.finished => 'Marcar como terminada',
+        OrderStatus.delivered => 'Entregar',
+        OrderStatus.cancelled => 'Cancelar orden',
+        OrderStatus.received => 'Volver a recibido',
+      };
+
+  Future<void> _changeStatus(OrderStatus target) async {
+    final order = _order!;
+    String? reason;
+    if (target == OrderStatus.cancelled) {
+      reason = await showCancelOrderDialog(context, folio: order.folio);
+      if (reason == null || !mounted) {
+        return;
+      }
+    } else if (target == OrderStatus.delivered) {
+      final confirmed = await showConfirmDialog(
+        context,
+        title: 'Entregar orden',
+        message: '¿Seguro que quieres marcar la orden ${order.folio} como entregada? Ya no podrá modificarse.',
+      );
+      if (!confirmed || !mounted) {
+        return;
+      }
+    }
+    await _run(
+      (orders) => orders.changeStatus(order.id, target, reason: reason),
+      target == OrderStatus.cancelled
+          ? 'La orden ${order.folio} se canceló.'
+          : 'La orden pasó a «${target.label}».',
+    );
   }
 
   Future<void> _reassign() async {
@@ -260,6 +298,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   ? () => _editText(field: 'recommendations', title: 'Editar recomendaciones', current: order.recommendations)
                   : null,
             ),
+            _HistorySection(history: order.history),
           ],
         ),
       ),
@@ -303,12 +342,30 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 Text('Motivo de cancelación: ${order.cancelReason}',
                     style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.danger)),
               ],
-              if (canManage && !order.status.isFinal) ...[
+              if (order.allowedTransitions.isNotEmpty || (canManage && !order.status.isFinal)) ...[
                 const SizedBox(height: AppSpacing.lg),
-                OutlinedButton.icon(
-                  onPressed: _reassign,
-                  icon: const Icon(LucideIcons.userCog, size: AppSizes.icon),
-                  label: const Text('Reasignar mecánico'),
+                Wrap(
+                  spacing: AppSpacing.md,
+                  runSpacing: AppSpacing.md,
+                  children: [
+                    for (final target in order.allowedTransitions)
+                      target == OrderStatus.cancelled
+                          ? OutlinedButton(
+                              onPressed: () => _changeStatus(target),
+                              style: OutlinedButton.styleFrom(foregroundColor: AppColors.danger),
+                              child: Text(_actionLabel(order.status, target)),
+                            )
+                          : FilledButton(
+                              onPressed: () => _changeStatus(target),
+                              child: Text(_actionLabel(order.status, target)),
+                            ),
+                    if (canManage && !order.status.isFinal)
+                      OutlinedButton.icon(
+                        onPressed: _reassign,
+                        icon: const Icon(LucideIcons.userCog, size: AppSizes.icon),
+                        label: const Text('Reasignar mecánico'),
+                      ),
+                  ],
                 ),
               ],
             ],
@@ -484,6 +541,62 @@ class _LinesSection extends StatelessWidget {
                     child: Text('Subtotal: ${formatMoney(subtotal)}', style: theme.textTheme.titleMedium),
                   ),
                 ),
+              ],
+            ),
+    );
+  }
+}
+
+/// Historial de cambios de estado, en orden cronológico.
+class _HistorySection extends StatelessWidget {
+  const _HistorySection({required this.history});
+
+  final List<StatusChange> history;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return _SectionFrame(
+      title: 'Historial de estados',
+      child: history.isEmpty
+          ? Padding(
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              child: Text('Sin cambios registrados.',
+                  style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary)),
+            )
+          : Column(
+              children: [
+                for (final change in history) ...[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.md),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          width: 160,
+                          child: Text(formatDateTime(change.changedAt), style: theme.textTheme.bodySmall),
+                        ),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                change.fromStatus == null
+                                    ? 'Orden registrada como «${change.toStatus.label}»'
+                                    : '${change.fromStatus!.label} → ${change.toStatus.label}',
+                                style: theme.textTheme.bodyLarge,
+                              ),
+                              Text('Por ${change.changedBy}', style: theme.textTheme.bodySmall),
+                              if (change.reason != null)
+                                Text('Motivo: ${change.reason}', style: theme.textTheme.bodySmall),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (change != history.last) const Divider(),
+                ],
               ],
             ),
     );
