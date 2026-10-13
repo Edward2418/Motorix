@@ -16,6 +16,10 @@ export async function create(req, res) {
   sendData(res, await paymentService.registerPayment(orderId, validatePaymentCreate(req.body), req.user), 201);
 }
 
+export async function refresh(req, res) {
+  sendData(res, await paymentService.refreshPayment(parseId(req.params.id, 'El identificador del pago')));
+}
+
 export async function cancel(req, res) {
   const paymentId = parseId(req.params.id, 'El identificador del pago');
   sendData(res, await paymentService.cancelPayment(paymentId, validatePaymentCancel(req.body), req.user));

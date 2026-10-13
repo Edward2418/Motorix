@@ -79,6 +79,18 @@ export async function insert(data, conn) {
   return result.insertId;
 }
 
+// Resuelve un pago pendiente de Mercado Pago (PAGADO o RECHAZADO) solo si sigue PENDIENTE. Devuelve true si se aplicó.
+export async function markResolved(id, { status, paidAt = null, externalPaymentId = null }, conn) {
+  const result = await query(
+    `UPDATE payments
+     SET status = ?, paid_at = ?, external_payment_id = COALESCE(?, external_payment_id)
+     WHERE id = ? AND status = 'PENDIENTE'`,
+    [status, paidAt, externalPaymentId, id],
+    conn
+  );
+  return result.affectedRows === 1;
+}
+
 // Cancela solo si el pago sigue en uno de los estados permitidos. Devuelve true si se aplicó.
 export async function markCancelled(id, allowedStatuses, { reason, cancelledBy }, conn) {
   const result = await query(

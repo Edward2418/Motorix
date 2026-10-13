@@ -13,6 +13,8 @@ router.use(authenticate, manage);
 router.get('/config', asyncHandler(paymentController.config));
 
 // Los pagos nunca se eliminan ni se editan: solo se cancelan con motivo.
+// Actualiza el estado de un pago de Mercado Pago consultando al servicio externo.
+router.post('/:id/refresh', asyncHandler(paymentController.refresh));
 router.post('/:id/cancel', asyncHandler(paymentController.cancel));
 
 export default router;
