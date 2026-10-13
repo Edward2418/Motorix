@@ -3,6 +3,7 @@ import * as maintenanceController from '../controllers/maintenanceController.js'
 import * as orderController from '../controllers/orderController.js';
 import * as orderPartController from '../controllers/orderPartController.js';
 import * as paymentController from '../controllers/paymentController.js';
+import * as ticketController from '../controllers/ticketController.js';
 import { authenticate } from '../middlewares/authenticate.js';
 import { authorize, ROLES } from '../middlewares/authorize.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
@@ -37,6 +38,10 @@ router.delete('/:id/parts/:lineId', asyncHandler(orderPartController.remove));
 // Pagos de la orden: solo ADMIN y RECEPTIONIST (el mecánico recibe 403).
 router.get('/:id/payments', manage, asyncHandler(paymentController.listByOrder));
 router.post('/:id/payments', manage, asyncHandler(paymentController.create));
+
+// Ticket de servicio: un ticket por orden, solo ADMIN y RECEPTIONIST. No existen rutas para editarlo ni eliminarlo.
+router.post('/:id/ticket', manage, asyncHandler(ticketController.generate));
+router.get('/:id/ticket', manage, asyncHandler(ticketController.get));
 
 for (const kind of ['services', 'labor']) {
   router.post('/:id/' + kind, asyncHandler(orderController.addLine(kind)));
