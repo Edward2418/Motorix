@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import * as inventoryController from '../controllers/inventoryController.js';
 import * as partController from '../controllers/partController.js';
 import { authenticate } from '../middlewares/authenticate.js';
 import { authorize, ROLES } from '../middlewares/authorize.js';
@@ -19,5 +20,9 @@ router.get('/categories', readers, asyncHandler(partController.categories));
 router.get('/:id', readers, asyncHandler(partController.get));
 router.put('/:id', admin, asyncHandler(partController.update));
 router.patch('/:id/status', admin, asyncHandler(partController.setStatus));
+
+// Movimientos de inventario: solo ADMIN. No hay rutas para modificar ni eliminar movimientos.
+router.get('/:id/movements', admin, asyncHandler(inventoryController.listMovements));
+router.post('/:id/movements', admin, asyncHandler(inventoryController.createMovement));
 
 export default router;

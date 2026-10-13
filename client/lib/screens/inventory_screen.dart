@@ -17,6 +17,7 @@ import '../widgets/status_chip.dart';
 import '../widgets/table_footer.dart';
 import '../widgets/table_scroll.dart';
 import '../widgets/view_states.dart';
+import 'part_detail_screen.dart';
 import 'part_form_screen.dart';
 
 /// Inventario de refacciones (solo ADMIN): catálogo con búsqueda, filtros, estado y nivel de stock.
@@ -44,6 +45,16 @@ class _InventoryScreenState extends State<InventoryScreen> {
     );
     if (saved == true && mounted) {
       showFeedback(context, part == null ? 'Refacción registrada correctamente.' : 'Refacción actualizada correctamente.');
+    }
+  }
+
+  Future<void> _openDetail(Part part) async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(builder: (_) => PartDetailScreen(partId: part.id)),
+    );
+    // Al volver se recarga el listado: el detalle pudo registrar entradas o ajustes.
+    if (mounted) {
+      context.read<PartsProvider>().load();
     }
   }
 
@@ -209,6 +220,11 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      IconButton(
+                        tooltip: 'Ver movimientos',
+                        onPressed: () => _openDetail(part),
+                        icon: const Icon(LucideIcons.listOrdered, size: AppSizes.icon),
+                      ),
                       IconButton(
                         tooltip: 'Editar refacción',
                         onPressed: () => _openForm(part: part),
