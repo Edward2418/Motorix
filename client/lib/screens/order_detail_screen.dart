@@ -23,6 +23,7 @@ import '../widgets/service_mileage_dialog.dart';
 import '../widgets/section_navigator.dart';
 import '../widgets/status_badge.dart';
 import '../widgets/view_states.dart';
+import 'ticket_screen.dart';
 import 'vehicle_history_screen.dart';
 
 /// Detalle de una orden de servicio: datos generales, contenido técnico editable (según rol, propiedad
@@ -457,13 +458,25 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 child: Text('Total: ${formatMoney(order.total)}', style: theme.textTheme.titleLarge),
               ),
             ),
-            // Pagos: solo administración y recepción, cuando la orden ya está terminada o entregada.
-            if (canManage && (status == OrderStatus.finished || status == OrderStatus.delivered))
+            // Pagos y ticket: solo administración y recepción, cuando la orden ya está terminada o entregada.
+            if (canManage && (status == OrderStatus.finished || status == OrderStatus.delivered)) ...[
+              Align(
+                alignment: Alignment.centerRight,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+                  child: OutlinedButton.icon(
+                    onPressed: () => _openTicket(order),
+                    icon: const Icon(LucideIcons.receipt, size: AppSizes.icon),
+                    label: const Text('Ticket de servicio'),
+                  ),
+                ),
+              ),
               PaymentsSection(
                 orderId: order.id,
                 isAdmin: user.role == UserRole.admin,
                 onChanged: _load,
               ),
+            ],
             _TextSection(
               title: 'Observaciones',
               text: order.notes,
@@ -495,6 +508,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         ),
       ),
     );
+  }
+
+  void _openTicket(ServiceOrder order) {
+    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => TicketScreen(orderId: order.id)));
   }
 
   void _openHistory(ServiceOrder order) {

@@ -91,4 +91,6 @@ class AppSizes {
   static const double spinner = 24;
   static const double spinnerSmall = 16;
   static const double historyDateWidth = 160;
+  static const double ticketWidth = 560;
+  static const double ticketLabelWidth = 140;
 }
