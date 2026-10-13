@@ -1,4 +1,5 @@
 import { AppError } from '../utils/AppError.js';
+import { MAX_QUANTITY } from '../services/stockRules.js';
 
 // Ayudantes de validación y sanitización compartidos por todos los validadores.
 // Cada validador acumula errores por campo y, si hay alguno, lanza un error 400.
@@ -229,6 +230,41 @@ export function optionalLongText(errors, body, field, label, maxLength) {
     return undefined;
   }
   return optionalText(errors, body, field, label, maxLength);
+}
+
+// Cantidad de piezas: entero de 1 a 99 999.
+export function parseQuantity(errors, value, field, label) {
+  if (!Number.isInteger(value)) {
+    errors.add(field, `${label} debe ser un número entero.`);
+    return undefined;
+  }
+  if (value < 1) {
+    errors.add(field, `${label} debe ser mayor que cero.`);
+    return undefined;
+  }
+  if (value > MAX_QUANTITY) {
+    errors.add(field, `${label} no puede superar ${MAX_QUANTITY}.`);
+    return undefined;
+  }
+  return value;
+}
+
+// Entero de 0 a `max` (existencias, stock mínimo, stock contado).
+export function parseNonNegativeInt(errors, value, field, label, max) {
+  if (!Number.isInteger(value)) {
+    errors.add(field, `${label} debe ser un número entero.`);
+    return undefined;
+  }
+  if (value < 0 || value > max) {
+    errors.add(field, `${label} debe estar entre 0 y ${max}.`);
+    return undefined;
+  }
+  return value;
+}
+
+// Motivo obligatorio de hasta 255 caracteres (ajustes, cancelaciones, correcciones).
+export function requiredReason(errors, body, field = 'reason', label = 'El motivo') {
+  return requiredText(errors, body, field, label, 255);
 }
 
 // Entero positivo obligatorio (identificadores enviados en el cuerpo de la petición).

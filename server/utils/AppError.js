@@ -35,6 +35,37 @@ export class AppError extends Error {
     return new AppError(409, 'INVALID_TRANSITION', message);
   }
 
+  // No alcanza el stock para la salida pedida (409); el mensaje indica la existencia disponible.
+  static insufficientStock(partName, available) {
+    const unidades = available === 1 ? 'unidad' : 'unidades';
+    return new AppError(409, 'INSUFFICIENT_STOCK', `No hay existencia suficiente de «${partName}»: disponible ${available} ${unidades}.`);
+  }
+
+  static partAlreadyInOrder() {
+    return new AppError(409, 'PART_ALREADY_IN_ORDER', 'La refacción ya está en la orden. Modifica su cantidad en lugar de agregarla otra vez.');
+  }
+
+  static partInactive() {
+    return new AppError(409, 'PART_INACTIVE', 'La refacción está desactivada y no puede agregarse a una orden.');
+  }
+
+  static duplicatePartCode() {
+    const message = 'Ya existe una refacción con ese código.';
+    return new AppError(409, 'DUPLICATE_PART_CODE', message, [{ field: 'code', message }]);
+  }
+
+  static duplicateMaintenance(existingId) {
+    return new AppError(
+      409,
+      'DUPLICATE_MAINTENANCE',
+      `Ya existe un mantenimiento pendiente con esa descripción para este vehículo (n.º ${existingId}).`
+    );
+  }
+
+  static noAdjustmentNeeded() {
+    return new AppError(409, 'NO_ADJUSTMENT_NEEDED', 'El stock contado coincide con el registrado: no hay nada que ajustar.');
+  }
+
   static notFound(message = 'El recurso solicitado no existe.') {
     return new AppError(404, 'NOT_FOUND', message);
   }

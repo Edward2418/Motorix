@@ -43,3 +43,16 @@ String formatMileage(int km) {
   }
   return '$buffer km';
 }
+
+/// Cantidad entera con separador de miles: `1,250`.
+String formatQuantity(int quantity) {
+  final digits = quantity.abs().toString();
+  final buffer = StringBuffer();
+  for (var i = 0; i < digits.length; i++) {
+    if (i > 0 && (digits.length - i) % 3 == 0) {
+      buffer.write(',');
+    }
+    buffer.write(digits[i]);
+  }
+  return '${quantity < 0 ? '-' : ''}$buffer';
+}

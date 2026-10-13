@@ -2,6 +2,8 @@
 // Las variables se cargan con `node --env-file` (ver scripts de package.json) o desde el entorno.
 // En pruebas, tests/helpers/setupEnv.js carga ../.env.test antes de importar este módulo.
 
+import { readPositiveInt } from '../utils/envNumbers.js';
+
 const required = ['DB_HOST', 'DB_PORT', 'DB_USER', 'DB_PASSWORD', 'DB_NAME', 'JWT_SECRET'];
 
 const missing = required.filter((name) => !process.env[name]);
@@ -22,5 +24,10 @@ export const env = {
   jwt: {
     secret: process.env.JWT_SECRET,
     expiresIn: process.env.JWT_EXPIRES_IN ?? '8h'
+  },
+  // Umbrales para marcar un mantenimiento como «Próximo»: días o kilómetros restantes (clarificación del Sprint 3).
+  maintenance: {
+    soonDays: readPositiveInt(process.env.MAINTENANCE_SOON_DAYS, 30, 'MAINTENANCE_SOON_DAYS'),
+    soonKm: readPositiveInt(process.env.MAINTENANCE_SOON_KM, 1000, 'MAINTENANCE_SOON_KM')
   }
 };

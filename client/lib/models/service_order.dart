@@ -1,3 +1,5 @@
+import 'maintenance.dart';
+
 /// Estados de una orden de servicio (coinciden con los de la API).
 enum OrderStatus {
   received('RECIBIDO', 'Recibido'),
@@ -32,6 +34,37 @@ class OrderLine {
         id: json['id'] as int,
         description: json['description'] as String,
         amount: (json['amount'] as num).toDouble(),
+      );
+}
+
+/// Refacción usada en una orden: cantidad y precio de venta copiado al agregarla.
+class OrderPartLine {
+  const OrderPartLine({
+    required this.id,
+    required this.partId,
+    required this.code,
+    required this.name,
+    required this.quantity,
+    required this.unitPrice,
+    required this.subtotal,
+  });
+
+  final int id;
+  final int partId;
+  final String code;
+  final String name;
+  final int quantity;
+  final double unitPrice;
+  final double subtotal;
+
+  factory OrderPartLine.fromJson(Map<String, dynamic> json) => OrderPartLine(
+        id: json['id'] as int,
+        partId: json['partId'] as int,
+        code: json['code'] as String,
+        name: json['name'] as String,
+        quantity: json['quantity'] as int,
+        unitPrice: (json['unitPrice'] as num).toDouble(),
+        subtotal: (json['subtotal'] as num).toDouble(),
       );
 }
 
@@ -86,6 +119,11 @@ class ServiceOrder {
     this.deliveredAt,
     this.services = const [],
     this.labor = const [],
+    this.parts = const [],
+    this.maintenance = const [],
+    this.serviceMileage,
+    this.serviceMileageCorrectionReason,
+    this.partsTotal = 0,
     this.servicesTotal = 0,
     this.laborTotal = 0,
     this.history = const [],
@@ -115,6 +153,15 @@ class ServiceOrder {
   final DateTime? deliveredAt;
   final List<OrderLine> services;
   final List<OrderLine> labor;
+  final List<OrderPartLine> parts;
+
+  /// Mantenimientos programados desde esta orden.
+  final List<Maintenance> maintenance;
+
+  /// Kilometraje con el que se terminó el servicio (nulo mientras la orden no esté terminada).
+  final int? serviceMileage;
+  final String? serviceMileageCorrectionReason;
+  final double partsTotal;
   final double servicesTotal;
   final double laborTotal;
   final List<StatusChange> history;
@@ -152,6 +199,17 @@ class ServiceOrder {
           for (final line in (json['labor'] as List<dynamic>? ?? const []))
             OrderLine.fromJson(line as Map<String, dynamic>),
         ],
+        parts: [
+          for (final line in (json['parts'] as List<dynamic>? ?? const []))
+            OrderPartLine.fromJson(line as Map<String, dynamic>),
+        ],
+        maintenance: [
+          for (final item in (json['maintenance'] as List<dynamic>? ?? const []))
+            Maintenance.fromJson(item as Map<String, dynamic>),
+        ],
+        serviceMileage: json['serviceMileage'] as int?,
+        serviceMileageCorrectionReason: json['serviceMileageCorrectionReason'] as String?,
+        partsTotal: ((json['partsTotal'] ?? 0) as num).toDouble(),
         servicesTotal: ((json['servicesTotal'] ?? 0) as num).toDouble(),
         laborTotal: ((json['laborTotal'] ?? 0) as num).toDouble(),
         history: [

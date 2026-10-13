@@ -34,6 +34,34 @@ describe('manejador central de errores', () => {
     expect(res.body).toEqual({ error: { code: 'CONFLICT', message: 'Ya existe ese dato.' } });
   });
 
+  test('los errores de inventario y mantenimiento llevan su propio código 409', () => {
+    const casos = [
+      [AppError.insufficientStock('Bujía', 3), 'INSUFFICIENT_STOCK'],
+      [AppError.partAlreadyInOrder(), 'PART_ALREADY_IN_ORDER'],
+      [AppError.partInactive(), 'PART_INACTIVE'],
+      [AppError.duplicatePartCode(), 'DUPLICATE_PART_CODE'],
+      [AppError.duplicateMaintenance(7), 'DUPLICATE_MAINTENANCE'],
+      [AppError.noAdjustmentNeeded(), 'NO_ADJUSTMENT_NEEDED']
+    ];
+    for (const [error, codigo] of casos) {
+      const res = respond(error);
+      expect(res.statusCode).toBe(409);
+      expect(res.body.error.code).toBe(codigo);
+      expect(res.body.error.message.length).toBeGreaterThan(10);
+    }
+  });
+
+  test('el stock insuficiente indica la existencia disponible con el singular o el plural correcto', () => {
+    expect(AppError.insufficientStock('Bujía', 1).message).toContain('disponible 1 unidad.');
+    expect(AppError.insufficientStock('Bujía', 0).message).toContain('disponible 0 unidades.');
+  });
+
+  test('el código de refacción duplicado señala el campo code', () => {
+    expect(respond(AppError.duplicatePartCode()).body.error.details).toEqual([
+      { field: 'code', message: 'Ya existe una refacción con ese código.' }
+    ]);
+  });
+
   test('un error inesperado devuelve 500 sin trazas ni detalles internos', () => {
     const res = respond(new Error('SELECT * FROM users falló en la línea 42'));
     expect(res.statusCode).toBe(500);

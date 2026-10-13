@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../models/appointment.dart';
+import '../models/maintenance.dart';
+import '../models/part.dart';
 import '../models/service_order.dart';
 import '../utils/app_tokens.dart';
 
@@ -15,6 +17,14 @@ class StatusBadge extends StatelessWidget {
   /// Insignia de una cita.
   factory StatusBadge.appointment(AppointmentStatus status, {Key? key}) =>
       StatusBadge(key: key, label: status.label, color: appointmentStatusColor(status));
+
+  /// Insignia del estado visual de un mantenimiento (Normal, Próximo o Vencido).
+  factory StatusBadge.maintenance(MaintenanceVisualStatus status, {Key? key}) =>
+      StatusBadge(key: key, label: status.label, color: maintenanceStatusColor(status));
+
+  /// Insignia del nivel de stock de una refacción (Normal, Bajo o Agotado).
+  factory StatusBadge.stock(StockLevel level, {Key? key}) =>
+      StatusBadge(key: key, label: level.label, color: stockLevelColor(level));
 
   final String label;
   final Color color;
@@ -52,4 +62,18 @@ Color appointmentStatusColor(AppointmentStatus status) => switch (status) {
       AppointmentStatus.inProgress => AppColors.warning,
       AppointmentStatus.completed => AppColors.success,
       AppointmentStatus.cancelled => AppColors.danger,
+    };
+
+/// Normal gris, Próximo `warning`, Vencido `danger` (docs/design-system.md).
+Color maintenanceStatusColor(MaintenanceVisualStatus status) => switch (status) {
+      MaintenanceVisualStatus.normal => AppColors.textSecondary,
+      MaintenanceVisualStatus.soon => AppColors.warning,
+      MaintenanceVisualStatus.overdue => AppColors.danger,
+    };
+
+/// Normal `success`, Bajo `warning`, Agotado `danger`.
+Color stockLevelColor(StockLevel level) => switch (level) {
+      StockLevel.normal => AppColors.success,
+      StockLevel.low => AppColors.warning,
+      StockLevel.outOfStock => AppColors.danger,
     };

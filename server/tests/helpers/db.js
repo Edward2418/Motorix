@@ -12,6 +12,10 @@ export async function resetTables() {
   await pool.query('SET FOREIGN_KEY_CHECKS = 0');
   const tables = [
     'login_attempts',
+    'maintenance',
+    'inventory_movements',
+    'order_parts',
+    'parts',
     'order_status_history',
     'order_services',
     'order_labor',
@@ -124,4 +128,73 @@ export async function createOrder({
     creator
   ]);
   return { id: result.insertId, folio, clientId, vehicleId, mechanicId, status };
+}
+
+// Crea una refacción con su movimiento de ENTRADA «Stock inicial» (si el stock es mayor que cero).
+export async function createPart({
+  code = 'REF-001',
+  name = 'Bujía de prueba',
+  category = 'Motor',
+  brand = 'NGK',
+  stock = 10,
+  minStock = 3,
+  purchasePrice = 50,
+  salePrice = 80,
+  active = true,
+  createdBy
+} = {}) {
+  const [result] = await pool.query(
+    'INSERT INTO parts (code, name, category, brand, stock, min_stock, purchase_price, sale_price, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [code, name, category, brand, stock, minStock, purchasePrice, salePrice, active ? 1 : 0]
+  );
+  if (stock > 0) {
+    const [rows] = await pool.query('SELECT id FROM users ORDER BY id LIMIT 1');
+    const creator = createdBy ?? rows[0]?.id ?? (await createUser({ username: 'creador-inventario', role: 'ADMIN' })).id;
+    await pool.query(
+      "INSERT INTO inventory_movements (part_id, type, quantity, stock_after, reason, created_by) VALUES (?, 'ENTRADA', ?, ?, 'Stock inicial', ?)",
+      [result.insertId, stock, stock, creator]
+    );
+  }
+  return { id: result.insertId, code, name, stock, minStock, salePrice, active };
+}
+
+// Agrega una refacción a una orden directamente en la base, con su movimiento SALIDA y descontando el stock.
+export async function createOrderPart({ orderId, partId, quantity = 1, createdBy }) {
+  const [[part]] = await pool.query('SELECT stock, sale_price FROM parts WHERE id = ?', [partId]);
+  const newStock = part.stock - quantity;
+  if (newStock < 0) {
+    throw new Error('createOrderPart: el stock de prueba no alcanza.');
+  }
+  const [[order]] = await pool.query('SELECT folio, mechanic_id FROM service_orders WHERE id = ?', [orderId]);
+  await pool.query('UPDATE parts SET stock = ? WHERE id = ?', [newStock, partId]);
+  const [result] = await pool.query('INSERT INTO order_parts (order_id, part_id, quantity, unit_price) VALUES (?, ?, ?, ?)', [
+    orderId,
+    partId,
+    quantity,
+    part.sale_price
+  ]);
+  await pool.query(
+    "INSERT INTO inventory_movements (part_id, type, quantity, stock_after, reason, order_id, created_by) VALUES (?, 'SALIDA', ?, ?, ?, ?, ?)",
+    [partId, -quantity, newStock, `Uso en la orden ${order.folio}`, orderId, createdBy ?? order.mechanic_id]
+  );
+  return { id: result.insertId, orderId, partId, quantity, unitPrice: Number(part.sale_price) };
+}
+
+// Programa un mantenimiento directamente en la base. Por defecto: por fecha, dentro de 90 días.
+export async function createMaintenance({
+  vehicleId,
+  orderId,
+  description = 'Cambio de aceite',
+  dueDate,
+  dueMileage = null,
+  status = 'PROGRAMADO',
+  createdBy
+}) {
+  const target = dueDate === undefined && dueMileage === null ? new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10) : dueDate ?? null;
+  const [[order]] = await pool.query('SELECT mechanic_id FROM service_orders WHERE id = ?', [orderId]);
+  const [result] = await pool.query(
+    'INSERT INTO maintenance (vehicle_id, order_id, description, due_date, due_mileage, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    [vehicleId, orderId, description, target, dueMileage, status, createdBy ?? order.mechanic_id]
+  );
+  return { id: result.insertId, vehicleId, orderId, description, dueDate: target, dueMileage, status };
 }
