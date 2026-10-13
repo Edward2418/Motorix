@@ -4,6 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../models/user.dart';
 import '../screens/appointments_screen.dart';
 import '../screens/clients_screen.dart';
+import '../screens/inventory_screen.dart';
 import '../screens/orders_screen.dart';
 import '../screens/users_screen.dart';
 import '../screens/vehicles_screen.dart';
@@ -60,6 +61,12 @@ final List<NavDestination> allDestinations = [
     builder: (_) => const SectionNavigator(root: _ordersRoot),
   ),
   NavDestination(
+    label: 'Inventario',
+    icon: LucideIcons.package,
+    roles: {UserRole.admin},
+    builder: (_) => const SectionNavigator(root: _inventoryRoot),
+  ),
+  NavDestination(
     label: 'Usuarios',
     icon: LucideIcons.userCog,
     roles: {UserRole.admin},
@@ -79,3 +86,5 @@ Widget _usersRoot(BuildContext context) => const UsersScreen();
 Widget _ordersRoot(BuildContext context) => const OrdersScreen();
 
 Widget _appointmentsRoot(BuildContext context) => const AppointmentsScreen();
+
+Widget _inventoryRoot(BuildContext context) => const InventoryScreen();

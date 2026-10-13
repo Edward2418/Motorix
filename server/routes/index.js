@@ -6,6 +6,7 @@ import userRoutes from './userRoutes.js';
 import orderRoutes from './orderRoutes.js';
 import mechanicRoutes from './mechanicRoutes.js';
 import appointmentRoutes from './appointmentRoutes.js';
+import partRoutes from './partRoutes.js';
 
 // Agrupa las rutas de la API bajo /api. Cada módulo agrega su router aquí.
 const router = Router();
@@ -17,6 +18,7 @@ router.use('/users', userRoutes);
 router.use('/orders', orderRoutes);
 router.use('/mechanics', mechanicRoutes);
 router.use('/appointments', appointmentRoutes);
+router.use('/parts', partRoutes);
 
 router.get('/health', (req, res) => {
   res.json({ data: { status: 'ok' } });
