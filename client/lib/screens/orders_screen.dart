@@ -7,6 +7,7 @@ import '../providers/auth_provider.dart';
 import '../providers/orders_provider.dart';
 import '../utils/app_tokens.dart';
 import '../utils/formatters.dart';
+import '../widgets/cell_text.dart';
 import '../widgets/search_field.dart';
 import '../widgets/section_navigator.dart';
 import '../widgets/status_badge.dart';
@@ -155,9 +156,9 @@ class _OrdersScreenState extends State<OrdersScreen> {
               onSelectChanged: (_) => _open(order.id),
               cells: [
                 DataCell(Text(order.folio)),
-                DataCell(Text(order.clientName)),
-                DataCell(Text(order.vehicleLabel)),
-                DataCell(Text(order.mechanicName)),
+                DataCell(CellText(order.clientName, maxWidth: AppSizes.cellNarrow)),
+                DataCell(CellText(order.vehicleLabel, maxWidth: AppSizes.cellWide)),
+                DataCell(CellText(order.mechanicName, maxWidth: AppSizes.cellNarrow)),
                 DataCell(StatusBadge.order(order.status)),
                 DataCell(Text(formatMoney(order.total))),
                 DataCell(Text(formatDate(order.createdAt))),

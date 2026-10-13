@@ -7,25 +7,12 @@ import {
   parseId,
   parsePagination,
   parseSearch,
+  requiredPositiveInt as positiveInt,
   requiredText,
   requireBody
 } from './common.js';
 
 const MAX_MILEAGE = 4294967295;
-
-// Entero positivo obligatorio (identificadores).
-function positiveInt(errors, data, field, label) {
-  const value = data[field];
-  if (value === undefined || value === null || value === '') {
-    errors.add(field, `${label} es obligatorio.`);
-    return undefined;
-  }
-  if (!Number.isInteger(value) || value < 1) {
-    errors.add(field, `${label} no es válido.`);
-    return undefined;
-  }
-  return value;
-}
 
 // Datos de una orden nueva: cliente, vehículo, mecánico, kilometraje de entrada y problema reportado.
 // La corrección de kilometraje (solo ADMIN, lo valida el servicio) exige un motivo.

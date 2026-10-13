@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../models/user.dart';
+import '../screens/appointments_screen.dart';
 import '../screens/clients_screen.dart';
 import '../screens/orders_screen.dart';
 import '../screens/users_screen.dart';
@@ -47,6 +48,12 @@ final List<NavDestination> allDestinations = [
     builder: (_) => const SectionNavigator(root: _vehiclesRoot),
   ),
   NavDestination(
+    label: 'Citas',
+    icon: LucideIcons.calendarDays,
+    roles: {UserRole.admin, UserRole.receptionist},
+    builder: (_) => const SectionNavigator(root: _appointmentsRoot),
+  ),
+  NavDestination(
     label: 'Órdenes de servicio',
     icon: LucideIcons.wrench,
     roles: UserRole.values.toSet(),
@@ -70,3 +77,5 @@ Widget _vehiclesRoot(BuildContext context) => const VehiclesScreen();
 Widget _usersRoot(BuildContext context) => const UsersScreen();
 
 Widget _ordersRoot(BuildContext context) => const OrdersScreen();
+
+Widget _appointmentsRoot(BuildContext context) => const AppointmentsScreen();

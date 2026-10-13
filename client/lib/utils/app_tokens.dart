@@ -83,6 +83,8 @@ class AppSizes {
   static const double authCardWidth = 400;
   static const double optionsMaxHeight = 240;
   static const double icon = 18;
+  static const double cellNarrow = 160;
+  static const double cellWide = 220;
   static const double spinner = 24;
   static const double spinnerSmall = 16;
 }

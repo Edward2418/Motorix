@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
+import 'providers/appointments_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/clients_provider.dart';
 import 'providers/orders_provider.dart';
@@ -35,6 +36,7 @@ class MotorixApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => VehiclesProvider(api)),
         ChangeNotifierProvider(create: (_) => UsersProvider(api)),
         ChangeNotifierProvider(create: (_) => OrdersProvider(api)),
+        ChangeNotifierProvider(create: (_) => AppointmentsProvider(api)),
       ],
       child: MaterialApp(
         title: 'Motorix',

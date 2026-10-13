@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../models/service_order.dart';
 import '../models/user.dart';
+import '../providers/appointments_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/orders_provider.dart';
 import '../services/api_client.dart';
@@ -110,6 +111,41 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           ? 'La orden ${order.folio} se canceló.'
           : 'La orden pasó a «${target.label}».',
     );
+  }
+
+  /// Muestra los datos de la cita de la que nació la orden (solo recepción y administración la consultan).
+  Future<void> _viewAppointment() async {
+    final id = _order!.appointmentId!;
+    try {
+      final appointment = await context.read<AppointmentsProvider>().fetch(id);
+      if (!mounted) {
+        return;
+      }
+      await showDialog<void>(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text('Cita de origen'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Fecha y hora: ${formatDateTime(appointment.scheduledAt)}'),
+              Text('Cliente: ${appointment.clientName}'),
+              Text('Vehículo: ${appointment.vehicleLabel}'),
+              Text('Motivo: ${appointment.reason}'),
+              if (appointment.notes != null) Text('Observaciones: ${appointment.notes}'),
+              const SizedBox(height: AppSpacing.sm),
+              StatusBadge.appointment(appointment.status),
+            ],
+          ),
+          actions: [FilledButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cerrar'))],
+        ),
+      );
+    } on ApiException catch (e) {
+      if (mounted) {
+        showFeedback(context, e.message, error: true);
+      }
+    }
   }
 
   Future<void> _reassign() async {
@@ -342,7 +378,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 Text('Motivo de cancelación: ${order.cancelReason}',
                     style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.danger)),
               ],
-              if (order.allowedTransitions.isNotEmpty || (canManage && !order.status.isFinal)) ...[
+              if (order.allowedTransitions.isNotEmpty || (canManage && (!order.status.isFinal || order.appointmentId != null))) ...[
                 const SizedBox(height: AppSpacing.lg),
                 Wrap(
                   spacing: AppSpacing.md,
@@ -359,6 +395,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                               onPressed: () => _changeStatus(target),
                               child: Text(_actionLabel(order.status, target)),
                             ),
+                    if (canManage && order.appointmentId != null)
+                      OutlinedButton.icon(
+                        onPressed: _viewAppointment,
+                        icon: const Icon(LucideIcons.calendarDays, size: AppSizes.icon),
+                        label: const Text('Ver cita de origen'),
+                      ),
                     if (canManage && !order.status.isFinal)
                       OutlinedButton.icon(
                         onPressed: _reassign,

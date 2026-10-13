@@ -230,3 +230,17 @@ export function optionalLongText(errors, body, field, label, maxLength) {
   }
   return optionalText(errors, body, field, label, maxLength);
 }
+
+// Entero positivo obligatorio (identificadores enviados en el cuerpo de la petición).
+export function requiredPositiveInt(errors, data, field, label) {
+  const value = data[field];
+  if (value === undefined || value === null || value === '') {
+    errors.add(field, `${label} es obligatorio.`);
+    return undefined;
+  }
+  if (!Number.isInteger(value) || value < 1) {
+    errors.add(field, `${label} no es válido.`);
+    return undefined;
+  }
+  return value;
+}
