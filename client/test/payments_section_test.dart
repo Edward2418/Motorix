@@ -93,6 +93,7 @@ Future<List<http.Request>> abrirOrden(
 
 /// Servidor simulado: detalle de la orden y sus pagos. [alRegistrar] responde al POST de pagos.
 FakeHandler servidor({
+  bool mercadoPago = false,
   required Map<String, dynamic> detalle,
   List<Map<String, dynamic>> pagos = const [],
   Map<String, dynamic>? resumen,
@@ -100,6 +101,14 @@ FakeHandler servidor({
 }) =>
     (request) {
       final path = request.url.path;
+      if (path.endsWith('/payments/config')) {
+        return FakeResponse(200, {
+          'data': {
+            'methods': ['EFECTIVO', 'TARJETA', 'TRANSFERENCIA', 'MERCADO_PAGO'],
+            'mercadoPagoEnabled': mercadoPago,
+          },
+        });
+      }
       if (path.endsWith('/orders/3/payments')) {
         if (request.method == 'POST' && alRegistrar != null) {
           return alRegistrar(request);
@@ -272,6 +281,64 @@ void main() {
       handler: servidor(detalle: ordenTerminada(estado: 'EN_REPARACION')),
     );
     expect(find.text('Pagos'), findsNothing);
+  });
+
+  testWidgets('el historial muestra el método de cada pago en español', (tester) async {
+    await abrirOrden(
+      tester,
+      role: 'RECEPTIONIST',
+      handler: servidor(
+        detalle: ordenTerminada(),
+        pagos: [
+          pagoJson(id: 3, importe: 100, metodo: 'TRANSFERENCIA'),
+          pagoJson(id: 2, importe: 200, metodo: 'TARJETA'),
+          pagoJson(id: 1, importe: 300, metodo: 'EFECTIVO'),
+        ],
+        resumen: resumenJson(cobrado: 600, estado: 'PARCIAL'),
+      ),
+    );
+    expect(find.textContaining(r'Transferencia · $100.00'), findsOneWidget);
+    expect(find.textContaining(r'Tarjeta · $200.00'), findsOneWidget);
+    expect(find.textContaining(r'Efectivo · $300.00'), findsOneWidget);
+  });
+
+  testWidgets('el diálogo ofrece los tres métodos manuales, avisa de no escribir tarjetas y deshabilita Mercado Pago sin configurar',
+      (tester) async {
+    await abrirOrden(tester, role: 'RECEPTIONIST', handler: servidor(detalle: ordenTerminada()));
+    await tester.tap(find.text('Registrar pago'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('No escribas números de tarjeta'), findsOneWidget);
+    await tester.tap(find.text('Efectivo'));
+    await tester.pumpAndSettle();
+    expect(find.text('Tarjeta'), findsWidgets);
+    expect(find.text('Transferencia'), findsWidgets);
+    expect(find.text('Mercado Pago (no configurado)'), findsOneWidget);
+  });
+
+  testWidgets('una referencia rechazada por el servidor se muestra en su campo', (tester) async {
+    await abrirOrden(
+      tester,
+      role: 'RECEPTIONIST',
+      handler: servidor(
+        detalle: ordenTerminada(),
+        alRegistrar: (_) => apiError(
+          400,
+          'VALIDATION_ERROR',
+          'Hay datos inválidos. Revisa los campos indicados.',
+          details: [
+            {'field': 'reference', 'message': 'No escribas números de tarjeta: usa solo un número de autorización o de rastreo.'},
+          ],
+        ),
+      ),
+    );
+    await tester.tap(find.text('Registrar pago'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.widgetWithText(TextFormField, 'Referencia (opcional)'), '4111 1111 1111 1111');
+    await tester.tap(find.widgetWithText(FilledButton, 'Registrar pago'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Confirmar'));
+    await tester.pumpAndSettle();
+    expect(find.text('No escribas números de tarjeta: usa solo un número de autorización o de rastreo.'), findsOneWidget);
   });
 
   testWidgets('con la orden pagada no se ofrece registrar otro pago', (tester) async {

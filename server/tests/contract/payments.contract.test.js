@@ -84,6 +84,23 @@ describe('contrato de los pagos', () => {
     }
   });
 
+  test('GET /payments/config responde methods y mercadoPagoEnabled', async () => {
+    const { tokens } = await escenarioPago();
+    const res = await request(app).get('/api/payments/config').set(bearer(tokens.recepcion));
+    expect(res.status).toBe(200);
+    expect(res.body.data).toEqual({
+      methods: ['EFECTIVO', 'TARJETA', 'TRANSFERENCIA', 'MERCADO_PAGO'],
+      mercadoPagoEnabled: expect.any(Boolean)
+    });
+  });
+
+  test('una referencia con forma de tarjeta responde 400 con el campo reference', async () => {
+    const { orden, tokens } = await escenarioPago();
+    const res = await registrarPago(tokens.recepcion, orden.id, { amount: 10, method: 'TARJETA', reference: '4111111111111111' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatchObject({ code: 'VALIDATION_ERROR', details: [{ field: 'reference', message: expect.any(String) }] });
+  });
+
   test('un identificador inválido responde 400', async () => {
     const { tokens } = await escenarioPago();
     const res = await request(app).get('/api/orders/abc/payments').set(bearer(tokens.admin));

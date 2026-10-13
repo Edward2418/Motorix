@@ -35,7 +35,9 @@ class _PaymentsSectionState extends State<PaymentsSection> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        context.read<PaymentsProvider>().load(widget.orderId);
+        final provider = context.read<PaymentsProvider>();
+        provider.loadConfig();
+        provider.load(widget.orderId);
       }
     });
   }
@@ -49,6 +51,7 @@ class _PaymentsSectionState extends State<PaymentsSection> {
     final saved = await showPaymentDialog(
       context,
       available: summary.available,
+      mercadoPagoEnabled: provider.mercadoPagoEnabled,
       onSubmit: (input) => provider.register(widget.orderId, input),
     );
     if (saved && mounted) {

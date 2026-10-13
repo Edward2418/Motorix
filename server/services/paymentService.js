@@ -4,6 +4,11 @@ import * as paymentModel from '../models/paymentModel.js';
 import { AppError } from '../utils/AppError.js';
 import { canRegister } from './paymentRules.js';
 
+// Métodos disponibles y si Mercado Pago está configurado en el servidor (se completa con la pasarela en la Historia 3).
+export function getConfig() {
+  return { methods: ['EFECTIVO', 'TARJETA', 'TRANSFERENCIA', 'MERCADO_PAGO'], mercadoPagoEnabled: false };
+}
+
 // Resumen de pagos de una orden con los datos vigentes (usa la conexión de la transacción si se da).
 export async function summaryOf(orderId, conn) {
   const order = await orderModel.findById(orderId, conn);

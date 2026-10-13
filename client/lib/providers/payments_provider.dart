@@ -23,11 +23,26 @@ class PaymentsProvider extends ChangeNotifier {
   PaymentSummary? _summary;
   bool _loading = false;
   String? _error;
+  bool _mercadoPagoEnabled = false;
+
+  /// Mercado Pago solo se ofrece si el servidor tiene credenciales configuradas.
+  bool get mercadoPagoEnabled => _mercadoPagoEnabled;
 
   List<Payment> get payments => _payments;
   PaymentSummary? get summary => _summary;
   bool get loading => _loading;
   String? get error => _error;
+
+  /// Consulta qué métodos ofrece el servidor. Si falla, Mercado Pago queda deshabilitado.
+  Future<void> loadConfig() async {
+    try {
+      final response = await _api.get('/payments/config');
+      _mercadoPagoEnabled = ((response['data'] as Map<String, dynamic>)['mercadoPagoEnabled'] ?? false) as bool;
+    } catch (_) {
+      _mercadoPagoEnabled = false;
+    }
+    notifyListeners();
+  }
 
   /// Carga los pagos de la orden. Si se vuelve a llamar con la misma orden, no oculta la lista mientras actualiza.
   Future<void> load(int orderId) async {

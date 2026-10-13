@@ -10,6 +10,8 @@ const manage = authorize(ROLES.ADMIN, ROLES.RECEPTIONIST);
 
 router.use(authenticate, manage);
 
+router.get('/config', asyncHandler(paymentController.config));
+
 // Los pagos nunca se eliminan ni se editan: solo se cancelan con motivo.
 router.post('/:id/cancel', asyncHandler(paymentController.cancel));
 
