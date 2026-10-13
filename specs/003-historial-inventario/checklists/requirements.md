@@ -32,4 +32,4 @@
 ## Notas
 
 - Las cuatro decisiones que el insumo del sprint deja para `/speckit-clarify` (modelo del historial, umbrales de vencimiento, política de stock negativo y uso exacto de los tipos de movimiento) se resolvieron con valores por defecto razonables, registrados en la sección «Supuestos». Conviene confirmarlos en la clarificación.
-- Decisiones propias que también conviene confirmar: el kilometraje del servicio obligatorio al terminar, el acceso de solo lectura del mecánico al inventario y que el total de la orden incluya las refacciones (cambia la regla del Sprint 2).
+- Decisiones propias confirmadas en la clarificación del 2026-10-13: kilometraje del servicio obligatorio, umbrales como configuración del servidor, correcciones de refacciones en órdenes TERMINADAS solo por administración, alertas solo para administración y regla de duplicados y cancelación de mantenimientos.

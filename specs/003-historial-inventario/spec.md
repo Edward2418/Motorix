@@ -8,6 +8,16 @@
 
 **Entrada**: Descripción del usuario: "Usa la descripción de docs/sprints/sprint-3-historial-inventario.md"
 
+## Clarificaciones
+
+### Sesión 2026-10-13
+
+- Q: ¿El kilometraje del servicio es obligatorio al terminar la orden o se toma el de entrada por defecto? → A: Obligatorio al pasar a TERMINADO, con el kilometraje de entrada propuesto como valor inicial (confirma FR-006 y la historia 2).
+- Q: ¿Los umbrales de «Próximo» se editan desde la aplicación o son un valor fijo de configuración? → A: Valores de configuración del servidor, con valores por defecto de 30 días y 1 000 km; sin pantalla de ajustes.
+- Q: ¿Cómo se corrigen las refacciones de una orden ya TERMINADA? → A: Solo la administración puede agregar, cambiar o quitar refacciones en una orden TERMINADA (no en ENTREGADA ni CANCELADA), con motivo obligatorio y movimiento ligado a la orden.
+- Q: ¿Quién ve el aviso de reabastecimiento por stock bajo? → A: Solo administración (confirma FR-036 e historia 8); recepción y mecánico no lo ven.
+- Q: ¿Qué pasa con los mantenimientos duplicados y con los de una orden que se cancela? → A: Se rechaza un duplicado pendiente (mismo vehículo y misma descripción, sin distinguir mayúsculas ni espacios laterales) y, al cancelar una orden, sus mantenimientos pendientes pasan a Cancelado automáticamente.
+
 ## Escenarios de usuario y pruebas *(obligatorio)*
 
 ### Historia de usuario 1 - Consultar el historial de servicios de un vehículo (Prioridad: P1)
@@ -63,6 +73,8 @@ Como mecánico, quiero establecer el próximo mantenimiento de un vehículo, por
 5. **Dado** que el intervalo lo captura el mecánico en cada registro, **Cuando** se guarda, **Entonces** el sistema no impone intervalos universales ni valores por defecto basados en el tipo de servicio.
 6. **Dado** un mantenimiento programado, **Cuando** el mecánico, recepción o administración lo marca como atendido (opcionalmente indicando la orden que lo cumplió) o lo cancela con motivo, **Entonces** deja de contar como pendiente y se conserva en el registro.
 7. **Dado** un usuario con rol mecánico, **Cuando** intenta registrar un mantenimiento desde una orden que no tiene asignada, **Entonces** el sistema lo niega.
+8. **Dado** un mantenimiento pendiente del mismo vehículo con la misma descripción, **Cuando** se intenta registrar otro igual, **Entonces** el sistema lo rechaza indicando el existente.
+9. **Dado** una orden con mantenimientos pendientes, **Cuando** la orden se cancela, **Entonces** esos mantenimientos pasan a Cancelado con el motivo «Orden cancelada».
 
 ---
 
@@ -144,8 +156,9 @@ Como mecánico, quiero agregar a una orden las refacciones que usé para refleja
 6. **Dado** una refacción agregada por error, **Cuando** el mecánico la quita de la orden, **Entonces** la cantidad regresa al inventario mediante un movimiento de ENTRADA con motivo de devolución, y el movimiento original se conserva.
 7. **Dado** una orden que se cancela, **Cuando** se confirma la cancelación, **Entonces** todas sus refacciones regresan al inventario con movimientos de devolución.
 8. **Dado** dos órdenes que intentan usar al mismo tiempo la última unidad de una refacción, **Cuando** ambas se procesan, **Entonces** solo una tiene éxito y la otra recibe el mensaje de stock insuficiente.
-9. **Dado** una orden en TERMINADO, ENTREGADO o CANCELADA, o asignada a otro mecánico, **Cuando** se intenta agregar, cambiar o quitar una refacción, **Entonces** el sistema lo rechaza (siguen las mismas reglas de edición que los servicios).
-10. **Dado** una orden con refacciones, **Cuando** se consulta, **Entonces** el total incluye servicios, mano de obra y refacciones (cantidad × precio registrado), y un cambio posterior en el precio de la refacción no altera las órdenes anteriores.
+9. **Dado** una orden en ENTREGADO o CANCELADA, o una orden en TERMINADO cuando quien lo intenta es un mecánico o recepción, o una orden asignada a otro mecánico, **Cuando** se intenta agregar, cambiar o quitar una refacción, **Entonces** el sistema lo rechaza.
+10. **Dado** una orden en TERMINADO, **Cuando** la administración agrega, cambia o quita una refacción indicando el motivo, **Entonces** se aplica con su movimiento de inventario ligado a la orden y el motivo queda registrado; sin motivo se rechaza.
+11. **Dado** una orden con refacciones, **Cuando** se consulta, **Entonces** el total incluye servicios, mano de obra y refacciones (cantidad × precio registrado), y un cambio posterior en el precio de la refacción no altera las órdenes anteriores.
 
 ---
 
@@ -209,11 +222,11 @@ Como administrador, quiero ver alertas de stock bajo para reabastecer a tiempo.
 - **FR-009**: El sistema DEBE permitir registrar un próximo mantenimiento ligado a un vehículo y a la orden de origen, con descripción, fecha objetivo y/o kilometraje objetivo (al menos uno) y notas opcionales.
 - **FR-010**: La fecha objetivo DEBE ser hoy o posterior, y el kilometraje objetivo DEBE ser mayor al kilometraje actual del vehículo; en caso contrario, el sistema DEBE rechazar el registro con un mensaje claro.
 - **FR-011**: El sistema NO DEBE asumir intervalos universales: fecha y kilometraje se capturan en cada registro.
-- **FR-012**: Un vehículo PUEDE tener varios mantenimientos programados al mismo tiempo.
-- **FR-013**: Cada mantenimiento DEBE tener un estado de ciclo de vida: Programado, Atendido o Cancelado; atenderlo puede vincular la orden que lo cumplió y cancelarlo exige un motivo.
+- **FR-012**: Un vehículo PUEDE tener varios mantenimientos programados al mismo tiempo, pero NO DEBE tener dos pendientes con la misma descripción (sin distinguir mayúsculas ni espacios laterales).
+- **FR-013**: Cada mantenimiento DEBE tener un estado de ciclo de vida: Programado, Atendido o Cancelado; atenderlo puede vincular la orden que lo cumplió y cancelarlo exige un motivo; cancelar una orden cancela automáticamente los mantenimientos pendientes que originó.
 - **FR-014**: El mecánico solo DEBE poder registrar mantenimientos desde sus propias órdenes; administración y recepción PUEDEN registrarlos desde cualquier orden finalizada o en curso.
 - **FR-015**: El estado visual de cada mantenimiento programado DEBE calcularse al consultar: Vencido si ya pasó la fecha o el kilometraje actual del vehículo alcanzó el objetivo; Próximo si falta menos que el umbral configurado en días o en kilómetros; Normal en otro caso.
-- **FR-016**: Los umbrales de «Próximo» (días y kilómetros) DEBEN ser configurables sin modificar el código y tener un valor por defecto documentado.
+- **FR-016**: Los umbrales de «Próximo» (días y kilómetros) DEBEN ser valores de configuración del servidor (no hay pantalla de ajustes), con valores por defecto documentados de 30 días y 1 000 km.
 - **FR-017**: La consulta de mantenimientos DEBE mostrar vehículo, cliente con teléfono, descripción, objetivo, estado visual y datos de la orden de origen; DEBE permitir filtrar por estado, cliente o placa, y ordenar primero los vencidos y luego los próximos.
 
 **Catálogo e inventario**
@@ -235,7 +248,7 @@ Como administrador, quiero ver alertas de stock bajo para reabastecer a tiempo.
 - **FR-029**: Las refacciones utilizadas DEBEN registrarse siempre dentro de una orden (RN-6), con cantidad entera mayor a cero y el precio de venta vigente copiado a la línea al momento de agregarla.
 - **FR-030**: Agregar una refacción a una orden DEBE generar, en la misma operación, un movimiento de SALIDA ligado a esa orden y descontar el stock (RN-7); si falla una parte, no debe quedar ninguna.
 - **FR-031**: Cambiar la cantidad de una refacción en la orden DEBE registrar el movimiento por la diferencia; quitarla o cancelar la orden DEBE devolver las unidades con movimientos de ENTRADA con motivo de devolución, una sola vez.
-- **FR-032**: Solo el mecánico asignado, y la administración, DEBEN poder agregar, cambiar o quitar refacciones, y únicamente en los estados donde también se editan los servicios; recepción no.
+- **FR-032**: El mecánico asignado y la administración DEBEN poder agregar, cambiar o quitar refacciones en los estados donde también se editan los servicios; en una orden TERMINADA solo la administración, con motivo obligatorio y registrado; nunca en ENTREGADA ni CANCELADA; recepción no.
 - **FR-033**: El total de la orden DEBE incluir las refacciones (cantidad × precio registrado) además de los servicios y la mano de obra.
 - **FR-034**: El sistema DEBE resolver correctamente la concurrencia: dos operaciones simultáneas sobre la misma refacción no pueden dejar el stock inconsistente ni negativo.
 
@@ -259,7 +272,7 @@ Como administrador, quiero ver alertas de stock bajo para reabastecer a tiempo.
 - **Refacción**: pieza del catálogo con código único, nombre, categoría, marca, stock actual, stock mínimo, precios de compra y venta, y estado activo.
 - **Movimiento de inventario**: cambio de stock inmutable de una refacción; tipo, cantidad, motivo, orden relacionada opcional, usuario y fecha.
 - **Refacción de la orden**: línea de una orden que relaciona una orden con una refacción, cantidad y precio de venta registrado.
-- **Umbrales de mantenimiento**: parámetros configurables (días y kilómetros) que definen cuándo un mantenimiento se considera próximo.
+- **Umbrales de mantenimiento**: parámetros de configuración del servidor (días y kilómetros) que definen cuándo un mantenimiento se considera próximo; no son un registro editable desde la interfaz.
 
 ## Criterios de éxito *(obligatorio)*
 
@@ -282,13 +295,13 @@ Como administrador, quiero ver alertas de stock bajo para reabastecer a tiempo.
 
 - El historial del vehículo es una consulta derivada de las órdenes del Sprint 2 (no se duplica información); incluye las órdenes TERMINADO y ENTREGADO por considerarse trabajo concluido. La forma técnica exacta se decide en la planificación.
 - Se agrega a las órdenes el dato «kilometraje del servicio»; las órdenes anteriores al sprint toman como valor su kilometraje de entrada.
-- Los umbrales por defecto de «Próximo» son 30 días y 1 000 km; son valores iniciales ajustables, no intervalos de mantenimiento universales. La clarificación podrá refinarlos.
+- Los umbrales por defecto de «Próximo» son 30 días y 1 000 km; son valores de configuración del servidor, no intervalos de mantenimiento universales.
 - Los tipos de movimiento son ENTRADA (reabastecimiento, stock inicial, devoluciones), SALIDA (uso en órdenes) y AJUSTE (corrección por conteo físico); el sistema los nombra en español en la interfaz y la clarificación podrá afinar su uso exacto.
 - La política de stock negativo es prohibirlo por completo; no hay excepción con advertencia.
 - Las cantidades de refacciones son números enteros (piezas); litros u otras unidades fraccionarias quedan fuera del MVP.
 - El precio de venta de la refacción se copia a la orden al agregarla; los precios de compra son solo informativos para la administración.
 - Recepción no accede al inventario; el mecánico lo consulta en solo lectura y sin precios de compra, y solo para elegir refacciones al trabajar una orden.
-- Una orden terminada ya no admite cambios de refacciones; si hace falta corregir, el flujo es administrativo (ajuste de inventario).
+- Una orden terminada solo admite cambios de refacciones por la administración, con motivo; el mecánico y recepción no los pueden hacer.
 - Dependencias: clientes, vehículos, usuarios, citas y órdenes del Sprint 1 y 2 (estados, mecánico asignado, kilometraje de entrada, matriz de edición de las órdenes).
 - Un solo almacén y sin proveedores, órdenes de compra ni lotes en el MVP.
 - La atención al cliente por mantenimientos vencidos es manual (llamada o mensaje fuera del sistema).
