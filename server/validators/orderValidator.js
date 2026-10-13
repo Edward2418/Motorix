@@ -1,4 +1,15 @@
-import { FieldErrors, requiredText, requireBody } from './common.js';
+import { ORDER_STATUSES } from '../services/orderStateMachine.js';
+import {
+  FieldErrors,
+  optionalLongText,
+  parseAmount,
+  parseEnum,
+  parseId,
+  parsePagination,
+  parseSearch,
+  requiredText,
+  requireBody
+} from './common.js';
 
 const MAX_MILEAGE = 4294967295;
 
@@ -76,6 +87,17 @@ export function validateOrderCreate(body) {
   };
 }
 
+// Filtros del listado: estado, mecánico, cliente, búsqueda y paginación.
+export function validateOrderListQuery(query) {
+  return {
+    status: query.status === undefined ? undefined : parseEnum(query.status, ORDER_STATUSES, 'El estado'),
+    mechanicId: query.mechanicId === undefined ? undefined : parseId(query.mechanicId, 'El filtro mechanicId'),
+    clientId: query.clientId === undefined ? undefined : parseId(query.clientId, 'El filtro clientId'),
+    search: parseSearch(query.search),
+    ...parsePagination(query)
+  };
+}
+
 // Reasignación de mecánico: { mechanicId }.
 export function validateMechanicChange(body) {
   const data = requireBody(body);
@@ -83,4 +105,42 @@ export function validateMechanicChange(body) {
   const mechanicId = positiveInt(errors, data, 'mechanicId', 'El mecánico');
   errors.throwIfAny();
   return { mechanicId };
+}
+
+// Edición del contenido de la orden: solo se validan y devuelven los campos enviados.
+// El problema reportado es obligatorio si se envía; los demás se guardan como null cuando vienen vacíos.
+export function validateOrderContent(body) {
+  const data = requireBody(body);
+  const errors = new FieldErrors();
+  const fields = {};
+
+  if (Object.prototype.hasOwnProperty.call(data, 'reportedProblem')) {
+    fields.reportedProblem = requiredText(errors, data, 'reportedProblem', 'El problema reportado', 2000);
+  }
+  for (const [field, label] of [
+    ['diagnosis', 'El diagnóstico'],
+    ['notes', 'Las observaciones'],
+    ['recommendations', 'Las recomendaciones']
+  ]) {
+    const value = optionalLongText(errors, data, field, label, 4000);
+    if (value !== undefined) {
+      fields[field] = value;
+    }
+  }
+
+  if (Object.keys(fields).length === 0 && errors.items.length === 0) {
+    errors.add('body', 'Envía al menos uno de estos campos: reportedProblem, diagnosis, notes, recommendations.');
+  }
+  errors.throwIfAny();
+  return fields;
+}
+
+// Servicio o línea de mano de obra: descripción e importe (en la API siempre se llama `amount`).
+export function validateLine(body) {
+  const data = requireBody(body);
+  const errors = new FieldErrors();
+  const description = requiredText(errors, data, 'description', 'La descripción', 255);
+  const amount = parseAmount(errors, data.amount, 'amount', 'El importe');
+  errors.throwIfAny();
+  return { description, amount };
 }

@@ -51,6 +51,25 @@ export function toOrder(row) {
   };
 }
 
+// Resumen para los listados: sin el contenido técnico de la orden.
+export function toSummary(order) {
+  return {
+    id: order.id,
+    folio: order.folio,
+    status: order.status,
+    clientId: order.clientId,
+    clientName: order.clientName,
+    vehicleId: order.vehicleId,
+    vehicleLabel: order.vehicleLabel,
+    mechanicId: order.mechanicId,
+    mechanicName: order.mechanicName,
+    entryMileage: order.entryMileage,
+    total: order.total,
+    createdAt: order.createdAt,
+    updatedAt: order.updatedAt
+  };
+}
+
 export async function findById(id, conn) {
   const rows = await query(`${ORDER_SELECT} WHERE o.id = ? LIMIT 1`, [id], conn);
   return toOrder(rows[0]);
@@ -148,4 +167,21 @@ export async function list({ status, mechanicId, clientId, search, page, pageSiz
     (page - 1) * pageSize
   ]);
   return { items: rows.map(toOrder), total: Number(total) };
+}
+
+// Campos de contenido editables y su columna. Solo se actualizan los que vienen en `fields`.
+const CONTENT_COLUMNS = Object.freeze({
+  reportedProblem: 'reported_problem',
+  diagnosis: 'diagnosis',
+  notes: 'notes',
+  recommendations: 'recommendations'
+});
+
+export async function updateContent(id, fields, conn) {
+  const keys = Object.keys(fields).filter((key) => CONTENT_COLUMNS[key]);
+  if (keys.length === 0) {
+    return;
+  }
+  const assignments = keys.map((key) => `${CONTENT_COLUMNS[key]} = ?`).join(', ');
+  await query(`UPDATE service_orders SET ${assignments} WHERE id = ?`, [...keys.map((key) => fields[key]), id], conn);
 }

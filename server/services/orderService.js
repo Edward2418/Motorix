@@ -149,6 +149,13 @@ export async function createOrder(input, actor) {
   return buildOrderDetail(await orderModel.findById(orderId), actor);
 }
 
+// Lista órdenes. Un mecánico solo ve las asignadas a él, sin importar los filtros que envíe.
+export async function listOrders(filters, actor) {
+  const effective = actor.role === 'MECHANIC' ? { ...filters, mechanicId: actor.id } : filters;
+  const { items, total } = await orderModel.list(effective);
+  return { data: items.map(orderModel.toSummary), page: filters.page, pageSize: filters.pageSize, total };
+}
+
 // Consulta una orden. Un mecánico solo puede abrir las que tiene asignadas.
 export async function getOrder(id, actor) {
   const order = await orderModel.findById(id);
@@ -172,5 +179,102 @@ export async function reassignMechanic(orderId, mechanicId, actor) {
   }
   await requireActiveMechanic(mechanicId);
   await orderModel.updateMechanic(orderId, mechanicId);
+  return buildOrderDetail(await orderModel.findById(orderId), actor);
+}
+
+// ---------- Edición del contenido y de las líneas (FR-016, FR-017 y FR-017a) ----------
+
+const TECHNICAL_FIELDS = ['diagnosis', 'notes', 'recommendations'];
+// En TERMINADO solo se pueden agregar observaciones y recomendaciones.
+const TERMINADO_FIELDS = ['notes', 'recommendations'];
+
+const isAssignedMechanic = (order, actor) => actor.role === 'MECHANIC' && order.mechanicId === actor.id;
+
+// Contenido técnico y líneas: el mecánico asignado o un administrador.
+const canEditTechnical = (order, actor) => actor.role === 'ADMIN' || isAssignedMechanic(order, actor);
+
+// El problema reportado lo editan recepción y administración.
+const canEditReportedProblem = (actor) => actor.role === 'ADMIN' || actor.role === 'RECEPTIONIST';
+
+async function requireOrder(id, conn) {
+  const order = await orderModel.findById(id, conn);
+  if (!order) {
+    throw AppError.notFound('La orden no existe.');
+  }
+  return order;
+}
+
+// Líneas editables mientras la orden no esté TERMINADO, ENTREGADO ni CANCELADA.
+function assertLinesEditable(order) {
+  if (order.status === 'TERMINADO' || isFinalStatus(order.status)) {
+    throw AppError.conflict(`La orden está en estado ${order.status} y ya no admite cambios en servicios ni mano de obra.`);
+  }
+}
+
+// Actualiza solo los campos enviados, validando permisos (403) y estado (409) de cada uno.
+export async function updateContent(id, fields, actor) {
+  const order = await requireOrder(id);
+  const keys = Object.keys(fields);
+
+  for (const key of keys) {
+    const allowed = key === 'reportedProblem' ? canEditReportedProblem(actor) : canEditTechnical(order, actor);
+    if (!allowed) {
+      throw AppError.forbidden(
+        key === 'reportedProblem'
+          ? 'Solo recepción o administración pueden editar el problema reportado.'
+          : 'Solo el mecánico asignado o un administrador pueden editar este contenido.'
+      );
+    }
+  }
+
+  const editableByState = (key) => {
+    if (isFinalStatus(order.status)) {
+      return false;
+    }
+    return order.status === 'TERMINADO' ? TERMINADO_FIELDS.includes(key) : true;
+  };
+  const blocked = keys.filter((key) => !editableByState(key));
+  if (blocked.length > 0) {
+    throw AppError.conflict(
+      `La orden está en estado ${order.status} y no admite cambios en: ${blocked.join(', ')}.`
+    );
+  }
+
+  await orderModel.updateContent(id, fields);
+  return buildOrderDetail(await orderModel.findById(id), actor);
+}
+
+async function loadEditableOrder(orderId, actor) {
+  const order = await requireOrder(orderId);
+  if (!canEditTechnical(order, actor)) {
+    throw AppError.forbidden('Solo el mecánico asignado o un administrador pueden modificar servicios y mano de obra.');
+  }
+  assertLinesEditable(order);
+  return order;
+}
+
+// Agrega un servicio (kind = 'services') o una línea de mano de obra (kind = 'labor').
+export async function addLine(kind, orderId, input, actor) {
+  await loadEditableOrder(orderId, actor);
+  await orderItemModel.insertLine(kind, orderId, input);
+  return buildOrderDetail(await orderModel.findById(orderId), actor);
+}
+
+export async function updateLine(kind, orderId, lineId, input, actor) {
+  await loadEditableOrder(orderId, actor);
+  if (!(await orderItemModel.findLine(kind, orderId, lineId))) {
+    throw AppError.notFound('La línea no existe en esta orden.');
+  }
+  await orderItemModel.updateLine(kind, orderId, lineId, input);
+  return buildOrderDetail(await orderModel.findById(orderId), actor);
+}
+
+// Quita solo la línea; la orden nunca se elimina.
+export async function removeLine(kind, orderId, lineId, actor) {
+  await loadEditableOrder(orderId, actor);
+  if (!(await orderItemModel.findLine(kind, orderId, lineId))) {
+    throw AppError.notFound('La línea no existe en esta orden.');
+  }
+  await orderItemModel.deleteLine(kind, orderId, lineId);
   return buildOrderDetail(await orderModel.findById(orderId), actor);
 }

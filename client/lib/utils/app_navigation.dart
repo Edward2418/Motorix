@@ -3,6 +3,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../models/user.dart';
 import '../screens/clients_screen.dart';
+import '../screens/orders_screen.dart';
 import '../screens/users_screen.dart';
 import '../screens/vehicles_screen.dart';
 import '../widgets/section_navigator.dart';
@@ -46,6 +47,12 @@ final List<NavDestination> allDestinations = [
     builder: (_) => const SectionNavigator(root: _vehiclesRoot),
   ),
   NavDestination(
+    label: 'Órdenes de servicio',
+    icon: LucideIcons.wrench,
+    roles: UserRole.values.toSet(),
+    builder: (_) => const SectionNavigator(root: _ordersRoot),
+  ),
+  NavDestination(
     label: 'Usuarios',
     icon: LucideIcons.userCog,
     roles: {UserRole.admin},
@@ -61,3 +68,5 @@ Widget _clientsRoot(BuildContext context) => const ClientsScreen();
 Widget _vehiclesRoot(BuildContext context) => const VehiclesScreen();
 
 Widget _usersRoot(BuildContext context) => const UsersScreen();
+
+Widget _ordersRoot(BuildContext context) => const OrdersScreen();

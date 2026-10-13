@@ -10,8 +10,17 @@ const router = Router();
 const manage = authorize(ROLES.ADMIN, ROLES.RECEPTIONIST);
 
 router.use(authenticate);
+router.get('/', asyncHandler(orderController.list));
 router.post('/', manage, asyncHandler(orderController.create));
 router.get('/:id', asyncHandler(orderController.get));
 router.put('/:id/mechanic', manage, asyncHandler(orderController.reassignMechanic));
+
+// Contenido técnico, servicios y mano de obra: los permisos por rol y por propiedad los valida el servicio.
+router.patch('/:id', asyncHandler(orderController.updateContent));
+for (const kind of ['services', 'labor']) {
+  router.post('/:id/' + kind, asyncHandler(orderController.addLine(kind)));
+  router.put('/:id/' + kind + '/:lineId', asyncHandler(orderController.updateLine(kind)));
+  router.delete('/:id/' + kind + '/:lineId', asyncHandler(orderController.removeLine(kind)));
+}
 
 export default router;
