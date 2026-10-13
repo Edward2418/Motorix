@@ -124,6 +124,26 @@ describe('contrato de /api/parts', () => {
     expect(malo.status).toBe(400);
   });
 
+  test('GET /parts/alerts devuelve { data: [Part] } solo con las activas en alerta', async () => {
+    const { token } = await loginAs('ADMIN');
+    await createPart({ code: 'A-1', stock: 2, minStock: 5 });
+    await createPart({ code: 'A-2', stock: 20, minStock: 5 });
+
+    const res = await request(app).get('/api/parts/alerts').set(bearer(token));
+    expect(res.status).toBe(200);
+    expect(res.body.data).toHaveLength(1);
+    expect(res.body.data[0]).toEqual(partShape);
+    expect(res.body.data[0]).toMatchObject({ code: 'A-1', stockLevel: 'BAJO' });
+  });
+
+  test('GET /parts/alerts responde 401 sin sesión y 403 para recepción y mecánico', async () => {
+    expect((await request(app).get('/api/parts/alerts')).status).toBe(401);
+    for (const rol of ['RECEPTIONIST', 'MECHANIC']) {
+      const { token } = await loginAs(rol, { username: `alerta.${rol.toLowerCase()}` });
+      expect({ rol, status: (await request(app).get('/api/parts/alerts').set(bearer(token))).status }).toEqual({ rol, status: 403 });
+    }
+  });
+
   test('GET /parts/categories devuelve { data: [string] } ordenado', async () => {
     const { token } = await loginAs('ADMIN');
     await createPart({ code: 'A-1', category: 'Frenos' });

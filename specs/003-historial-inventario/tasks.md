@@ -252,15 +252,15 @@ description: "Lista de tareas del Sprint 3: historial, mantenimiento e inventari
 
 ### Pruebas de la Historia 8 ⚠️ (escribir primero; deben fallar)
 
-- [ ] T083 [P] [US8] Crear `server/tests/integration/parts-alerts.test.js`: `GET /api/parts/alerts` devuelve las activas con stock igual o menor al mínimo, las agotadas primero y luego por menor existencia; una refacción con `min_stock = 0` solo alerta al llegar a 0; las desactivadas no generan alerta; consumir unidades en una orden hasta el mínimo la agrega sin otra acción; una entrada que la sube por encima del mínimo la quita; sin alertas devuelve lista vacía; solo ADMIN (RECEPTIONIST y MECHANIC → 403); y `GET /api/parts?lowStock=true` coincide con las alertas
-- [ ] T084 [US8] Agregar a `server/tests/contract/parts.contract.test.js` el caso de `GET /api/parts/alerts` (forma de `Part`, 401, 403)
+- [X] T083 [P] [US8] Crear `server/tests/integration/parts-alerts.test.js`: `GET /api/parts/alerts` devuelve las activas con stock igual o menor al mínimo, las agotadas primero y luego por menor existencia; una refacción con `min_stock = 0` solo alerta al llegar a 0; las desactivadas no generan alerta; consumir unidades en una orden hasta el mínimo la agrega sin otra acción; una entrada que la sube por encima del mínimo la quita; sin alertas devuelve lista vacía; solo ADMIN (RECEPTIONIST y MECHANIC → 403); y `GET /api/parts?lowStock=true` coincide con las alertas
+- [X] T084 [US8] Agregar a `server/tests/contract/parts.contract.test.js` el caso de `GET /api/parts/alerts` (forma de `Part`, 401, 403)
 
 ### Implementación de la Historia 8
 
-- [ ] T085 [US8] Ampliar `server/models/partModel.js` con `listAlerts()` (activas con `stock <= min_stock`, ordenadas con las agotadas primero) y el filtro `lowStock` en `list`; agregar `alerts` a `server/services/partService.js`, `server/controllers/partController.js` y la ruta `GET /alerts` (solo ADMIN, declarada antes de `/:id`) en `server/routes/partRoutes.js`
-- [ ] T086 [P] [US8] Crear `client/lib/widgets/stock_alert_banner.dart`: barra de advertencia con el token `warning` (o `danger` si hay agotadas) que resume cuántas refacciones requieren reabastecimiento, lista las primeras con su stock y mínimo, y un botón «Ver solo stock bajo» que aplica el filtro; no se muestra (ni deja espacio) cuando no hay alertas; ampliar `client/lib/providers/parts_provider.dart` con `loadAlerts()` y el filtro «Stock bajo»
-- [ ] T087 [US8] Integrar el aviso y el filtro «Stock bajo» en `client/lib/screens/inventory_screen.dart` (se recarga tras cada entrada, ajuste o cambio de refacciones desde una orden al volver a la pantalla)
-- [ ] T088 [P] [US8] Crear `client/test/stock_alert_banner_test.dart`: aparece con refacciones en alerta, no ocupa espacio sin alertas, el botón aplica el filtro, y desaparece al recargar tras una entrada simulada
+- [X] T085 [US8] Ampliar `server/models/partModel.js` con `listAlerts()` (activas con `stock <= min_stock`, ordenadas con las agotadas primero) y el filtro `lowStock` en `list`; agregar `alerts` a `server/services/partService.js`, `server/controllers/partController.js` y la ruta `GET /alerts` (solo ADMIN, declarada antes de `/:id`) en `server/routes/partRoutes.js`
+- [X] T086 [P] [US8] Crear `client/lib/widgets/stock_alert_banner.dart`: barra de advertencia con el token `warning` (o `danger` si hay agotadas) que resume cuántas refacciones requieren reabastecimiento, lista las primeras con su stock y mínimo, y un botón «Ver solo stock bajo» que aplica el filtro; no se muestra (ni deja espacio) cuando no hay alertas; ampliar `client/lib/providers/parts_provider.dart` con `loadAlerts()` y el filtro «Stock bajo»
+- [X] T087 [US8] Integrar el aviso y el filtro «Stock bajo» en `client/lib/screens/inventory_screen.dart` (se recarga tras cada entrada, ajuste o cambio de refacciones desde una orden al volver a la pantalla)
+- [X] T088 [P] [US8] Crear `client/test/stock_alert_banner_test.dart`: aparece con refacciones en alerta, no ocupa espacio sin alertas, el botón aplica el filtro, y desaparece al recargar tras una entrada simulada
 
 **Punto de control**: Las alertas de stock bajo funcionan y se actualizan con cada movimiento.
 

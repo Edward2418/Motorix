@@ -13,6 +13,10 @@ export async function categories(req, res) {
   sendData(res, await partService.listCategories(req.user));
 }
 
+export async function alerts(req, res) {
+  sendData(res, await partService.listAlerts(req.user));
+}
+
 export async function get(req, res) {
   sendData(res, await partService.getPart(partId(req), req.user));
 }

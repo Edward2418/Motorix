@@ -17,6 +17,7 @@ class PartsProvider extends ChangeNotifier {
 
   List<Part> _items = const [];
   List<String> _categories = const [];
+  List<Part> _alerts = const [];
   int _total = 0;
   int _page = 1;
   String _search = '';
@@ -29,6 +30,9 @@ class PartsProvider extends ChangeNotifier {
 
   List<Part> get items => _items;
   List<String> get categories => _categories;
+
+  /// Refacciones activas con stock bajo o agotado (aviso de reabastecimiento).
+  List<Part> get alerts => _alerts;
   int get total => _total;
   int get page => _page;
   String get search => _search;
@@ -69,6 +73,18 @@ class PartsProvider extends ChangeNotifier {
       _loading = false;
       notifyListeners();
     }
+    // El aviso se actualiza con cada recarga: cualquier movimiento puede cambiar las alertas.
+    await refreshAlerts();
+  }
+
+  /// Actualiza las alertas. Si falla, el aviso simplemente no se muestra, sin interrumpir la pantalla.
+  Future<void> refreshAlerts() async {
+    try {
+      _alerts = await loadAlerts();
+    } catch (_) {
+      _alerts = const [];
+    }
+    notifyListeners();
   }
 
   /// Categorías existentes, para el filtro. Si falla, el filtro queda vacío sin interrumpir la pantalla.

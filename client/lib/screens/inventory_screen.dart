@@ -14,6 +14,7 @@ import '../widgets/search_field.dart';
 import '../widgets/section_navigator.dart';
 import '../widgets/status_badge.dart';
 import '../widgets/status_chip.dart';
+import '../widgets/stock_alert_banner.dart';
 import '../widgets/table_footer.dart';
 import '../widgets/table_scroll.dart';
 import '../widgets/view_states.dart';
@@ -150,6 +151,11 @@ class _InventoryScreenState extends State<InventoryScreen> {
             ],
           ),
           const SizedBox(height: AppSpacing.lg),
+          StockAlertBanner(
+            alerts: parts.alerts,
+            lowOnly: parts.lowOnly,
+            onToggleLowOnly: (value) => context.read<PartsProvider>().setLowOnly(value),
+          ),
           Expanded(
             child: Card(
               clipBehavior: Clip.antiAlias,

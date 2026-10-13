@@ -53,6 +53,11 @@ export async function listParts(filters, actor) {
   return { data: rows.map((row) => present(row, actor)), page, pageSize, total };
 }
 
+// Refacciones activas con stock igual o menor al mínimo (aviso de reabastecimiento, solo administración).
+export async function listAlerts(actor) {
+  return (await partModel.listAlerts()).map((row) => present(row, actor));
+}
+
 export async function getPart(id, actor) {
   return present(await requirePart(id, actor), actor);
 }

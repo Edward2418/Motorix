@@ -17,6 +17,7 @@ router.get('/', readers, asyncHandler(partController.list));
 router.post('/', admin, asyncHandler(partController.create));
 // Las rutas fijas van antes de /:id.
 router.get('/categories', readers, asyncHandler(partController.categories));
+router.get('/alerts', admin, asyncHandler(partController.alerts));
 router.get('/:id', readers, asyncHandler(partController.get));
 router.put('/:id', admin, asyncHandler(partController.update));
 router.patch('/:id/status', admin, asyncHandler(partController.setStatus));
