@@ -1,3 +1,4 @@
+import 'payment.dart';
 import 'maintenance.dart';
 
 /// Estados de una orden de servicio (coinciden con los de la API).
@@ -128,6 +129,8 @@ class ServiceOrder {
     this.laborTotal = 0,
     this.history = const [],
     this.allowedTransitions = const [],
+    this.paymentStatus,
+    this.payment,
   });
 
   final int id;
@@ -168,6 +171,10 @@ class ServiceOrder {
 
   /// Estados a los que el usuario actual puede pasar la orden (el servidor los calcula por rol y propiedad).
   final List<OrderStatus> allowedTransitions;
+
+  /// Estado de pago y resumen: solo los recibe administración y recepción (nulos para el mecánico).
+  final OrderPaymentStatus? paymentStatus;
+  final PaymentSummary? payment;
 
   factory ServiceOrder.fromJson(Map<String, dynamic> json) => ServiceOrder(
         id: json['id'] as int,
@@ -220,5 +227,8 @@ class ServiceOrder {
           for (final status in (json['allowedTransitions'] as List<dynamic>? ?? const []))
             OrderStatus.fromApi(status as String),
         ],
+        paymentStatus:
+            json['paymentStatus'] == null ? null : OrderPaymentStatus.fromApi(json['paymentStatus'] as String),
+        payment: json['payment'] == null ? null : PaymentSummary.fromJson(json['payment'] as Map<String, dynamic>),
       );
 }

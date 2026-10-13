@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/appointment.dart';
 import '../models/maintenance.dart';
 import '../models/part.dart';
+import '../models/payment.dart';
 import '../models/service_order.dart';
 import '../utils/app_tokens.dart';
 
@@ -25,6 +26,14 @@ class StatusBadge extends StatelessWidget {
   /// Insignia del nivel de stock de una refacción (Normal, Bajo o Agotado).
   factory StatusBadge.stock(StockLevel level, {Key? key}) =>
       StatusBadge(key: key, label: level.label, color: stockLevelColor(level));
+
+  /// Insignia del estado de un pago (Pendiente, Pagado, Rechazado o Cancelado).
+  factory StatusBadge.payment(PaymentStatus status, {Key? key}) =>
+      StatusBadge(key: key, label: status.label, color: paymentStatusColor(status));
+
+  /// Insignia del estado de pago de una orden (Sin pago, Pago parcial o Pagada).
+  factory StatusBadge.orderPayment(OrderPaymentStatus status, {Key? key}) =>
+      StatusBadge(key: key, label: status.label, color: orderPaymentStatusColor(status));
 
   final String label;
   final Color color;
@@ -76,4 +85,19 @@ Color stockLevelColor(StockLevel level) => switch (level) {
       StockLevel.normal => AppColors.success,
       StockLevel.low => AppColors.warning,
       StockLevel.outOfStock => AppColors.danger,
+    };
+
+/// Pendiente `warning`, Pagado `success`, Rechazado `danger`, Cancelado gris.
+Color paymentStatusColor(PaymentStatus status) => switch (status) {
+      PaymentStatus.pending => AppColors.warning,
+      PaymentStatus.paid => AppColors.success,
+      PaymentStatus.rejected => AppColors.danger,
+      PaymentStatus.cancelled => AppColors.textSecondary,
+    };
+
+/// Sin pago gris, Pago parcial `warning`, Pagada `success`.
+Color orderPaymentStatusColor(OrderPaymentStatus status) => switch (status) {
+      OrderPaymentStatus.none => AppColors.textSecondary,
+      OrderPaymentStatus.partial => AppColors.warning,
+      OrderPaymentStatus.paid => AppColors.success,
     };

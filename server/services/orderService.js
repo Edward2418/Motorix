@@ -29,7 +29,7 @@ export async function buildOrderDetail(order, actor, conn) {
     listMaintenanceByOrder(order.id, conn),
     orderHistoryModel.listByOrder(order.id, conn)
   ]);
-  return {
+  const detail = {
     ...order,
     services,
     labor,
@@ -42,6 +42,16 @@ export async function buildOrderDetail(order, actor, conn) {
       isAssignedMechanic: order.mechanicId === actor.id
     })
   };
+  return withoutPaymentForMechanic(detail, actor);
+}
+
+// El mecánico nunca recibe campos de pago (permisos validados en el servidor).
+function withoutPaymentForMechanic(value, actor) {
+  if (actor.role !== 'MECHANIC') {
+    return value;
+  }
+  const { payment, paymentStatus, ...rest } = value;
+  return rest;
 }
 
 // Valida que el usuario sea un mecánico activo.
@@ -161,7 +171,7 @@ export async function createOrder(input, actor) {
 export async function listOrders(filters, actor) {
   const effective = actor.role === 'MECHANIC' ? { ...filters, mechanicId: actor.id } : filters;
   const { items, total } = await orderModel.list(effective);
-  return { data: items.map(orderModel.toSummary), page: filters.page, pageSize: filters.pageSize, total };
+  return { data: items.map((order) => withoutPaymentForMechanic(orderModel.toSummary(order), actor)), page: filters.page, pageSize: filters.pageSize, total };
 }
 
 // Consulta una orden. Un mecánico solo puede abrir las que tiene asignadas.

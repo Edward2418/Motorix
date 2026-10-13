@@ -62,6 +62,31 @@ describe('manejador central de errores', () => {
     ]);
   });
 
+  test('los errores de pagos y tickets llevan su propio código y estado', () => {
+    const casos = [
+      [AppError.orderNotPayable('La orden está abierta.'), 409, 'ORDER_NOT_PAYABLE'],
+      [AppError.amountExceedsBalance(600), 409, 'AMOUNT_EXCEEDS_BALANCE'],
+      [AppError.paymentNotCancellable(), 409, 'PAYMENT_NOT_CANCELLABLE'],
+      [AppError.paymentNotRefreshable(), 409, 'PAYMENT_NOT_REFRESHABLE'],
+      [AppError.mercadoPagoNotConfigured(), 409, 'MERCADOPAGO_NOT_CONFIGURED'],
+      [AppError.orderNotTicketable('RECIBIDO'), 409, 'ORDER_NOT_TICKETABLE'],
+      [AppError.ticketNotFound(), 404, 'TICKET_NOT_FOUND'],
+      [AppError.serviceUnavailable(), 503, 'SERVICE_UNAVAILABLE']
+    ];
+    for (const [error, estado, codigo] of casos) {
+      const res = respond(error);
+      expect({ codigo, estado: res.statusCode }).toEqual({ codigo, estado });
+      expect(res.body.error.code).toBe(codigo);
+      expect(res.body.error.message.length).toBeGreaterThan(10);
+    }
+  });
+
+  test('el importe excedido informa lo disponible con formato de moneda y señala el campo amount', () => {
+    const res = respond(AppError.amountExceedsBalance(1234.5));
+    expect(res.body.error.message).toContain('$1,234.50');
+    expect(res.body.error.details).toEqual([{ field: 'amount', message: expect.stringContaining('$1,234.50') }]);
+  });
+
   test('un error inesperado devuelve 500 sin trazas ni detalles internos', () => {
     const res = respond(new Error('SELECT * FROM users falló en la línea 42'));
     expect(res.statusCode).toBe(500);

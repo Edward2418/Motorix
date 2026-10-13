@@ -2,6 +2,7 @@ import { Router } from 'express';
 import * as maintenanceController from '../controllers/maintenanceController.js';
 import * as orderController from '../controllers/orderController.js';
 import * as orderPartController from '../controllers/orderPartController.js';
+import * as paymentController from '../controllers/paymentController.js';
 import { authenticate } from '../middlewares/authenticate.js';
 import { authorize, ROLES } from '../middlewares/authorize.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
@@ -32,6 +33,10 @@ router.post('/:id/maintenance', asyncHandler(maintenanceController.createFromOrd
 router.post('/:id/parts', asyncHandler(orderPartController.add));
 router.put('/:id/parts/:lineId', asyncHandler(orderPartController.updateQuantity));
 router.delete('/:id/parts/:lineId', asyncHandler(orderPartController.remove));
+
+// Pagos de la orden: solo ADMIN y RECEPTIONIST (el mecánico recibe 403).
+router.get('/:id/payments', manage, asyncHandler(paymentController.listByOrder));
+router.post('/:id/payments', manage, asyncHandler(paymentController.create));
 
 for (const kind of ['services', 'labor']) {
   router.post('/:id/' + kind, asyncHandler(orderController.addLine(kind)));

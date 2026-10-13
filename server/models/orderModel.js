@@ -1,5 +1,6 @@
 import { query } from '../config/db.js';
 import { likePattern } from '../validators/common.js';
+import { summarize } from '../services/paymentRules.js';
 
 const ORDER_SELECT = `
   SELECT o.id, o.folio, o.status, o.client_id, c.name AS client_name, o.vehicle_id,
@@ -9,7 +10,9 @@ const ORDER_SELECT = `
          o.recommendations, o.cancel_reason, o.delivered_at, o.created_at, o.updated_at,
          (SELECT COALESCE(SUM(s.cost), 0) FROM order_services s WHERE s.order_id = o.id) AS services_total,
          (SELECT COALESCE(SUM(l.amount), 0) FROM order_labor l WHERE l.order_id = o.id) AS labor_total,
-         (SELECT COALESCE(SUM(p.quantity * p.unit_price), 0) FROM order_parts p WHERE p.order_id = o.id) AS parts_total
+         (SELECT COALESCE(SUM(p.quantity * p.unit_price), 0) FROM order_parts p WHERE p.order_id = o.id) AS parts_total,
+         (SELECT COALESCE(SUM(py.amount), 0) FROM payments py WHERE py.order_id = o.id AND py.status = 'PAGADO') AS paid_total,
+         (SELECT COALESCE(SUM(py.amount), 0) FROM payments py WHERE py.order_id = o.id AND py.status = 'PENDIENTE') AS reserved_total
   FROM service_orders o
   JOIN clients c ON c.id = o.client_id
   JOIN vehicles v ON v.id = o.vehicle_id
@@ -25,6 +28,7 @@ export function toOrder(row) {
   const servicesTotal = money(row.services_total);
   const laborTotal = money(row.labor_total);
   const partsTotal = money(row.parts_total);
+  const total = money(servicesTotal + laborTotal + partsTotal);
   return {
     id: row.id,
     folio: row.folio,
@@ -50,7 +54,15 @@ export function toOrder(row) {
     servicesTotal,
     laborTotal,
     partsTotal,
-    total: money(servicesTotal + laborTotal + partsTotal),
+    total,
+    // Resumen de pagos calculado con las reglas puras; el servicio lo quita de las respuestas para el mecánico.
+    payment: summarize({
+      total,
+      payments: [
+        { status: 'PAGADO', amount: row.paid_total },
+        { status: 'PENDIENTE', amount: row.reserved_total }
+      ]
+    }),
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };
@@ -70,6 +82,7 @@ export function toSummary(order) {
     mechanicName: order.mechanicName,
     entryMileage: order.entryMileage,
     total: order.total,
+    paymentStatus: order.payment.status,
     createdAt: order.createdAt,
     updatedAt: order.updatedAt
   };

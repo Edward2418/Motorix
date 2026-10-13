@@ -12,6 +12,9 @@ export async function resetTables() {
   await pool.query('SET FOREIGN_KEY_CHECKS = 0');
   const tables = [
     'login_attempts',
+    'payments',
+    'tickets',
+    'ticket_folio_counters',
     'maintenance',
     'inventory_movements',
     'order_parts',
@@ -216,4 +219,49 @@ export async function markFinished({ orderId, finishedAt, serviceMileage = null,
 export async function addServiceLine(orderId, description, amount, table = 'order_services') {
   const column = table === 'order_services' ? 'cost' : 'amount';
   await pool.query(`INSERT INTO ${table} (order_id, description, ${column}) VALUES (?, ?, ?)`, [orderId, description, amount]);
+}
+
+// Registra un pago directamente en la base. Por defecto: efectivo, ya cobrado, hecho por el primer usuario.
+export async function createPayment({
+  orderId,
+  amount = 100,
+  method = 'EFECTIVO',
+  status = 'PAGADO',
+  reference = null,
+  paidAt,
+  externalReference = null,
+  expiresAt = null,
+  cancelReason,
+  createdBy
+}) {
+  let creator = createdBy;
+  if (!creator) {
+    const [rows] = await pool.query('SELECT id FROM users ORDER BY id LIMIT 1');
+    creator = rows[0]?.id ?? (await createUser({ username: 'creador-pagos', role: 'ADMIN' })).id;
+  }
+  const cobrado = status === 'PAGADO' ? paidAt ?? new Date() : null;
+  const motivo = status === 'CANCELADO' ? cancelReason ?? 'Cancelado en la prueba' : cancelReason ?? null;
+  const [result] = await pool.query(
+    `INSERT INTO payments
+       (order_id, amount, method, status, reference, external_reference, expires_at, paid_at, cancel_reason, created_by)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [orderId, amount, method, status, reference, externalReference, expiresAt, cobrado, motivo, creator]
+  );
+  return { id: result.insertId, orderId, amount, method, status };
+}
+
+// Crea el ticket de una orden directamente en la base, con su folio.
+export async function createTicket({ orderId, folio, orderTotal = 0, generatedBy }) {
+  let creator = generatedBy;
+  if (!creator) {
+    const [rows] = await pool.query('SELECT id FROM users ORDER BY id LIMIT 1');
+    creator = rows[0]?.id ?? (await createUser({ username: 'creador-tickets', role: 'ADMIN' })).id;
+  }
+  const [result] = await pool.query('INSERT INTO tickets (folio, order_id, order_total, generated_by) VALUES (?, ?, ?, ?)', [
+    folio,
+    orderId,
+    orderTotal,
+    creator
+  ]);
+  return { id: result.insertId, folio, orderId };
 }

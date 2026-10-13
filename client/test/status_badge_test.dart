@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:motorix_client/models/maintenance.dart';
 import 'package:motorix_client/models/part.dart';
+import 'package:motorix_client/models/payment.dart';
 import 'package:motorix_client/utils/app_tokens.dart';
 import 'package:motorix_client/utils/formatters.dart';
 import 'package:motorix_client/widgets/status_badge.dart';
@@ -20,6 +21,33 @@ void main() {
     expect(maintenanceStatusColor(MaintenanceVisualStatus.normal), AppColors.textSecondary);
     expect(maintenanceStatusColor(MaintenanceVisualStatus.soon), AppColors.warning);
     expect(maintenanceStatusColor(MaintenanceVisualStatus.overdue), AppColors.danger);
+  });
+
+  testWidgets('la insignia de pago muestra la etiqueta de cada estado de pago', (tester) async {
+    for (final estado in PaymentStatus.values) {
+      await tester.pumpWidget(envolver(StatusBadge.payment(estado)));
+      expect(find.text(estado.label), findsOneWidget, reason: 'Debe mostrar ${estado.label}');
+    }
+  });
+
+  testWidgets('la insignia de pago de la orden muestra la etiqueta de cada estado', (tester) async {
+    for (final estado in OrderPaymentStatus.values) {
+      await tester.pumpWidget(envolver(StatusBadge.orderPayment(estado)));
+      expect(find.text(estado.label), findsOneWidget, reason: 'Debe mostrar ${estado.label}');
+    }
+  });
+
+  test('los colores de pago siguen pendiente ámbar, pagado verde, rechazado rojo y cancelado gris', () {
+    expect(paymentStatusColor(PaymentStatus.pending), AppColors.warning);
+    expect(paymentStatusColor(PaymentStatus.paid), AppColors.success);
+    expect(paymentStatusColor(PaymentStatus.rejected), AppColors.danger);
+    expect(paymentStatusColor(PaymentStatus.cancelled), AppColors.textSecondary);
+  });
+
+  test('los colores del estado de pago de la orden siguen sin pago gris, parcial ámbar y pagada verde', () {
+    expect(orderPaymentStatusColor(OrderPaymentStatus.none), AppColors.textSecondary);
+    expect(orderPaymentStatusColor(OrderPaymentStatus.partial), AppColors.warning);
+    expect(orderPaymentStatusColor(OrderPaymentStatus.paid), AppColors.success);
   });
 
   testWidgets('la insignia de stock muestra la etiqueta de cada nivel', (tester) async {

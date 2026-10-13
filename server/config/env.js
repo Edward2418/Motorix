@@ -29,5 +29,21 @@ export const env = {
   maintenance: {
     soonDays: readPositiveInt(process.env.MAINTENANCE_SOON_DAYS, 30, 'MAINTENANCE_SOON_DAYS'),
     soonKm: readPositiveInt(process.env.MAINTENANCE_SOON_KM, 1000, 'MAINTENANCE_SOON_KM')
+  },
+  // Pagos (Sprint 4). El token de Mercado Pago solo se lee del entorno: nunca se registra ni se envía al cliente.
+  payments: {
+    paymentLinkHours: readPositiveInt(process.env.PAYMENT_LINK_HOURS, 24, 'PAYMENT_LINK_HOURS')
+  },
+  mercadoPago: {
+    accessToken: (process.env.MERCADOPAGO_ACCESS_TOKEN ?? '').trim(),
+    backUrl: (process.env.MERCADOPAGO_BACK_URL ?? '').trim(),
+    // Enlace de pruebas (sandbox) por defecto; poner MERCADOPAGO_SANDBOX=false para usar el enlace de producción.
+    sandbox: (process.env.MERCADOPAGO_SANDBOX ?? 'true').trim().toLowerCase() !== 'false'
+  },
+  // Encabezado del ticket. Valores de ejemplo: se cambian en .env, no hay pantalla para editarlos.
+  workshop: {
+    name: (process.env.WORKSHOP_NAME ?? 'Taller Motorix (ejemplo)').trim(),
+    address: (process.env.WORKSHOP_ADDRESS ?? 'Av. Principal 123, Ciudad de México').trim(),
+    phone: (process.env.WORKSHOP_PHONE ?? '55 0000 0000').trim()
   }
 };

@@ -66,6 +66,46 @@ export class AppError extends Error {
     return new AppError(409, 'NO_ADJUSTMENT_NEEDED', 'El stock contado coincide con el registrado: no hay nada que ajustar.');
   }
 
+  // Pagos (Sprint 4)
+  static orderNotPayable(reason) {
+    return new AppError(409, 'ORDER_NOT_PAYABLE', reason);
+  }
+
+  static amountExceedsBalance(available) {
+    const importe = `$${Number(available).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const message = `El importe supera lo disponible para cobrar (${importe}).`;
+    return new AppError(409, 'AMOUNT_EXCEEDS_BALANCE', message, [{ field: 'amount', message }]);
+  }
+
+  static paymentNotCancellable(message = 'El pago ya no se puede cancelar.') {
+    return new AppError(409, 'PAYMENT_NOT_CANCELLABLE', message);
+  }
+
+  static paymentNotRefreshable(message = 'Solo se puede actualizar el estado de un pago de Mercado Pago.') {
+    return new AppError(409, 'PAYMENT_NOT_REFRESHABLE', message);
+  }
+
+  static mercadoPagoNotConfigured() {
+    return new AppError(409, 'MERCADOPAGO_NOT_CONFIGURED', 'Mercado Pago no está configurado en el servidor.');
+  }
+
+  static orderNotTicketable(status) {
+    return new AppError(
+      409,
+      'ORDER_NOT_TICKETABLE',
+      `La orden está en estado ${status}: el ticket solo se genera para una orden terminada o entregada.`
+    );
+  }
+
+  static ticketNotFound() {
+    return new AppError(404, 'TICKET_NOT_FOUND', 'La orden todavía no tiene ticket.');
+  }
+
+  // Servicio externo (Mercado Pago) o base de datos caídos: 503 con mensaje propio, sin detalles internos.
+  static serviceUnavailable(message = 'El servicio no está disponible por el momento. Inténtalo de nuevo en unos minutos.') {
+    return new AppError(503, 'SERVICE_UNAVAILABLE', message);
+  }
+
   static notFound(message = 'El recurso solicitado no existe.') {
     return new AppError(404, 'NOT_FOUND', message);
   }
