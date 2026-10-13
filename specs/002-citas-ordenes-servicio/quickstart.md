@@ -69,3 +69,25 @@ Con un token de `mecanico` (de `POST /api/auth/login`):
 - [ ] No existe ninguna ruta `DELETE` sobre citas ni órdenes (solo sobre líneas de servicio y mano de obra).
 - [ ] Cada pantalla nueva cumple `docs/design-system.md` §11 (tokens, transiciones, estados vacío/cargando/error, confirmaciones de entrega y cancelación).
 - [ ] No hay secretos en el repositorio y `server/` no usa `require` ni `module.exports`.
+
+## 7. Resultado de la validación (2026-10-13)
+
+Se ejecutaron por API, contra el servidor real y una base local con los datos de ejemplo cargados, los
+escenarios 1 a 11 y 13 a 16 (los saltos y retrocesos del escenario 12 se comprobaron junto con los de
+estados), los permisos fuera de la interfaz y la conciliación del Sprint 1: **37 de 37 comprobaciones
+pasaron**. Además pasan las pruebas automatizadas del backend y del frontend.
+
+| Medición | Resultado |
+|----------|-----------|
+| Registrar la cita (escenario 1) | 17 ms en el servidor |
+| Crear la orden desde la cita (escenario 4) | 40 ms |
+| Registro técnico completo: diagnóstico, 2 servicios, mano de obra, observaciones y recomendaciones (escenario 10) | 141 ms |
+| Flujo completo cita → crear orden → diagnóstico → servicios → estados → entrega (SC-008) | 699 ms |
+
+**Limitaciones**
+
+- Los tiempos son del servidor; los de captura de una persona (SC-001, SC-005 y SC-008 «en menos de N minutos»)
+  dependen de la interfaz y no se pudieron cronometrar porque compilar la aplicación en Windows exige activar
+  el Modo de desarrollador. Los escenarios de interfaz están cubiertos por las pruebas de widgets, pero falta
+  el recorrido manual en pantalla.
+- La meta de 2 000 órdenes del plan no se midió (quedó como supuesto no verificado).

@@ -4,7 +4,7 @@ Sistema de Gestión para Taller Mecánico. Proyecto académico cuyo MVP se const
 El alcance completo está en [`docs/project-context.md`](docs/project-context.md) y las reglas del
 proyecto en la [constitución](.specify/memory/constitution.md).
 
-**Estado actual: Sprint 1** — inicio de sesión (JWT), usuarios y roles, clientes y vehículos.
+**Estado actual: Sprint 2** — sobre la base del Sprint 1 (inicio de sesión con JWT, usuarios y roles, clientes y vehículos) agrega **citas** y **órdenes de servicio**: la recepción registra citas y crea órdenes, el mecánico documenta diagnóstico, servicios y recomendaciones, y el estado avanza por un flujo controlado hasta la entrega.
 
 ## Estructura
 
@@ -52,12 +52,13 @@ specs/      Especificaciones, planes y tareas (Spec Kit)
 
 ## Cuentas iniciales (solo entorno local)
 
-El seed crea tres cuentas, una por rol: `admin` (Administrador), `recepcion` (Recepcionista) y
-`mecanico` (Mecánico). Sus contraseñas iniciales están en la sección «Estándar de usuarios y
+El seed crea cuatro cuentas: `admin` (Administrador), `recepcion` (Recepcionista) y dos mecánicos,
+`mecanico` y `mecanico2` (así se puede comprobar que cada mecánico ve solo sus órdenes). Sus contraseñas iniciales están en la sección «Estándar de usuarios y
 contraseñas del MVP» de [`docs/project-context.md`](docs/project-context.md). Solo aplican a
 entornos locales; al cambiarlas rige la política mínima (8 caracteres, mayúscula, minúscula y número).
 
-El inicio de sesión acepta el usuario o el correo electrónico en el mismo campo.
+El inicio de sesión acepta el usuario o el correo electrónico en el mismo campo. Tras 5 intentos fallidos
+consecutivos la cuenta se bloquea 15 minutos.
 
 ## Permisos por rol
 
@@ -68,9 +69,34 @@ El inicio de sesión acepta el usuario o el correo electrónico en el mismo camp
 | Clientes: registrar, editar, desactivar | Sí | Sí | No |
 | Vehículos: consultar | Sí | Sí | Sí |
 | Vehículos: registrar, desactivar | Sí | Sí | No |
+| Citas: registrar, consultar, modificar, confirmar, cancelar | Sí | Sí | No |
+| Órdenes: consultar | Todas | Todas | Solo las asignadas |
+| Órdenes: crear y reasignar mecánico | Sí | Sí | No |
+| Órdenes: corregir el kilometraje a la baja al crear | Sí | No | No |
+| Órdenes: diagnóstico, servicios, mano de obra, observaciones y recomendaciones | Sí | No (solo el problema reportado) | Solo en sus órdenes |
+| Órdenes: avanzar el estado hasta TERMINADO | Sí | Sí | Solo en sus órdenes |
+| Órdenes: entregar o cancelar | Sí | Sí | No |
 
 Los permisos se validan siempre en el backend; ocultar un botón en la interfaz no es seguridad.
-Nada se elimina de forma definitiva: los registros se **desactivan** y se pueden reactivar.
+Nada se elimina de forma definitiva: los registros se **desactivan** y se pueden reactivar, y las
+citas y las órdenes se conservan siempre (una orden que no se entrega se **cancela**).
+
+## Flujo de una orden de servicio
+
+```text
+RECIBIDO → DIAGNOSTICO → EN_REPARACION → TERMINADO → ENTREGADO
+                              ⇅
+                    ESPERANDO_REFACCION
+
+Cancelación (con motivo): desde RECIBIDO, DIAGNOSTICO, EN_REPARACION o ESPERANDO_REFACCION → CANCELADA
+```
+
+- Cada orden tiene un folio único `OS-AAAA-NNNN` y solo puede haber **una orden abierta por vehículo**.
+- El kilometraje de entrada no puede ser menor al registrado; solo un administrador puede corregirlo a la
+  baja, indicando el motivo.
+- El total se calcula con los servicios y la mano de obra; no se guarda aparte.
+- Crear una orden desde una cita la deja EN_PROCESO; al entregar la orden la cita queda COMPLETADA y al
+  cancelarla, CANCELADA.
 
 ## Pruebas
 

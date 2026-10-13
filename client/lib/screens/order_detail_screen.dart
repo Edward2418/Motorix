@@ -615,7 +615,7 @@ class _HistorySection extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         SizedBox(
-                          width: 160,
+                          width: AppSizes.historyDateWidth,
                           child: Text(formatDateTime(change.changedAt), style: theme.textTheme.bodySmall),
                         ),
                         Expanded(

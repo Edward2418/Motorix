@@ -138,6 +138,8 @@ Color de marca: **rojo grisáceo (apagado)**. El rojo de alerta es distinto: má
 | Esperando refacción | `warning` |
 | Terminado / Completada / Entregado | `success` |
 | Cancelada | `danger` |
+
+Estados de las **citas** (Sprint 2): Pendiente gris (`textSecondary`), Confirmada `primary`, En proceso `warning`, Completada `success` y Cancelada `danger`. Las insignias de estado usan el color con un fondo suave del mismo tono y un borde fino (`StatusBadge`).
 | Mantenimiento próximo | `warning` |
 | Mantenimiento vencido / Stock crítico | `danger` |
 

@@ -87,4 +87,5 @@ class AppSizes {
   static const double cellWide = 220;
   static const double spinner = 24;
   static const double spinnerSmall = 16;
+  static const double historyDateWidth = 160;
 }

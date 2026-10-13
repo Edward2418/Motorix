@@ -235,7 +235,8 @@ Debe permitir:
 
 `RECIBIDO → DIAGNOSTICO → EN_REPARACION → TERMINADO → ENTREGADO`
 
-Puede existir `ESPERANDO_REFACCION` cuando sea necesario.
+Puede existir `ESPERANDO_REFACCION` cuando sea necesario. Una orden que no se entrega
+se cancela (`CANCELADA`, con motivo): nunca se elimina.
 
 ------------------------------------------------------------------------
 
@@ -1292,6 +1293,39 @@ Antes de asumirlas como definitivas, el equipo debe decidir:
     (`config`, `models`, `services`, `controllers`, `routes`, `middlewares`,
     `validators`, `utils`) viven directamente en `server/`, manteniendo la
     separación de responsabilidades de la sección 11.
+
+### Decisiones resueltas durante el Sprint 2
+
+-   **Estados de la orden**: `RECIBIDO → DIAGNOSTICO → EN_REPARACION → TERMINADO →
+    ENTREGADO`, con `ESPERANDO_REFACCION` entre `EN_REPARACION` y su regreso, y
+    `CANCELADA` (con motivo) desde cualquier estado abierto antes de `TERMINADO`. No hay
+    saltos ni retrocesos. La lógica vive en `server/services/orderStateMachine.js`.
+-   **Quién cambia el estado**: el mecánico asignado llega hasta `TERMINADO`; recepción y
+    administración pueden avanzar estados intermedios y son las únicas que entregan
+    (`ENTREGADO`) o cancelan. Las órdenes `ENTREGADO` y `CANCELADA` quedan como historial:
+    no se modifican ni se eliminan.
+-   **Una sola orden abierta por vehículo**: se valida en el servicio y la garantiza un
+    índice único de la base de datos (columna generada `open_vehicle_id`).
+-   **Folio**: `OS-AAAA-NNNN` (año y consecutivo de cuatro dígitos), generado con un
+    contador por año dentro de la misma transacción; nunca se reutiliza.
+-   **Kilometraje**: el de entrada no puede ser menor al registrado en el vehículo. Solo un
+    administrador puede corregirlo a la baja, al crear la orden y con un motivo obligatorio;
+    la orden guarda el kilometraje previo y el motivo. Crear la orden actualiza el
+    kilometraje del vehículo.
+-   **Asignación de mecánico**: manual, por recepción o administración, mientras la orden
+    no esté entregada ni cancelada. No se puede desactivar ni cambiar el rol de un mecánico
+    con órdenes abiertas.
+-   **Total de la orden**: se calcula como la suma de servicios y mano de obra; no se
+    almacena. En la API el importe de ambos se llama `amount`.
+-   **Citas**: estados `PENDIENTE`, `CONFIRMADA`, `EN_PROCESO`, `COMPLETADA` y `CANCELADA`. Se
+    pueden modificar y cancelar mientras estén pendientes o confirmadas; la que tiene una
+    orden solo se cancela cancelando la orden. Crear la orden desde la cita la deja en
+    proceso; entregar la orden la completa y cancelarla la cancela. Se tolera un margen de
+    5 minutos hacia el pasado al registrar.
+-   **Datos de ejemplo**: 6 citas y 8 órdenes en todos los estados, repartidas entre los
+    mecánicos `mecanico` y `mecanico2` (el segundo se agrega al estándar de usuarios).
+-   **Conciliación del Sprint 1**: se implementaron el bloqueo tras 5 intentos fallidos de
+    inicio de sesión (15 minutos) y el aviso de teléfono de cliente repetido.
 
 ### Decisiones resueltas durante el ajuste del MVP (2026-10-09)
 
