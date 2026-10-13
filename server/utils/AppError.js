@@ -20,6 +20,16 @@ export class AppError extends Error {
     return new AppError(403, 'FORBIDDEN', message);
   }
 
+  // Teléfono ya registrado en otro cliente activo: el cliente puede confirmar y guardar de todos modos.
+  static phoneDuplicate(existingName) {
+    const message = 'Ya existe un cliente activo con ese teléfono: ' + existingName + '.';
+    return new AppError(409, 'PHONE_DUPLICATE', message, [{ field: 'phone', message }]);
+  }
+
+  static tooManyAttempts(message) {
+    return new AppError(429, 'TOO_MANY_ATTEMPTS', message);
+  }
+
   static notFound(message = 'El recurso solicitado no existe.') {
     return new AppError(404, 'NOT_FOUND', message);
   }

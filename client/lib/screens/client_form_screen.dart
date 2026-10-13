@@ -61,7 +61,7 @@ class _ClientFormScreenState extends State<ClientFormScreen> {
     }
   }
 
-  Future<void> _submit() async {
+  Future<void> _submit({bool confirmDuplicate = false}) async {
     setState(() {
       _generalError = null;
       _serverErrors = const {};
@@ -78,12 +78,14 @@ class _ClientFormScreenState extends State<ClientFormScreen> {
           name: _name.text.trim(),
           phone: _phone.text.trim(),
           email: _email.text.trim(),
+          confirmDuplicate: confirmDuplicate,
         );
       } else {
         await clients.create(
           name: _name.text.trim(),
           phone: _phone.text.trim(),
           email: _email.text.trim(),
+          confirmDuplicate: confirmDuplicate,
         );
       }
       if (!mounted) {
@@ -93,6 +95,19 @@ class _ClientFormScreenState extends State<ClientFormScreen> {
       Navigator.of(context).pop(true);
     } on ApiException catch (e) {
       if (!mounted) {
+        return;
+      }
+      if (e.code == 'PHONE_DUPLICATE') {
+        // Otro cliente activo tiene el mismo teléfono: se avisa y se guarda solo si el usuario confirma.
+        setState(() => _saving = false);
+        final proceed = await showConfirmDialog(
+          context,
+          title: 'Teléfono repetido',
+          message: '${e.message} ¿Quieres guardar de todos modos?',
+        );
+        if (proceed && mounted) {
+          await _submit(confirmDuplicate: true);
+        }
         return;
       }
       setState(() {

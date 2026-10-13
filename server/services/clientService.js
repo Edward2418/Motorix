@@ -17,12 +17,25 @@ export async function getClient(id) {
   return { ...client, vehicles };
 }
 
-export function createClient(input) {
+// Avisa (409 PHONE_DUPLICATE) si otro cliente activo tiene el mismo teléfono, salvo que se confirme.
+async function assertPhoneNotDuplicated({ phone, confirmDuplicate }, excludeId = 0) {
+  if (confirmDuplicate) {
+    return;
+  }
+  const existing = await clientModel.findActiveByPhoneDigits(phone, excludeId);
+  if (existing) {
+    throw AppError.phoneDuplicate(existing.name);
+  }
+}
+
+export async function createClient(input) {
+  await assertPhoneNotDuplicated(input);
   return clientModel.create(input);
 }
 
 export async function updateClient(id, input) {
   await getClient(id);
+  await assertPhoneNotDuplicated(input, id);
   return clientModel.update(id, input);
 }
 

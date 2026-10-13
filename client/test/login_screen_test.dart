@@ -48,6 +48,18 @@ void main() {
     expect(find.text('Iniciar sesión'), findsWidgets, reason: 'debe seguir en la pantalla de inicio de sesión');
   });
 
+  testWidgets('muestra el mensaje de bloqueo cuando hay demasiados intentos fallidos', (tester) async {
+    await abrirApp(
+      tester,
+      (_) => apiError(429, 'TOO_MANY_ATTEMPTS', 'Demasiados intentos fallidos. Inténtalo de nuevo en 15 minutos.'),
+    );
+
+    await iniciarSesion(tester, 'admin');
+
+    expect(find.text('Demasiados intentos fallidos. Inténtalo de nuevo en 15 minutos.'), findsOneWidget);
+    expect(find.text('Iniciar sesión'), findsWidgets, reason: 'debe seguir en la pantalla de inicio de sesión');
+  });
+
   testWidgets('el administrador ve Clientes, Vehículos y Usuarios en el menú', (tester) async {
     await abrirApp(tester, conLogin(loginOk(role: 'ADMIN')));
 

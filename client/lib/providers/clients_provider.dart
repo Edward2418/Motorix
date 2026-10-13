@@ -89,11 +89,13 @@ class ClientsProvider extends ChangeNotifier {
   }
 
   /// Edita un cliente. Lanza [ApiException] con los errores por campo si el servidor rechaza los datos.
-  Future<Client> update(int id, {required String name, required String phone, String? email}) async {
+  Future<Client> update(int id,
+      {required String name, required String phone, String? email, bool confirmDuplicate = false}) async {
     final response = await _api.put('/clients/$id', body: {
       'name': name,
       'phone': phone,
       'email': (email == null || email.isEmpty) ? null : email,
+      if (confirmDuplicate) 'confirmDuplicate': true,
     });
     final client = Client.fromJson(response['data'] as Map<String, dynamic>);
     await load();
@@ -109,11 +111,13 @@ class ClientsProvider extends ChangeNotifier {
   }
 
   /// Registra un cliente. Lanza [ApiException] con los errores por campo si el servidor rechaza los datos.
-  Future<Client> create({required String name, required String phone, String? email}) async {
+  Future<Client> create(
+      {required String name, required String phone, String? email, bool confirmDuplicate = false}) async {
     final response = await _api.post('/clients', body: {
       'name': name,
       'phone': phone,
       'email': (email == null || email.isEmpty) ? null : email,
+      if (confirmDuplicate) 'confirmDuplicate': true,
     });
     final client = Client.fromJson(response['data'] as Map<String, dynamic>);
     await load();

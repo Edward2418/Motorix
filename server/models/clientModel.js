@@ -52,6 +52,16 @@ export async function findById(id) {
   return toClient(rows[0]);
 }
 
+// Otro cliente activo con los mismos dígitos de teléfono (ignora espacios, guiones, paréntesis y signos).
+export async function findActiveByPhoneDigits(phone, excludeId = 0) {
+  const digits = phone.replace(/\D/g, '');
+  const rows = await query(
+    "SELECT id, name FROM clients WHERE active = 1 AND id <> ? AND REGEXP_REPLACE(phone, '[^0-9]', '') = ? LIMIT 1",
+    [excludeId, digits]
+  );
+  return rows[0] ?? null;
+}
+
 export async function create({ name, phone, email }) {
   const result = await query('INSERT INTO clients (name, phone, email) VALUES (?, ?, ?)', [name, phone, email]);
   return findById(result.insertId);
