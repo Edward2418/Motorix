@@ -24,7 +24,7 @@
 
 Como recepcionista, quiero crear una orden de servicio asociada a un cliente y a uno de sus vehículos, con el kilometraje de entrada, el problema reportado y el mecánico asignado, para registrar el trabajo a realizar y vincular correctamente la información.
 
-**Por qué esta prioridad**: La orden es el eje del taller: sin ella no hay diagnóstico, servicios ni estados. Se apoya en los clientes y vehículos del Sprint 1.
+**Por qué esta prioridad**: La orden es el eje del taller: sin ella no hay diagnóstico, servicios ni estados. Se apoya en los clientes y vehículos del Sprint 1. Crear la orden equivale a recibir el vehículo en el taller.
 
 **Prueba independiente**: Con un cliente y un vehículo existentes, crear una orden y comprobar que queda con folio, estado inicial «Recibido», kilometraje de entrada y mecánico asignado, y que aparece en el listado de órdenes.
 
@@ -129,6 +129,7 @@ Como recepcionista, quiero registrar, consultar, modificar y cancelar citas para
 - Cancelar una orden sin indicar el motivo, o ya terminada, entregada o cancelada (se rechaza).
 - Cancelar una orden con servicios o mano de obra ya registrados (se permite; el contenido se conserva como historial).
 - Desactivar a un mecánico con órdenes abiertas asignadas (se rechaza hasta reasignarlas).
+- Cambiar el rol de un mecánico con órdenes abiertas asignadas (se rechaza hasta reasignarlas).
 - Servicios con costo cero o muy alto, o con descripciones muy largas.
 
 ## Requisitos *(obligatorio)*
@@ -155,7 +156,7 @@ Como recepcionista, quiero registrar, consultar, modificar y cancelar citas para
 - **FR-012**: Al crear una orden, el kilometraje actual del vehículo DEBE actualizarse con el kilometraje de entrada.
 - **FR-013**: El sistema DEBE permitir crear una orden a partir de una cita; la cita pasa a En proceso y queda vinculada a la orden. También DEBE permitir crear órdenes sin cita previa.
 - **FR-014**: El mecánico asignado DEBE ser un usuario activo con rol de mecánico; recepción y administración pueden asignarlo al crear la orden y reasignarlo mientras la orden no esté ENTREGADO ni CANCELADA (ver FR-017a).
-- **FR-014a**: El sistema NO DEBE permitir desactivar a un mecánico que tiene órdenes abiertas (no entregadas) asignadas; el mensaje de rechazo DEBE indicar los folios de esas órdenes. Una vez reasignadas, la baja se permite.
+- **FR-014a**: El sistema NO DEBE permitir desactivar a un mecánico, ni cambiarle el rol, mientras tenga órdenes abiertas (ni ENTREGADO ni CANCELADA) asignadas; el mensaje de rechazo DEBE indicar los folios de esas órdenes. Una vez reasignadas, la desactivación o el cambio de rol se permiten.
 - **FR-015**: Los mecánicos DEBEN ver y consultar únicamente las órdenes asignadas a ellos; recepción y administración ven todas, con filtros por estado, mecánico, cliente y folio.
 - **FR-016**: El mecánico asignado, o un administrador, DEBE poder registrar el diagnóstico, las observaciones y las recomendaciones de la orden; recepción y administración pueden editar el problema reportado.
 - **FR-017**: El mecánico asignado, o un administrador, DEBE poder agregar, editar y quitar servicios realizados (descripción y costo) y líneas de mano de obra (descripción e importe), según lo que permite cada estado (FR-017a).
@@ -178,7 +179,7 @@ Como recepcionista, quiero registrar, consultar, modificar y cancelar citas para
 - **FR-023**: Una orden ENTREGADO o CANCELADA DEBE conservarse como historial y no puede modificarse.
 - **FR-023a**: Solo recepción o administración pueden cancelar una orden, con un motivo obligatorio y confirmación previa, y únicamente antes de TERMINADO. El motivo DEBE quedar guardado en la orden y el cambio registrarse como cualquier otro cambio de estado.
 - **FR-024**: Al marcar una orden como ENTREGADO, la cita vinculada (si existe) DEBE pasar a Completada; al cancelar la orden, la cita vinculada DEBE pasar a Cancelada.
-- **FR-025**: El servidor DEBE validar en cada acción los permisos por rol: ADMIN y RECEPTIONIST gestionan citas y crean y reasignan órdenes; MECHANIC solo opera sobre sus órdenes asignadas y NO gestiona citas; la matriz completa de permisos por rol y por propiedad es la de `research.md` §3.
+- **FR-025**: El servidor DEBE validar en cada acción los permisos por rol: ADMIN y RECEPTIONIST gestionan citas y crean y reasignan órdenes; MECHANIC solo opera sobre sus órdenes asignadas y NO gestiona citas. En concreto: ADMIN puede todo; RECEPTIONIST gestiona citas, crea y reasigna órdenes, edita el problema reportado, avanza estados intermedios, entrega y cancela órdenes; MECHANIC, solo en sus órdenes asignadas, registra diagnóstico, observaciones, recomendaciones, servicios y mano de obra y cambia estados hasta TERMINADO.
 
 **Transversales**
 

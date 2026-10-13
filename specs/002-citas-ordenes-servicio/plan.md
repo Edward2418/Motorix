@@ -24,7 +24,7 @@ Segundo sprint del MVP. Agrega al sistema del Sprint 1 el registro de **citas** 
 
 **Tipo de proyecto**: Aplicación con frontend y backend separados (continúa la estructura del Sprint 1)
 
-**Metas de rendimiento**: listados de citas y órdenes en menos de 1 s con 2 000 órdenes; creación de una orden en menos de 1 s
+**Metas de rendimiento**: creación de una orden y listados con los datos de ejemplo en menos de 1 s (se mide en T076). La meta de 2 000 órdenes queda como supuesto no verificado en este sprint; los índices de la tabla `service_orders` están pensados para ese volumen.
 
 **Restricciones**: sin eliminación de órdenes ni de citas; permisos validados en el servidor; seeds idempotentes; escrituras multi-tabla en transacción; una sola orden abierta por vehículo garantizada también por la base de datos
 
