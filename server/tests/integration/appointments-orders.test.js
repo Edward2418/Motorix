@@ -95,7 +95,7 @@ describe('citas y órdenes: efectos entre sí', () => {
     const { crearOrden, cambiar, estadoCita } = await base();
     const orden = await crearOrden();
     for (const estado of ['DIAGNOSTICO', 'EN_REPARACION', 'TERMINADO', 'ENTREGADO']) {
-      await cambiar(orden.body.data.id, { status: estado });
+      await cambiar(orden.body.data.id, { status: estado, serviceMileage: 999999 });
     }
     expect((await estadoCita()).status).toBe('COMPLETADA');
   });

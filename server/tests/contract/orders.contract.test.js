@@ -16,6 +16,8 @@ const orderDetailShape = {
   entryMileage: expect.any(Number),
   previousMileage: expect.any(Number),
   mileageCorrectionReason: null,
+  serviceMileage: null,
+  serviceMileageCorrectionReason: null,
   appointmentId: null,
   reportedProblem: expect.any(String),
   diagnosis: null,

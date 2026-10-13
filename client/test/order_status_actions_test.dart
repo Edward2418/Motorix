@@ -163,7 +163,7 @@ void main() {
     });
   }
 
-  testWidgets('un cambio de estado intermedio se aplica sin pedir confirmación', (tester) async {
+  testWidgets('un cambio de estado intermedio se aplica pidiendo solo el kilometraje al terminar', (tester) async {
     final log = await abrirDetalle(tester, role: 'MECHANIC', handler: (request) {
       if (request.method == 'POST') {
         return FakeResponse(200, {
@@ -175,9 +175,12 @@ void main() {
 
     await tester.tap(find.text('Marcar como terminada'));
     await tester.pumpAndSettle();
+    expect(find.text('Kilometraje del servicio'), findsWidgets, reason: 'terminar pide el kilometraje del servicio');
+    await tester.tap(find.text('Confirmar'));
+    await tester.pumpAndSettle();
 
     final peticion = cambios(log).single;
-    expect(jsonDecode(peticion.body), {'status': 'TERMINADO'});
+    expect(jsonDecode(peticion.body), {'status': 'TERMINADO', 'serviceMileage': 45800});
     expect(find.text('La orden pasó a «Terminado».'), findsOneWidget);
     expect(find.text('Marcar como terminada'), findsNothing, reason: 'ya no hay acciones disponibles');
   });
@@ -263,6 +266,8 @@ void main() {
     });
 
     await tester.tap(find.text('Marcar como terminada'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Confirmar'));
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Estados permitidos desde EN_REPARACION'), findsOneWidget);

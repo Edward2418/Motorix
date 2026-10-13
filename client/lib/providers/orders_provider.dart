@@ -167,10 +167,22 @@ class OrdersProvider extends ChangeNotifier {
   }
 
   /// Cambia el estado de la orden. La cancelación exige [reason]. El servidor valida la transición y el rol.
-  Future<ServiceOrder> changeStatus(int orderId, OrderStatus status, {String? reason}) async {
+  Future<ServiceOrder> changeStatus(int orderId, OrderStatus status, {String? reason, int? serviceMileage}) async {
     final response = await _api.post('/orders/$orderId/status', body: {
       'status': status.apiValue,
       'reason': ?reason,
+      'serviceMileage': ?serviceMileage,
+    });
+    final order = ServiceOrder.fromJson(response['data'] as Map<String, dynamic>);
+    notifyListeners();
+    return order;
+  }
+
+  /// Corrige el kilometraje del servicio de una orden terminada o entregada (solo administración, con motivo).
+  Future<ServiceOrder> correctServiceMileage(int orderId, int mileage, String reason) async {
+    final response = await _api.put('/orders/$orderId/service-mileage', body: {
+      'serviceMileage': mileage,
+      'reason': reason,
     });
     final order = ServiceOrder.fromJson(response['data'] as Map<String, dynamic>);
     notifyListeners();

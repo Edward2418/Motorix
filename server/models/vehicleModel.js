@@ -34,6 +34,11 @@ export async function listByClient(clientId) {
   return rows.map(toVehicle);
 }
 
+// Sube el kilometraje actual del vehículo solo si el nuevo valor es mayor (nunca lo baja).
+export async function raiseMileage(vehicleId, mileage, conn) {
+  await query('UPDATE vehicles SET current_mileage = GREATEST(current_mileage, ?) WHERE id = ?', [mileage, vehicleId], conn);
+}
+
 export async function findById(id) {
   const rows = await query(`${VEHICLE_SELECT} WHERE v.id = ? LIMIT 1`, [id]);
   return toVehicle(rows[0]);

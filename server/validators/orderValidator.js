@@ -134,8 +134,37 @@ export function validateStatusChange(body) {
   if (data.status === 'CANCELADA' && reason === null) {
     errors.add('reason', 'El motivo de la cancelación es obligatorio.');
   }
+  // Solo se valida la forma. Que sea obligatorio al terminar la orden lo exige el servicio después de comprobar
+  // permiso y transición, para que un permiso denegado (403) o una transición inválida (409) sigan mandando.
+  let serviceMileage = null;
+  if (Object.prototype.hasOwnProperty.call(data, 'serviceMileage') && data.serviceMileage !== undefined) {
+    if (!Number.isInteger(data.serviceMileage) || data.serviceMileage < 0 || data.serviceMileage > MAX_MILEAGE) {
+      errors.add('serviceMileage', 'El kilometraje del servicio debe ser un número entero válido.');
+    } else {
+      serviceMileage = data.serviceMileage;
+    }
+  }
   errors.throwIfAny();
-  return { status: data.status, reason: data.status === 'CANCELADA' ? reason : null };
+  return {
+    status: data.status,
+    reason: data.status === 'CANCELADA' ? reason : null,
+    serviceMileage: data.status === 'TERMINADO' ? serviceMileage : null
+  };
+}
+
+// Corrección del kilometraje del servicio (solo ADMIN): nuevo valor y motivo obligatorio.
+export function validateServiceMileageCorrection(body) {
+  const data = requireBody(body);
+  const errors = new FieldErrors();
+  let serviceMileage;
+  if (!Number.isInteger(data.serviceMileage) || data.serviceMileage < 0 || data.serviceMileage > MAX_MILEAGE) {
+    errors.add('serviceMileage', 'El kilometraje del servicio debe ser un número entero válido.');
+  } else {
+    serviceMileage = data.serviceMileage;
+  }
+  const reason = requiredText(errors, data, 'reason', 'El motivo', 255);
+  errors.throwIfAny();
+  return { serviceMileage, reason };
 }
 
 // Servicio o línea de mano de obra: descripción e importe (en la API siempre se llama `amount`).

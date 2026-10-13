@@ -24,7 +24,7 @@ describe('órdenes: cambios de estado', () => {
       ['recepcion', 'ENTREGADO']
     ];
     for (const [quien, destino] of camino) {
-      const res = await cambiar(tokens[quien], orden.id, { status: destino });
+      const res = await cambiar(tokens[quien], orden.id, { status: destino, serviceMileage: 5000 });
       expect({ destino, status: res.status }).toEqual({ destino, status: 200 });
       expect(res.body.data.status).toBe(destino);
     }

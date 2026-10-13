@@ -55,6 +55,21 @@ describe('contrato de POST /api/orders/{id}/status', () => {
     expect(res.body).toEqual({ error: { code: 'FORBIDDEN', message: expect.any(String) } });
   });
 
+  test('400 VALIDATION_ERROR cuando se termina la orden sin kilometraje del servicio', async () => {
+    const { orden, tokens } = await escenarioOrden('EN_REPARACION');
+    const res = await cambiar(tokens.mecanico, orden.id, { status: 'TERMINADO' });
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('VALIDATION_ERROR');
+    expect(res.body.error.details).toEqual([{ field: 'serviceMileage', message: expect.any(String) }]);
+  });
+
+  test('al terminar con kilometraje del servicio, OrderDetail lo devuelve', async () => {
+    const { orden, tokens } = await escenarioOrden('EN_REPARACION');
+    const res = await cambiar(tokens.mecanico, orden.id, { status: 'TERMINADO', serviceMileage: 1200 });
+    expect(res.status).toBe(200);
+    expect(res.body.data).toMatchObject({ status: 'TERMINADO', serviceMileage: 1200, serviceMileageCorrectionReason: null });
+  });
+
   test('400 VALIDATION_ERROR cuando falta el estado', async () => {
     const { orden, tokens } = await escenarioOrden();
     const res = await cambiar(tokens.admin, orden.id, {});

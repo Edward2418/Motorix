@@ -5,6 +5,7 @@ import {
   validateOrderContent,
   validateOrderCreate,
   validateOrderListQuery,
+  validateServiceMileageCorrection,
   validateStatusChange
 } from '../validators/orderValidator.js';
 import { parseId } from '../validators/common.js';
@@ -34,6 +35,11 @@ export async function reassignMechanic(req, res) {
 export async function changeStatus(req, res) {
   const id = orderId(req);
   sendData(res, await orderService.changeStatus(id, validateStatusChange(req.body), req.user));
+}
+
+export async function correctServiceMileage(req, res) {
+  const id = orderId(req);
+  sendData(res, await orderService.correctServiceMileage(id, validateServiceMileageCorrection(req.body), req.user));
 }
 
 export async function updateContent(req, res) {

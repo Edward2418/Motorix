@@ -18,6 +18,9 @@ router.put('/:id/mechanic', manage, asyncHandler(orderController.reassignMechani
 // Cambio de estado: los tres roles; el servicio decide por rol y propiedad (403 o 409).
 router.post('/:id/status', asyncHandler(orderController.changeStatus));
 
+// Corregir el kilometraje del servicio de una orden finalizada: solo ADMIN.
+router.put('/:id/service-mileage', authorize(ROLES.ADMIN), asyncHandler(orderController.correctServiceMileage));
+
 // Contenido técnico, servicios y mano de obra: los permisos por rol y por propiedad los valida el servicio.
 router.patch('/:id', asyncHandler(orderController.updateContent));
 for (const kind of ['services', 'labor']) {

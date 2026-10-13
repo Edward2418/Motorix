@@ -13,6 +13,7 @@ import '../utils/formatters.dart';
 import '../widgets/cancel_order_dialog.dart';
 import '../widgets/confirm_dialog.dart';
 import '../widgets/order_line_dialog.dart';
+import '../widgets/service_mileage_dialog.dart';
 import '../widgets/section_navigator.dart';
 import '../widgets/status_badge.dart';
 import '../widgets/view_states.dart';
@@ -91,7 +92,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   Future<void> _changeStatus(OrderStatus target) async {
     final order = _order!;
     String? reason;
-    if (target == OrderStatus.cancelled) {
+    int? serviceMileage;
+    if (target == OrderStatus.finished) {
+      serviceMileage = await showServiceMileageDialog(context, entryMileage: order.entryMileage);
+      if (serviceMileage == null || !mounted) {
+        return;
+      }
+    } else if (target == OrderStatus.cancelled) {
       reason = await showCancelOrderDialog(context, folio: order.folio);
       if (reason == null || !mounted) {
         return;
@@ -107,10 +114,27 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       }
     }
     await _run(
-      (orders) => orders.changeStatus(order.id, target, reason: reason),
+      (orders) => orders.changeStatus(order.id, target, reason: reason, serviceMileage: serviceMileage),
       target == OrderStatus.cancelled
           ? 'La orden ${order.folio} se canceló.'
           : 'La orden pasó a «${target.label}».',
+    );
+  }
+
+  /// Corrección del kilometraje del servicio (solo administración, con motivo).
+  Future<void> _correctServiceMileage() async {
+    final order = _order!;
+    final correction = await showServiceMileageCorrectionDialog(
+      context,
+      entryMileage: order.entryMileage,
+      current: order.serviceMileage,
+    );
+    if (correction == null || !mounted) {
+      return;
+    }
+    await _run(
+      (orders) => orders.correctServiceMileage(order.id, correction.mileage, correction.reason),
+      'Se corrigió el kilometraje del servicio.',
     );
   }
 
@@ -352,6 +376,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   Widget _buildSummary(BuildContext context, ServiceOrder order, bool canManage) {
     final theme = Theme.of(context);
+    final isAdmin = context.select<AuthProvider, bool>((auth) => auth.user?.role == UserRole.admin);
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.xl),
       child: Card(
@@ -370,6 +395,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   _Field(label: 'Vehículo', value: order.vehicleLabel),
                   _Field(label: 'Mecánico asignado', value: order.mechanicName),
                   _Field(label: 'Kilometraje de entrada', value: formatMileage(order.entryMileage)),
+                  if (order.serviceMileage != null)
+                    _Field(label: 'Kilometraje del servicio', value: formatMileage(order.serviceMileage!)),
                   _Field(label: 'Recibida', value: formatDateTime(order.createdAt)),
                   if (order.deliveredAt != null) _Field(label: 'Entregada', value: formatDateTime(order.deliveredAt!)),
                 ],
@@ -381,6 +408,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   '${order.mileageCorrectionReason}',
                   style: theme.textTheme.bodySmall,
                 ),
+              ],
+              if (order.serviceMileageCorrectionReason != null) ...[
+                const SizedBox(height: AppSpacing.lg),
+                Text('Kilometraje del servicio corregido: ${order.serviceMileageCorrectionReason}',
+                    style: theme.textTheme.bodySmall),
               ],
               if (order.cancelReason != null) ...[
                 const SizedBox(height: AppSpacing.lg),
@@ -414,6 +446,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                         onPressed: _viewAppointment,
                         icon: const Icon(LucideIcons.calendarDays, size: AppSizes.icon),
                         label: const Text('Ver cita de origen'),
+                      ),
+                    if (isAdmin && (order.status == OrderStatus.finished || order.status == OrderStatus.delivered))
+                      OutlinedButton.icon(
+                        onPressed: _correctServiceMileage,
+                        icon: const Icon(LucideIcons.gauge, size: AppSizes.icon),
+                        label: const Text('Corregir kilometraje del servicio'),
                       ),
                     if (canManage && !order.status.isFinal)
                       OutlinedButton.icon(

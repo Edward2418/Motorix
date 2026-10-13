@@ -5,7 +5,7 @@ const ORDER_SELECT = `
   SELECT o.id, o.folio, o.status, o.client_id, c.name AS client_name, o.vehicle_id,
          CONCAT(v.license_plate, ' · ', v.brand, ' ', v.model, ' ', v.year) AS vehicle_label,
          o.mechanic_id, m.name AS mechanic_name, o.entry_mileage, o.previous_mileage,
-         o.mileage_correction_reason, o.appointment_id, o.reported_problem, o.diagnosis, o.notes,
+         o.mileage_correction_reason, o.service_mileage, o.service_mileage_correction_reason, o.appointment_id, o.reported_problem, o.diagnosis, o.notes,
          o.recommendations, o.cancel_reason, o.delivered_at, o.created_at, o.updated_at,
          (SELECT COALESCE(SUM(s.cost), 0) FROM order_services s WHERE s.order_id = o.id) AS services_total,
          (SELECT COALESCE(SUM(l.amount), 0) FROM order_labor l WHERE l.order_id = o.id) AS labor_total
@@ -36,6 +36,8 @@ export function toOrder(row) {
     entryMileage: row.entry_mileage,
     previousMileage: row.previous_mileage,
     mileageCorrectionReason: row.mileage_correction_reason,
+    serviceMileage: row.service_mileage,
+    serviceMileageCorrectionReason: row.service_mileage_correction_reason,
     appointmentId: row.appointment_id,
     reportedProblem: row.reported_problem,
     diagnosis: row.diagnosis,
@@ -78,7 +80,7 @@ export async function findById(id, conn) {
 // Bloquea la orden dentro de una transacción antes de cambiarla.
 export async function lockById(id, conn) {
   const rows = await query(
-    'SELECT id, status, mechanic_id, appointment_id, vehicle_id FROM service_orders WHERE id = ? FOR UPDATE',
+    'SELECT id, folio, status, mechanic_id, appointment_id, vehicle_id, entry_mileage FROM service_orders WHERE id = ? FOR UPDATE',
     [id],
     conn
   );
@@ -170,15 +172,33 @@ export async function list({ status, mechanicId, clientId, search, page, pageSiz
 }
 
 // Cambia el estado solo si la orden sigue en `fromStatus` (bloqueo optimista). Devuelve true si se aplicó.
-export async function updateStatus(id, fromStatus, toStatus, { cancelReason = null, deliveredAt = null } = {}, conn) {
+export async function updateStatus(
+  id,
+  fromStatus,
+  toStatus,
+  { cancelReason = null, deliveredAt = null, serviceMileage = null } = {},
+  conn
+) {
   const result = await query(
     `UPDATE service_orders
-     SET status = ?, cancel_reason = COALESCE(?, cancel_reason), delivered_at = COALESCE(?, delivered_at)
+     SET status = ?, cancel_reason = COALESCE(?, cancel_reason), delivered_at = COALESCE(?, delivered_at),
+         service_mileage = COALESCE(?, service_mileage)
      WHERE id = ? AND status = ?`,
-    [toStatus, cancelReason, deliveredAt, id, fromStatus],
+    [toStatus, cancelReason, deliveredAt, serviceMileage, id, fromStatus],
     conn
   );
   return result.affectedRows === 1;
+}
+
+// Corrige el kilometraje del servicio de una orden finalizada y deja el motivo y quién lo corrigió.
+export async function setServiceMileage(id, mileage, { reason, correctedBy }, conn) {
+  await query(
+    `UPDATE service_orders
+     SET service_mileage = ?, service_mileage_correction_reason = ?, service_mileage_corrected_by = ?
+     WHERE id = ?`,
+    [mileage, reason, correctedBy, id],
+    conn
+  );
 }
 
 // Campos de contenido editables y su columna. Solo se actualizan los que vienen en `fields`.

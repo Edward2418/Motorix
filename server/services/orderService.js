@@ -182,9 +182,41 @@ export async function reassignMechanic(orderId, mechanicId, actor) {
   return buildOrderDetail(await orderModel.findById(orderId), actor);
 }
 
+// El kilometraje del servicio no puede ser menor al de entrada de la orden.
+function assertServiceMileage(serviceMileage, entryMileage) {
+  if (serviceMileage < entryMileage) {
+    throw fieldError(
+      'serviceMileage',
+      `El kilometraje del servicio no puede ser menor al de entrada (${formatKm(entryMileage)} km).`
+    );
+  }
+}
+
+// Corrige el kilometraje del servicio de una orden TERMINADO o ENTREGADO (solo ADMIN, con motivo obligatorio).
+// No cambia el kilometraje actual del vehículo.
+export async function correctServiceMileage(orderId, { serviceMileage, reason }, actor) {
+  if (actor.role !== 'ADMIN') {
+    throw AppError.forbidden('Solo un administrador puede corregir el kilometraje del servicio.');
+  }
+  await withTransaction(async (conn) => {
+    const order = await orderModel.lockById(orderId, conn);
+    if (!order) {
+      throw AppError.notFound('La orden no existe.');
+    }
+    if (order.status !== 'TERMINADO' && order.status !== 'ENTREGADO') {
+      throw AppError.conflict(
+        `La orden está en estado ${order.status}: el kilometraje del servicio solo se corrige en órdenes terminadas o entregadas.`
+      );
+    }
+    assertServiceMileage(serviceMileage, order.entry_mileage);
+    await orderModel.setServiceMileage(orderId, serviceMileage, { reason, correctedBy: actor.id }, conn);
+  });
+  return buildOrderDetail(await orderModel.findById(orderId), actor);
+}
+
 // Cambia el estado de la orden dentro de una transacción: bloquea la orden, valida la transición y el rol,
 // guarda el cambio (solo si el estado sigue siendo el leído), registra el historial y actualiza la cita vinculada.
-export async function changeStatus(id, { status, reason }, actor) {
+export async function changeStatus(id, { status, reason, serviceMileage }, actor) {
   await withTransaction(async (conn) => {
     const order = await orderModel.lockById(id, conn);
     if (!order) {
@@ -200,11 +232,23 @@ export async function changeStatus(id, { status, reason }, actor) {
       throw check.code === 'FORBIDDEN' ? AppError.forbidden(check.reason) : AppError.invalidTransition(check.reason);
     }
 
+    // Para terminar la orden hace falta el kilometraje del servicio (se comprueba después del permiso y la transición).
+    if (status === 'TERMINADO') {
+      if (serviceMileage === null || serviceMileage === undefined) {
+        throw fieldError('serviceMileage', 'El kilometraje del servicio es obligatorio para terminar la orden.');
+      }
+      assertServiceMileage(serviceMileage, order.entry_mileage);
+    }
+
     const applied = await orderModel.updateStatus(
       id,
       order.status,
       status,
-      { cancelReason: status === 'CANCELADA' ? reason : null, deliveredAt: status === 'ENTREGADO' ? new Date() : null },
+      {
+        cancelReason: status === 'CANCELADA' ? reason : null,
+        deliveredAt: status === 'ENTREGADO' ? new Date() : null,
+        serviceMileage: status === 'TERMINADO' ? serviceMileage : null
+      },
       conn
     );
     if (!applied) {
@@ -214,6 +258,10 @@ export async function changeStatus(id, { status, reason }, actor) {
       { orderId: id, fromStatus: order.status, toStatus: status, changedBy: actor.id, reason: status === 'CANCELADA' ? reason : null },
       conn
     );
+    if (status === 'TERMINADO') {
+      // El kilometraje actual del vehículo solo sube; nunca baja.
+      await vehicleModel.raiseMileage(order.vehicle_id, serviceMileage, conn);
+    }
 
     if (order.appointment_id) {
       if (status === 'ENTREGADO') {
