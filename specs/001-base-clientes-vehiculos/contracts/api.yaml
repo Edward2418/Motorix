@@ -1,0 +1,616 @@
+openapi: 3.0.3
+info:
+  title: API de Motorix - Sprint 1
+  version: 1.0.0
+  description: >
+    Contrato de la API REST del Sprint 1: autenticación, usuarios, clientes y vehículos.
+    Todas las rutas cuelgan de /api y, salvo el inicio de sesión, requieren un token JWT en el
+    encabezado Authorization (Bearer). Las respuestas y los mensajes de error están en español.
+    No existe ninguna operación DELETE: los registros se desactivan (baja lógica).
+servers:
+  - url: http://localhost:3000/api
+security:
+  - bearerAuth: []
+tags:
+  - name: Autenticación
+  - name: Usuarios
+  - name: Clientes
+  - name: Vehículos
+
+paths:
+  /auth/login:
+    post:
+      tags: [Autenticación]
+      summary: Inicia sesión con usuario o correo
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Sesión iniciada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/LoginResult'
+        '400': { $ref: '#/components/responses/Validacion' }
+        '429':
+          description: Demasiados intentos fallidos (code TOO_MANY_ATTEMPTS). La cuenta queda bloqueada 15 minutos tras 5 intentos consecutivos; el mensaje indica el tiempo restante
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '401':
+          description: Credenciales incorrectas (mismo mensaje para usuario inexistente, contraseña errónea o cuenta desactivada)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /auth/me:
+    get:
+      tags: [Autenticación]
+      summary: Devuelve el usuario de la sesión actual
+      responses:
+        '200':
+          description: Usuario autenticado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+
+  /auth/password:
+    put:
+      tags: [Autenticación]
+      summary: Cambia la contraseña del usuario autenticado
+      description: La contraseña nueva debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '204':
+          description: Contraseña actualizada
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+
+  /users:
+    get:
+      tags: [Usuarios]
+      summary: Lista usuarios (solo ADMIN)
+      parameters:
+        - $ref: '#/components/parameters/Search'
+        - $ref: '#/components/parameters/Active'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Página de usuarios
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/User' }
+                  meta: { $ref: '#/components/schemas/PageMeta' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+    post:
+      tags: [Usuarios]
+      summary: Registra un usuario (solo ADMIN)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UserCreate' }
+      responses:
+        '201':
+          description: Usuario creado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/User' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+
+  /users/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      tags: [Usuarios]
+      summary: Consulta un usuario (solo ADMIN)
+      responses:
+        '200':
+          description: Usuario
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+    put:
+      tags: [Usuarios]
+      summary: Edita nombre, correo y rol de un usuario (solo ADMIN)
+      description: No se puede quitar el rol ADMIN al último administrador activo.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UserUpdate' }
+      responses:
+        '200':
+          description: Usuario actualizado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/User' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+
+  /users/{id}/status:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    patch:
+      tags: [Usuarios]
+      summary: Desactiva o reactiva un usuario (solo ADMIN)
+      description: Un administrador no puede desactivarse a sí mismo ni desactivar al último administrador activo (409).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/StatusRequest' }
+      responses:
+        '200':
+          description: Estado actualizado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+
+  /clients:
+    get:
+      tags: [Clientes]
+      summary: Lista clientes (ADMIN, RECEPTIONIST, MECHANIC)
+      parameters:
+        - $ref: '#/components/parameters/Search'
+        - $ref: '#/components/parameters/Active'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Página de clientes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Client' }
+                  meta: { $ref: '#/components/schemas/PageMeta' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+    post:
+      tags: [Clientes]
+      summary: Registra un cliente (ADMIN, RECEPTIONIST)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ClientInput' }
+      responses:
+        '201':
+          description: Cliente creado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Client' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+
+  /clients/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      tags: [Clientes]
+      summary: Consulta un cliente con sus vehículos (ADMIN, RECEPTIONIST, MECHANIC)
+      description: Incluye los vehículos asociados activos e inactivos, con su estado.
+      responses:
+        '200':
+          description: Cliente con sus vehículos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/ClientDetail' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+    put:
+      tags: [Clientes]
+      summary: Edita un cliente (ADMIN, RECEPTIONIST)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ClientInput' }
+      responses:
+        '200':
+          description: Cliente actualizado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Client' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+
+  /clients/{id}/status:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    patch:
+      tags: [Clientes]
+      summary: Desactiva o reactiva un cliente (ADMIN, RECEPTIONIST)
+      description: Desactivar un cliente con vehículos activos responde 409 hasta que no queden vehículos activos.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/StatusRequest' }
+      responses:
+        '200':
+          description: Estado actualizado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Client' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+
+  /vehicles:
+    get:
+      tags: [Vehículos]
+      summary: Lista vehículos (ADMIN, RECEPTIONIST, MECHANIC)
+      parameters:
+        - $ref: '#/components/parameters/Search'
+        - $ref: '#/components/parameters/Active'
+        - name: clientId
+          in: query
+          description: Filtra por propietario
+          schema: { type: integer, minimum: 1 }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Página de vehículos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Vehicle' }
+                  meta: { $ref: '#/components/schemas/PageMeta' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+    post:
+      tags: [Vehículos]
+      summary: Registra un vehículo asociado a un propietario (ADMIN, RECEPTIONIST)
+      description: El propietario debe existir y estar activo; la placa no puede repetirse.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/VehicleCreate' }
+      responses:
+        '201':
+          description: Vehículo creado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Vehicle' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+
+  /vehicles/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      tags: [Vehículos]
+      summary: Consulta un vehículo con los datos de su propietario (ADMIN, RECEPTIONIST, MECHANIC)
+      responses:
+        '200':
+          description: Vehículo
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Vehicle' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+
+  /vehicles/{id}/status:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    patch:
+      tags: [Vehículos]
+      summary: Desactiva o reactiva un vehículo (ADMIN, RECEPTIONIST)
+      description: Reactivar un vehículo cuyo propietario está desactivado responde 409.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/StatusRequest' }
+      responses:
+        '200':
+          description: Estado actualizado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Vehicle' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer, minimum: 1 }
+    Search:
+      name: search
+      in: query
+      description: Texto a buscar (nombre, teléfono, correo, usuario o placa, según el recurso)
+      schema: { type: string, maxLength: 100 }
+    Active:
+      name: active
+      in: query
+      description: Por defecto solo activos. `false` solo inactivos; `all` todos.
+      schema:
+        type: string
+        enum: ['true', 'false', all]
+        default: 'true'
+    Page:
+      name: page
+      in: query
+      schema: { type: integer, minimum: 1, default: 1 }
+    PageSize:
+      name: pageSize
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+
+  responses:
+    Validacion:
+      description: Datos inválidos
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NoAutenticado:
+      description: Falta la sesión o es inválida o venció
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    SinPermiso:
+      description: El rol no tiene permiso para la acción
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NoEncontrado:
+      description: El recurso no existe
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Conflicto:
+      description: Dato duplicado o regla de negocio incumplida
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              description: Código estable, por ejemplo VALIDATION_ERROR, UNAUTHENTICATED, FORBIDDEN, NOT_FOUND, CONFLICT, INTERNAL_ERROR
+            message:
+              type: string
+              description: Mensaje claro en español
+            details:
+              type: array
+              description: Errores por campo cuando aplica
+              items:
+                type: object
+                properties:
+                  field: { type: string }
+                  message: { type: string }
+
+    PageMeta:
+      type: object
+      properties:
+        page: { type: integer }
+        pageSize: { type: integer }
+        total: { type: integer }
+
+    Role:
+      type: string
+      enum: [ADMIN, RECEPTIONIST, MECHANIC]
+
+    StatusRequest:
+      type: object
+      required: [active]
+      properties:
+        active: { type: boolean }
+
+    LoginRequest:
+      type: object
+      required: [identifier, password]
+      properties:
+        identifier:
+          type: string
+          description: Nombre de usuario o correo electrónico, en el mismo campo
+        password:
+          type: string
+
+    LoginResult:
+      type: object
+      properties:
+        token: { type: string, description: Token JWT }
+        expiresIn: { type: integer, description: Vigencia en segundos }
+        user: { $ref: '#/components/schemas/User' }
+
+    ChangePasswordRequest:
+      type: object
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword: { type: string }
+        newPassword: { type: string, minLength: 8, maxLength: 72 }
+
+    User:
+      type: object
+      properties:
+        id: { type: integer }
+        username: { type: string }
+        name: { type: string }
+        email: { type: string, format: email }
+        role: { $ref: '#/components/schemas/Role' }
+        active: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    UserCreate:
+      type: object
+      required: [username, name, email, password, role]
+      properties:
+        username: { type: string, minLength: 3, maxLength: 50 }
+        name: { type: string, maxLength: 100 }
+        email: { type: string, format: email }
+        password: { type: string, minLength: 8, maxLength: 72 }
+        role: { $ref: '#/components/schemas/Role' }
+
+    UserUpdate:
+      type: object
+      required: [name, email, role]
+      properties:
+        name: { type: string, maxLength: 100 }
+        email: { type: string, format: email }
+        role: { $ref: '#/components/schemas/Role' }
+
+    ClientInput:
+      type: object
+      required: [name, phone]
+      properties:
+        name: { type: string, maxLength: 100 }
+        phone: { type: string, description: Entre 7 y 15 dígitos }
+        email: { type: string, format: email, nullable: true }
+        confirmDuplicate:
+          type: boolean
+          description: Confirma el alta o la edición aunque otro cliente activo tenga el mismo teléfono (de lo contrario responde 409 con code PHONE_DUPLICATE)
+
+    Client:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        phone: { type: string }
+        email: { type: string, nullable: true }
+        active: { type: boolean }
+        vehicleCount: { type: integer, description: Vehículos activos del cliente }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    ClientDetail:
+      allOf:
+        - $ref: '#/components/schemas/Client'
+        - type: object
+          properties:
+            vehicles:
+              type: array
+              items: { $ref: '#/components/schemas/Vehicle' }
+
+    VehicleCreate:
+      type: object
+      required: [clientId, brand, model, year, licensePlate]
+      properties:
+        clientId: { type: integer, minimum: 1 }
+        brand: { type: string, maxLength: 50 }
+        model: { type: string, maxLength: 50 }
+        year: { type: integer, minimum: 1950 }
+        licensePlate: { type: string, maxLength: 15 }
+        vin: { type: string, minLength: 17, maxLength: 17, nullable: true }
+        currentMileage: { type: integer, minimum: 0, default: 0 }
+
+    Vehicle:
+      type: object
+      properties:
+        id: { type: integer }
+        clientId: { type: integer }
+        clientName: { type: string }
+        brand: { type: string }
+        model: { type: string }
+        year: { type: integer }
+        licensePlate: { type: string }
+        vin: { type: string, nullable: true }
+        currentMileage: { type: integer }
+        active: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }

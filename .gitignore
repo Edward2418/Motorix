@@ -1,0 +1,26 @@
+# Secretos y entorno
+.env
+.env.*
+!.env.example
+
+# Datos locales de MySQL
+database/data/
+
+# Node.js
+node_modules/
+coverage/
+*.log
+
+# Flutter / Dart
+client/build/
+client/.dart_tool/
+client/.flutter-plugins*
+client/.packages
+
+# Sistema y editores
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
+.idea/
+.vscode/
