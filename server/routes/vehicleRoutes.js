@@ -12,6 +12,7 @@ const canWrite = authorize(ROLES.ADMIN, ROLES.RECEPTIONIST);
 router.use(authenticate);
 router.get('/', asyncHandler(vehicleController.list));
 router.get('/:id', asyncHandler(vehicleController.get));
+router.get('/:id/history', asyncHandler(vehicleController.history));
 router.post('/', canWrite, asyncHandler(vehicleController.create));
 router.patch('/:id/status', canWrite, asyncHandler(vehicleController.setStatus));
 

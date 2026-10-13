@@ -92,3 +92,11 @@ class HistoryEntry {
     );
   }
 }
+
+/// Página del historial de un vehículo.
+class HistoryPage {
+  const HistoryPage({required this.entries, required this.total});
+
+  final List<HistoryEntry> entries;
+  final int total;
+}

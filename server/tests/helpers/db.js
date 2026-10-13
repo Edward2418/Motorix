@@ -198,3 +198,22 @@ export async function createMaintenance({
   );
   return { id: result.insertId, vehicleId, orderId, description, dueDate: target, dueMileage, status };
 }
+
+// Marca una orden como finalizada en el historial: inserta el cambio a TERMINADO en la fecha indicada y,
+// si se da, fija el kilometraje del servicio. Sirve para probar el orden cronológico del historial.
+export async function markFinished({ orderId, finishedAt, serviceMileage = null, changedBy }) {
+  const [[order]] = await pool.query('SELECT mechanic_id FROM service_orders WHERE id = ?', [orderId]);
+  await pool.query(
+    "INSERT INTO order_status_history (order_id, from_status, to_status, changed_by, changed_at) VALUES (?, 'EN_REPARACION', 'TERMINADO', ?, ?)",
+    [orderId, changedBy ?? order.mechanic_id, finishedAt]
+  );
+  if (serviceMileage !== null) {
+    await pool.query('UPDATE service_orders SET service_mileage = ? WHERE id = ?', [serviceMileage, orderId]);
+  }
+}
+
+// Agrega un servicio o una línea de mano de obra a una orden directamente en la base.
+export async function addServiceLine(orderId, description, amount, table = 'order_services') {
+  const column = table === 'order_services' ? 'cost' : 'amount';
+  await pool.query(`INSERT INTO ${table} (order_id, description, ${column}) VALUES (?, ?, ?)`, [orderId, description, amount]);
+}

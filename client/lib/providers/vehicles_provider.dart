@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../models/client.dart';
+import '../models/history_entry.dart';
 import '../models/vehicle.dart';
 import '../services/api_client.dart';
 import 'clients_provider.dart';
@@ -11,6 +12,7 @@ class VehiclesProvider extends ChangeNotifier {
   final ApiClient _api;
 
   static const int pageSize = 10;
+  static const int historyPageSize = 5;
 
   List<Vehicle> _items = const [];
   int _total = 0;
@@ -102,6 +104,17 @@ class VehiclesProvider extends ChangeNotifier {
     });
     await load();
     return Vehicle.fromJson(response['data'] as Map<String, dynamic>);
+  }
+
+  /// Una página del historial de servicios del vehículo (órdenes terminadas y entregadas, la más reciente primero).
+  Future<HistoryPage> loadHistory(int vehicleId, {int page = 1, int pageSize = historyPageSize}) async {
+    final response = await _api.get('/vehicles/$vehicleId/history', query: {'page': '$page', 'pageSize': '$pageSize'});
+    return HistoryPage(
+      entries: [
+        for (final item in response['data'] as List<dynamic>) HistoryEntry.fromJson(item as Map<String, dynamic>),
+      ],
+      total: (response['meta'] as Map<String, dynamic>)['total'] as int,
+    );
   }
 
   /// Desactiva o reactiva un vehículo (baja lógica).

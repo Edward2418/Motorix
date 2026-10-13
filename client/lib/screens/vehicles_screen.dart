@@ -17,6 +17,7 @@ import '../widgets/table_scroll.dart';
 import '../widgets/view_states.dart';
 import 'client_detail_screen.dart';
 import 'vehicle_form_screen.dart';
+import 'vehicle_history_screen.dart';
 
 /// Listado de vehículos con búsqueda, filtro de estado y paginación.
 class VehiclesScreen extends StatefulWidget {
@@ -68,6 +69,14 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
   void _openOwner(Vehicle vehicle) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(builder: (_) => ClientDetailScreen(clientId: vehicle.clientId)),
+    );
+  }
+
+  void _openHistory(Vehicle vehicle) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => VehicleHistoryScreen(vehicleId: vehicle.id, title: '${vehicle.licensePlate} · ${vehicle.description}'),
+      ),
     );
   }
 
@@ -178,6 +187,11 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        IconButton(
+                          tooltip: 'Ver historial de servicios',
+                          onPressed: () => _openHistory(vehicle),
+                          icon: const Icon(LucideIcons.history, size: AppSizes.icon),
+                        ),
                         IconButton(
                           tooltip: 'Ver propietario',
                           onPressed: () => _openOwner(vehicle),

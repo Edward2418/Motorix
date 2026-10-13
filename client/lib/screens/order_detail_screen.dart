@@ -16,6 +16,7 @@ import '../widgets/order_line_dialog.dart';
 import '../widgets/section_navigator.dart';
 import '../widgets/status_badge.dart';
 import '../widgets/view_states.dart';
+import 'vehicle_history_screen.dart';
 
 /// Detalle de una orden de servicio: datos generales, contenido técnico editable (según rol, propiedad
 /// y estado) y, más adelante, las acciones de estado.
@@ -341,6 +342,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     );
   }
 
+  void _openHistory(ServiceOrder order) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => VehicleHistoryScreen(vehicleId: order.vehicleId, title: order.vehicleLabel),
+      ),
+    );
+  }
+
   Widget _buildSummary(BuildContext context, ServiceOrder order, bool canManage) {
     final theme = Theme.of(context);
     return Padding(
@@ -378,7 +387,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 Text('Motivo de cancelación: ${order.cancelReason}',
                     style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.danger)),
               ],
-              if (order.allowedTransitions.isNotEmpty || (canManage && (!order.status.isFinal || order.appointmentId != null))) ...[
+              ...[
                 const SizedBox(height: AppSpacing.lg),
                 Wrap(
                   spacing: AppSpacing.md,
@@ -395,6 +404,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                               onPressed: () => _changeStatus(target),
                               child: Text(_actionLabel(order.status, target)),
                             ),
+                    OutlinedButton.icon(
+                      onPressed: () => _openHistory(order),
+                      icon: const Icon(LucideIcons.history, size: AppSizes.icon),
+                      label: const Text('Ver historial del vehículo'),
+                    ),
                     if (canManage && order.appointmentId != null)
                       OutlinedButton.icon(
                         onPressed: _viewAppointment,
