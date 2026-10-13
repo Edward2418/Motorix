@@ -13,6 +13,7 @@ import '../utils/formatters.dart';
 import '../widgets/cancel_order_dialog.dart';
 import '../widgets/confirm_dialog.dart';
 import '../widgets/order_line_dialog.dart';
+import '../widgets/order_part_dialog.dart';
 import '../widgets/service_mileage_dialog.dart';
 import '../widgets/section_navigator.dart';
 import '../widgets/status_badge.dart';
@@ -246,6 +247,49 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     await _run((orders) => orders.removeLine(kind, _order!.id, line.id), 'Se quitó el ${kind.label}.');
   }
 
+  /// En una orden terminada, la administración debe indicar el motivo de cada cambio de refacciones.
+  bool get _partsNeedReason => _order?.status == OrderStatus.finished;
+
+  Future<void> _addPart() async {
+    final choice = await showAddPartDialog(context, requireReason: _partsNeedReason);
+    if (choice == null || !mounted) {
+      return;
+    }
+    await _run(
+      (orders) => orders.addPart(_order!.id, partId: choice.part.id, quantity: choice.quantity, reason: choice.reason),
+      'Se agregó «${choice.part.name}» a la orden.',
+    );
+  }
+
+  Future<void> _editPart(OrderPartLine line) async {
+    final change = await showPartQuantityDialog(context, line: line, requireReason: _partsNeedReason);
+    if (change == null || !mounted) {
+      return;
+    }
+    await _run(
+      (orders) => orders.updatePartQuantity(_order!.id, line.id, quantity: change.quantity, reason: change.reason),
+      'Se actualizó la cantidad de «${line.name}».',
+    );
+  }
+
+  Future<void> _removePart(OrderPartLine line) async {
+    final message =
+        '¿Seguro que quieres quitar «${line.name}» de la orden? Las ${line.quantity} unidades regresarán al inventario.';
+    String? reason;
+    if (_partsNeedReason) {
+      reason = await showPartReasonDialog(context, title: 'Quitar refacción', message: message);
+      if (reason == null || !mounted) {
+        return;
+      }
+    } else {
+      final confirmed = await showConfirmDialog(context, message: message);
+      if (!confirmed || !mounted) {
+        return;
+      }
+    }
+    await _run((orders) => orders.removePart(_order!.id, line.id, reason: reason), 'Se quitó «${line.name}» de la orden.');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -279,6 +323,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     final canEditProblem = canManage && open;
     final canEditDiagnosis = canEditTechnical && open;
     final canEditLines = canEditTechnical && open;
+    // Refacciones: el técnico en estados abiertos; en una orden terminada solo la administración (con motivo).
+    final canEditParts = canEditLines || (user.role == UserRole.admin && status == OrderStatus.finished);
     final canEditNotes = canEditTechnical && !status.isFinal;
     final theme = Theme.of(context);
 
@@ -333,6 +379,15 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               onAdd: () => _addLine(LineKind.labor),
               onEdit: (line) => _editLine(LineKind.labor, line),
               onRemove: (line) => _removeLine(LineKind.labor, line),
+            ),
+            _PartsSection(
+              parts: order.parts,
+              subtotal: order.partsTotal,
+              canEdit: canEditParts,
+              returned: status == OrderStatus.cancelled,
+              onAdd: _addPart,
+              onEdit: _editPart,
+              onRemove: _removePart,
             ),
             Padding(
               padding: const EdgeInsets.only(bottom: AppSpacing.xl),
@@ -628,6 +683,102 @@ class _LinesSection extends StatelessWidget {
                   ),
                   const Divider(),
                 ],
+                Padding(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Text('Subtotal: ${formatMoney(subtotal)}', style: theme.textTheme.titleMedium),
+                  ),
+                ),
+              ],
+            ),
+    );
+  }
+}
+
+/// Refacciones usadas en la orden: cantidad, precio de venta registrado y subtotal.
+class _PartsSection extends StatelessWidget {
+  const _PartsSection({
+    required this.parts,
+    required this.subtotal,
+    required this.canEdit,
+    required this.returned,
+    required this.onAdd,
+    required this.onEdit,
+    required this.onRemove,
+  });
+
+  final List<OrderPartLine> parts;
+  final double subtotal;
+  final bool canEdit;
+
+  /// Orden cancelada: las líneas quedan como registro y las unidades ya regresaron al inventario.
+  final bool returned;
+  final VoidCallback onAdd;
+  final void Function(OrderPartLine line) onEdit;
+  final void Function(OrderPartLine line) onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return _SectionFrame(
+      title: 'Refacciones',
+      action: canEdit
+          ? OutlinedButton.icon(
+              onPressed: onAdd,
+              icon: const Icon(LucideIcons.plus, size: AppSizes.icon),
+              label: const Text('Agregar refacción'),
+            )
+          : null,
+      child: parts.isEmpty
+          ? Padding(
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              child: Text(
+                'Todavía no hay refacciones registradas.',
+                style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+              ),
+            )
+          : Column(
+              children: [
+                for (final line in parts) ...[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.sm),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            '${formatQuantity(line.quantity)} × ${line.name} (${line.code})',
+                            style: theme.textTheme.bodyLarge,
+                          ),
+                        ),
+                        Text('${formatMoney(line.unitPrice)} c/u', style: theme.textTheme.bodySmall),
+                        const SizedBox(width: AppSpacing.lg),
+                        Text(formatMoney(line.subtotal), style: theme.textTheme.bodyLarge),
+                        if (canEdit) ...[
+                          IconButton(
+                            tooltip: 'Cambiar cantidad de ${line.name}',
+                            onPressed: () => onEdit(line),
+                            icon: const Icon(LucideIcons.pencil, size: AppSizes.icon),
+                          ),
+                          IconButton(
+                            tooltip: 'Quitar ${line.name}',
+                            onPressed: () => onRemove(line),
+                            icon: const Icon(LucideIcons.trash2, size: AppSizes.icon),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const Divider(),
+                ],
+                if (returned)
+                  Padding(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Text(
+                      'Orden cancelada: estas refacciones regresaron al inventario.',
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ),
                 Padding(
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   child: Align(

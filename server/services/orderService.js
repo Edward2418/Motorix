@@ -4,10 +4,12 @@ import * as clientModel from '../models/clientModel.js';
 import * as orderHistoryModel from '../models/orderHistoryModel.js';
 import * as orderItemModel from '../models/orderItemModel.js';
 import * as orderModel from '../models/orderModel.js';
+import * as orderPartModel from '../models/orderPartModel.js';
 import * as userModel from '../models/userModel.js';
 import * as vehicleModel from '../models/vehicleModel.js';
 import { AppError } from '../utils/AppError.js';
 import { nextFolio } from './folioService.js';
+import { returnAllParts } from './orderPartService.js';
 import { allowedTransitions, canTransition, isFinalStatus } from './orderStateMachine.js';
 
 const formatKm = (km) => Number(km).toLocaleString('en-US');
@@ -18,15 +20,17 @@ function fieldError(field, message) {
 
 // Detalle completo de la orden: líneas, totales, historial y las transiciones que el actor puede hacer.
 export async function buildOrderDetail(order, actor, conn) {
-  const [services, labor, history] = await Promise.all([
+  const [services, labor, parts, history] = await Promise.all([
     orderItemModel.listServices(order.id, conn),
     orderItemModel.listLabor(order.id, conn),
+    orderPartModel.listByOrder(order.id, conn),
     orderHistoryModel.listByOrder(order.id, conn)
   ]);
   return {
     ...order,
     services,
     labor,
+    parts,
     history,
     allowedTransitions: allowedTransitions({
       from: order.status,
@@ -258,6 +262,10 @@ export async function changeStatus(id, { status, reason, serviceMileage }, actor
       { orderId: id, fromStatus: order.status, toStatus: status, changedBy: actor.id, reason: status === 'CANCELADA' ? reason : null },
       conn
     );
+    if (status === 'CANCELADA') {
+      // Las refacciones de la orden regresan al inventario en la misma transacción (una sola vez).
+      await returnAllParts(order, actor, conn);
+    }
     if (status === 'TERMINADO') {
       // El kilometraje actual del vehículo solo sube; nunca baja.
       await vehicleModel.raiseMileage(order.vehicle_id, serviceMileage, conn);

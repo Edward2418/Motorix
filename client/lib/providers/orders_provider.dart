@@ -217,6 +217,37 @@ class OrdersProvider extends ChangeNotifier {
   }
 
   /// Quita la línea; la orden nunca se elimina.
+  /// Agrega una refacción a la orden: el servidor descuenta el inventario en la misma operación.
+  Future<ServiceOrder> addPart(int orderId, {required int partId, required int quantity, String? reason}) async {
+    final response = await _api.post('/orders/$orderId/parts', body: {
+      'partId': partId,
+      'quantity': quantity,
+      'reason': ?reason,
+    });
+    final order = ServiceOrder.fromJson(response['data'] as Map<String, dynamic>);
+    notifyListeners();
+    return order;
+  }
+
+  /// Cambia la cantidad de una refacción de la orden (el servidor mueve solo la diferencia).
+  Future<ServiceOrder> updatePartQuantity(int orderId, int lineId, {required int quantity, String? reason}) async {
+    final response = await _api.put('/orders/$orderId/parts/$lineId', body: {
+      'quantity': quantity,
+      'reason': ?reason,
+    });
+    final order = ServiceOrder.fromJson(response['data'] as Map<String, dynamic>);
+    notifyListeners();
+    return order;
+  }
+
+  /// Quita la refacción de la orden y devuelve las unidades al inventario.
+  Future<ServiceOrder> removePart(int orderId, int lineId, {String? reason}) async {
+    final response = await _api.delete('/orders/$orderId/parts/$lineId', body: reason == null ? null : {'reason': reason});
+    final order = ServiceOrder.fromJson(response['data'] as Map<String, dynamic>);
+    notifyListeners();
+    return order;
+  }
+
   Future<ServiceOrder> removeLine(LineKind kind, int orderId, int lineId) async {
     final response = await _api.delete('/orders/$orderId/${kind.path}/$lineId');
     final order = ServiceOrder.fromJson(response['data'] as Map<String, dynamic>);

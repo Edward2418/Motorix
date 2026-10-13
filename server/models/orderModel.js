@@ -8,7 +8,8 @@ const ORDER_SELECT = `
          o.mileage_correction_reason, o.service_mileage, o.service_mileage_correction_reason, o.appointment_id, o.reported_problem, o.diagnosis, o.notes,
          o.recommendations, o.cancel_reason, o.delivered_at, o.created_at, o.updated_at,
          (SELECT COALESCE(SUM(s.cost), 0) FROM order_services s WHERE s.order_id = o.id) AS services_total,
-         (SELECT COALESCE(SUM(l.amount), 0) FROM order_labor l WHERE l.order_id = o.id) AS labor_total
+         (SELECT COALESCE(SUM(l.amount), 0) FROM order_labor l WHERE l.order_id = o.id) AS labor_total,
+         (SELECT COALESCE(SUM(p.quantity * p.unit_price), 0) FROM order_parts p WHERE p.order_id = o.id) AS parts_total
   FROM service_orders o
   JOIN clients c ON c.id = o.client_id
   JOIN vehicles v ON v.id = o.vehicle_id
@@ -23,6 +24,7 @@ export function toOrder(row) {
   }
   const servicesTotal = money(row.services_total);
   const laborTotal = money(row.labor_total);
+  const partsTotal = money(row.parts_total);
   return {
     id: row.id,
     folio: row.folio,
@@ -47,7 +49,8 @@ export function toOrder(row) {
     deliveredAt: row.delivered_at,
     servicesTotal,
     laborTotal,
-    total: money(servicesTotal + laborTotal),
+    partsTotal,
+    total: money(servicesTotal + laborTotal + partsTotal),
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };
