@@ -138,10 +138,23 @@ Color de marca: **rojo grisáceo (apagado)**. El rojo de alerta es distinto: má
 | Esperando refacción | `warning` |
 | Terminado / Completada / Entregado | `success` |
 | Cancelada | `danger` |
-
-Estados de las **citas** (Sprint 2): Pendiente gris (`textSecondary`), Confirmada `primary`, En proceso `warning`, Completada `success` y Cancelada `danger`. Las insignias de estado usan el color con un fondo suave del mismo tono y un borde fino (`StatusBadge`).
 | Mantenimiento próximo | `warning` |
 | Mantenimiento vencido / Stock crítico | `danger` |
+
+Estados de las **citas** (Sprint 2): Pendiente gris (`textSecondary`), Confirmada `primary`, En proceso `warning`, Completada `success` y Cancelada `danger`. Las insignias de estado usan el color con un fondo suave del mismo tono y un borde fino (`StatusBadge`).
+
+Estados del **Sprint 3**:
+
+| Elemento | Estado | Color |
+|---|---|---|
+| Mantenimiento (estado visual calculado al consultar) | Normal | Gris (`textSecondary`) |
+| | Próximo | `warning` |
+| | Vencido | `danger` |
+| Nivel de stock de una refacción | Normal | `success` |
+| | Bajo (igual o menor al mínimo) | `warning` |
+| | Agotado (cero) | `danger` |
+
+El **aviso de stock bajo** (`StockAlertBanner`) es una barra en la parte superior de Inventario, solo para la administración: fondo suave y borde fino de `warning` (de `danger` si hay refacciones agotadas), el ícono de advertencia, un resumen y las primeras refacciones afectadas. Cuando no hay alertas no se muestra ni deja un espacio vacío. En las líneas de movimientos, las cantidades que suman usan `success` y las que restan `danger`.
 
 ---
 

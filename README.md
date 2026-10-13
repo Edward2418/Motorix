@@ -4,7 +4,7 @@ Sistema de Gestión para Taller Mecánico. Proyecto académico cuyo MVP se const
 El alcance completo está en [`docs/project-context.md`](docs/project-context.md) y las reglas del
 proyecto en la [constitución](.specify/memory/constitution.md).
 
-**Estado actual: Sprint 2** — sobre la base del Sprint 1 (inicio de sesión con JWT, usuarios y roles, clientes y vehículos) agrega **citas** y **órdenes de servicio**: la recepción registra citas y crea órdenes, el mecánico documenta diagnóstico, servicios y recomendaciones, y el estado avanza por un flujo controlado hasta la entrega.
+**Estado actual: Sprint 3** — suma el **historial de servicios por vehículo**, los **mantenimientos programados** (con estado Normal, Próximo o Vencido) y el **inventario de refacciones** con movimientos, alertas de stock bajo y su uso en las órdenes. Sobre el Sprint 2 (citas y órdenes de servicio) y el Sprint 1 (inicio de sesión con JWT, usuarios y roles, clientes y vehículos) agrega **citas** y **órdenes de servicio**: la recepción registra citas y crea órdenes, el mecánico documenta diagnóstico, servicios y recomendaciones, y el estado avanza por un flujo controlado hasta la entrega.
 
 ## Estructura
 
@@ -74,7 +74,13 @@ consecutivos la cuenta se bloquea 15 minutos.
 | Órdenes: crear y reasignar mecánico | Sí | Sí | No |
 | Órdenes: corregir el kilometraje a la baja al crear | Sí | No | No |
 | Órdenes: diagnóstico, servicios, mano de obra, observaciones y recomendaciones | Sí | No (solo el problema reportado) | Solo en sus órdenes |
-| Órdenes: avanzar el estado hasta TERMINADO | Sí | Sí | Solo en sus órdenes |
+| Órdenes: avanzar el estado hasta TERMINADO (con el kilometraje del servicio) | Sí | Sí | Solo en sus órdenes |
+| Órdenes: corregir el kilometraje del servicio | Sí (con motivo) | No | No |
+| Órdenes: refacciones utilizadas | Sí (en TERMINADO, con motivo) | No | Solo en sus órdenes abiertas |
+| Historial de un vehículo | Sí | Sí | Sí |
+| Mantenimientos: programar | Cualquier orden no cancelada | Cualquier orden no cancelada | Solo desde sus órdenes |
+| Mantenimientos: consultar, atender, cancelar | Sí | Sí | Consultar; cerrar solo los de sus órdenes |
+| Inventario: catálogo, existencias, movimientos y alertas | Sí | No | Solo consulta el catálogo activo, sin precio de compra |
 | Órdenes: entregar o cancelar | Sí | Sí | No |
 
 Los permisos se validan siempre en el backend; ocultar un botón en la interfaz no es seguridad.
@@ -95,8 +101,24 @@ Cancelación (con motivo): desde RECIBIDO, DIAGNOSTICO, EN_REPARACION o ESPERAND
 - El kilometraje de entrada no puede ser menor al registrado; solo un administrador puede corregirlo a la
   baja, indicando el motivo.
 - El total se calcula con los servicios y la mano de obra; no se guarda aparte.
+- Para terminar una orden hay que indicar el **kilometraje del servicio** (no menor al de entrada); el
+  kilometraje del vehículo solo sube. El historial del vehículo lista las órdenes terminadas y entregadas.
+- Las **refacciones** de la orden descuentan el inventario en el mismo momento; el total incluye servicios,
+  mano de obra y refacciones. Cancelar la orden las devuelve al inventario.
 - Crear una orden desde una cita la deja EN_PROCESO; al entregar la orden la cita queda COMPLETADA y al
   cancelarla, CANCELADA.
+
+## Inventario y mantenimientos
+
+- El **stock** de cada refacción es siempre la suma de sus movimientos (`ENTRADA`, `SALIDA` y `AJUSTE`), que
+  son inmutables, y **nunca puede ser negativo**. Las salidas solo las genera el uso en una orden.
+- Una refacción en o por debajo de su stock mínimo aparece en el aviso de **Inventario** (solo administración);
+  las desactivadas no generan alertas y nada se elimina.
+- Los **mantenimientos** se programan desde una orden por fecha, kilometraje o ambos. Su estado se calcula al
+  consultar: Vencido si ya pasó la fecha o se alcanzó el kilometraje; Próximo si faltan 30 días o 1 000 km o
+  menos. Los umbrales se ajustan con `MAINTENANCE_SOON_DAYS` y `MAINTENANCE_SOON_KM` en `.env`.
+- El contrato de la API está en
+  [`specs/003-historial-inventario/contracts/api.yaml`](specs/003-historial-inventario/contracts/api.yaml).
 
 ## Pruebas
 

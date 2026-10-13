@@ -8,9 +8,11 @@ Cada integrante usa su propia instancia. El frontend nunca se conecta a la base:
 ```text
 database/
 ├── migrations/   Scripts SQL numerados e inmutables (esquema): 001 usuarios, clientes y vehículos;
-│                 002 citas y órdenes de servicio; 003 intentos de inicio de sesión
+│                 002 citas y órdenes de servicio; 003 intentos de inicio de sesión;
+│                 004 inventario, mantenimientos y kilometraje del servicio
 ├── seeds/        Datos de ejemplo idempotentes: 001 usuarios, 002 clientes, 003 vehículos, 004 citas,
-│                 005 órdenes de servicio (crea también al segundo mecánico, `mecanico2`)
+│                 005 órdenes de servicio (crea también al segundo mecánico, `mecanico2`),
+│                 006 refacciones, movimientos y su uso en las órdenes, 007 mantenimientos
 ├── scripts/      Creación de las bases y del usuario de la aplicación
 ├── data/         (opcional, ignorada por Git) archivos físicos de MySQL
 └── README.md

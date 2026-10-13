@@ -1294,6 +1294,35 @@ Antes de asumirlas como definitivas, el equipo debe decidir:
     `validators`, `utils`) viven directamente en `server/`, manteniendo la
     separación de responsabilidades de la sección 11.
 
+### Decisiones resueltas durante el Sprint 3
+
+-   **Historial del vehículo**: es una consulta derivada de las órdenes en `TERMINADO` o
+    `ENTREGADO` (la más reciente primero); no existe una tabla de historial. La fecha del
+    servicio es el primer cambio a `TERMINADO`.
+-   **Kilometraje del servicio**: obligatorio al pasar una orden a `TERMINADO` (con el de
+    entrada propuesto), no menor al de entrada. Actualiza el kilometraje del vehículo solo si es
+    mayor. Solo la administración lo corrige después, con motivo y sin bajar el del vehículo.
+-   **Mantenimientos**: se programan desde una orden por fecha, kilometraje o ambos, sin
+    intervalos universales. Estados `PROGRAMADO`, `ATENDIDO` y `CANCELADO`. No se permiten dos
+    pendientes con la misma descripción en un vehículo. El estado visual (Normal, Próximo,
+    Vencido) se calcula al consultar; los umbrales de «Próximo» son configuración del servidor
+    (`MAINTENANCE_SOON_DAYS`, 30 por defecto, y `MAINTENANCE_SOON_KM`, 1000 por defecto).
+    Cancelar una orden cancela sus mantenimientos pendientes.
+-   **Inventario**: catálogo de refacciones administrado solo por la administración (el mecánico
+    consulta las activas, sin precio de compra; recepción no accede). Se desactivan, nunca se
+    eliminan. El código es único sin distinguir mayúsculas.
+-   **Movimientos de inventario**: `ENTRADA` (stock inicial, reabastecimiento y devoluciones),
+    `SALIDA` (solo por el uso en órdenes) y `AJUSTE` (conteo físico, con motivo). Son inmutables
+    y el stock actual es siempre la suma de ellos. **El stock negativo está prohibido** (reglas
+    en el servicio, bloqueo ordenado de filas y restricción de la base).
+-   **Refacciones en la orden**: una línea por refacción, con el precio de venta copiado al
+    agregarla. Las agrega, cambia y quita el mecánico asignado o la administración mientras la
+    orden está abierta; en `TERMINADO` solo la administración, con motivo; en `ENTREGADO` y
+    `CANCELADA` nadie. Cancelar la orden devuelve todas las refacciones, una sola vez.
+-   **Total de la orden**: servicios + mano de obra + refacciones (cambia la regla del Sprint 2).
+-   **Alertas de stock**: una refacción activa con stock igual o menor a su mínimo (agotada si es
+    cero) aparece en el aviso de Inventario; solo lo ve la administración.
+
 ### Decisiones resueltas durante el Sprint 2
 
 -   **Estados de la orden**: `RECIBIDO → DIAGNOSTICO → EN_REPARACION → TERMINADO →
