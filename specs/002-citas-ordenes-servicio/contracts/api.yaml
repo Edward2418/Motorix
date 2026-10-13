@@ -1,0 +1,739 @@
+openapi: 3.0.3
+info:
+  title: API de Motorix - Sprint 2 (citas y órdenes de servicio)
+  version: 1.1.0
+  description: >
+    Amplía el contrato del Sprint 1 (autenticación, usuarios, clientes y vehículos) con citas y órdenes
+    de servicio. Todas las rutas cuelgan de /api y requieren un token JWT (Bearer). Respuestas y errores
+    usan los mismos formatos del Sprint 1 ({ data }, { data, meta } y { error }). No existe ninguna
+    operación DELETE sobre citas ni órdenes. Los permisos por rol y por propiedad se validan en el servidor.
+servers:
+  - url: http://localhost:3000/api
+security:
+  - bearerAuth: []
+tags:
+  - name: Citas
+  - name: Órdenes
+  - name: Servicios y mano de obra
+  - name: Mecánicos
+
+paths:
+  /mechanics:
+    get:
+      tags: [Mecánicos]
+      summary: Lista los mecánicos activos para asignarles órdenes (ADMIN, RECEPTIONIST)
+      responses:
+        '200':
+          description: Mecánicos activos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/MechanicOption' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+
+  /appointments:
+    get:
+      tags: [Citas]
+      summary: Lista citas (ADMIN, RECEPTIONIST)
+      parameters:
+        - name: from
+          in: query
+          description: Fecha inicial (YYYY-MM-DD), inclusive
+          schema: { type: string, format: date }
+        - name: to
+          in: query
+          description: Fecha final (YYYY-MM-DD), inclusive
+          schema: { type: string, format: date }
+        - name: status
+          in: query
+          schema: { $ref: '#/components/schemas/AppointmentStatus' }
+        - name: clientId
+          in: query
+          schema: { type: integer, minimum: 1 }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Página de citas, ordenadas por fecha y hora
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Appointment' }
+                  meta: { $ref: '#/components/schemas/PageMeta' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+    post:
+      tags: [Citas]
+      summary: Registra una cita (ADMIN, RECEPTIONIST)
+      description: >
+        El cliente y el vehículo deben estar activos y el vehículo debe pertenecer al cliente.
+        La fecha no puede ser anterior al momento actual. La cita nace en PENDIENTE.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AppointmentCreate' }
+      responses:
+        '201':
+          description: Cita creada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Appointment' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+
+  /appointments/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      tags: [Citas]
+      summary: Consulta una cita (ADMIN, RECEPTIONIST)
+      responses:
+        '200':
+          description: Cita
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Appointment' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+    put:
+      tags: [Citas]
+      summary: Modifica fecha, hora, motivo y observaciones (ADMIN, RECEPTIONIST)
+      description: Solo mientras la cita esté PENDIENTE o CONFIRMADA (409 en otro caso).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AppointmentUpdate' }
+      responses:
+        '200':
+          description: Cita actualizada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Appointment' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+
+  /appointments/{id}/confirm:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    post:
+      tags: [Citas]
+      summary: Confirma una cita PENDIENTE (ADMIN, RECEPTIONIST)
+      responses:
+        '200':
+          description: Cita confirmada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Appointment' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+
+  /appointments/{id}/cancel:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    post:
+      tags: [Citas]
+      summary: Cancela una cita PENDIENTE o CONFIRMADA (ADMIN, RECEPTIONIST)
+      description: Responde 409 si la cita ya tiene una orden vinculada (hay que cancelar la orden).
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason: { type: string, maxLength: 255, nullable: true }
+      responses:
+        '200':
+          description: Cita cancelada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Appointment' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+
+  /orders:
+    get:
+      tags: [Órdenes]
+      summary: Lista órdenes de servicio
+      description: >
+        ADMIN y RECEPTIONIST ven todas. MECHANIC ve únicamente las asignadas a él, sin importar los
+        parámetros enviados.
+      parameters:
+        - name: status
+          in: query
+          schema: { $ref: '#/components/schemas/OrderStatus' }
+        - name: mechanicId
+          in: query
+          schema: { type: integer, minimum: 1 }
+        - name: clientId
+          in: query
+          schema: { type: integer, minimum: 1 }
+        - name: search
+          in: query
+          description: Folio, placa o nombre del cliente
+          schema: { type: string, maxLength: 100 }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Página de órdenes, de la más reciente a la más antigua
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/OrderSummary' }
+                  meta: { $ref: '#/components/schemas/PageMeta' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+    post:
+      tags: [Órdenes]
+      summary: Crea una orden de servicio (ADMIN, RECEPTIONIST)
+      description: >
+        Reglas: el cliente y el vehículo deben existir, estar activos y ser consistentes; el vehículo no
+        puede tener otra orden abierta (409, con el folio); el mecánico debe ser un usuario activo con rol
+        MECHANIC; el kilometraje de entrada no puede ser menor al registrado del vehículo, salvo que un
+        ADMIN envíe correctMileage con un motivo. Si se indica appointmentId, la cita debe estar PENDIENTE o
+        CONFIRMADA, coincidir con el cliente y el vehículo, y pasa a EN_PROCESO. Todo ocurre en una transacción.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OrderCreate' }
+      responses:
+        '201':
+          description: Orden creada en estado RECIBIDO
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/OrderDetail' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+
+  /orders/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      tags: [Órdenes]
+      summary: Consulta una orden con sus servicios, mano de obra, total e historial de estados
+      description: Un MECHANIC solo puede abrir las órdenes asignadas a él (403 en otro caso).
+      responses:
+        '200':
+          description: Orden
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/OrderDetail' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+    patch:
+      tags: [Órdenes]
+      summary: Actualiza el contenido de la orden
+      description: >
+        reportedProblem lo edita ADMIN o RECEPTIONIST; diagnosis, notes y recommendations los edita el
+        mecánico asignado o ADMIN. Se rechaza (409) si la orden está TERMINADO, ENTREGADO o CANCELADA,
+        salvo notes y recommendations mientras esté TERMINADO.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OrderContentUpdate' }
+      responses:
+        '200':
+          description: Orden actualizada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/OrderDetail' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+
+  /orders/{id}/mechanic:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    put:
+      tags: [Órdenes]
+      summary: Reasigna el mecánico de una orden (ADMIN, RECEPTIONIST)
+      description: Solo mientras la orden no esté ENTREGADO ni CANCELADA.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mechanicId]
+              properties:
+                mechanicId: { type: integer, minimum: 1 }
+      responses:
+        '200':
+          description: Orden reasignada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/OrderDetail' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+
+  /orders/{id}/status:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    post:
+      tags: [Órdenes]
+      summary: Cambia el estado de la orden
+      description: >
+        Valida la transición (RECIBIDO → DIAGNOSTICO → EN_REPARACION → TERMINADO → ENTREGADO, más
+        EN_REPARACION ⇄ ESPERANDO_REFACCION y la cancelación desde los cuatro primeros estados abiertos)
+        y el rol: el mecánico asignado llega hasta TERMINADO; ENTREGADO y CANCELADA solo ADMIN o
+        RECEPTIONIST. Una transición inválida responde 409 con los estados permitidos; un rol sin permiso, 403.
+        La cancelación exige reason. El cambio queda en el historial y actualiza la cita vinculada.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { $ref: '#/components/schemas/OrderStatus' }
+                reason:
+                  type: string
+                  maxLength: 255
+                  description: Obligatorio si status es CANCELADA
+      responses:
+        '200':
+          description: Estado actualizado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/OrderDetail' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+
+  /orders/{id}/services:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    post:
+      tags: [Servicios y mano de obra]
+      summary: Agrega un servicio realizado (mecánico asignado o ADMIN)
+      description: Solo mientras la orden no esté TERMINADO, ENTREGADO ni CANCELADA.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LineInput' }
+      responses:
+        '201':
+          description: Orden con el servicio agregado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/OrderDetail' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+
+  /orders/{id}/services/{lineId}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+      - $ref: '#/components/parameters/LineId'
+    put:
+      tags: [Servicios y mano de obra]
+      summary: Edita un servicio realizado
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LineInput' }
+      responses:
+        '200':
+          description: Orden con el servicio actualizado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/OrderDetail' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+    delete:
+      tags: [Servicios y mano de obra]
+      summary: Quita un servicio de la orden
+      description: Quita solo la línea; las órdenes nunca se eliminan.
+      responses:
+        '200':
+          description: Orden sin el servicio
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/OrderDetail' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+
+  /orders/{id}/labor:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    post:
+      tags: [Servicios y mano de obra]
+      summary: Agrega una línea de mano de obra (mecánico asignado o ADMIN)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LineInput' }
+      responses:
+        '201':
+          description: Orden con la mano de obra agregada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/OrderDetail' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+
+  /orders/{id}/labor/{lineId}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+      - $ref: '#/components/parameters/LineId'
+    put:
+      tags: [Servicios y mano de obra]
+      summary: Edita una línea de mano de obra
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LineInput' }
+      responses:
+        '200':
+          description: Orden con la mano de obra actualizada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/OrderDetail' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+    delete:
+      tags: [Servicios y mano de obra]
+      summary: Quita una línea de mano de obra
+      responses:
+        '200':
+          description: Orden sin la línea
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/OrderDetail' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer, minimum: 1 }
+    LineId:
+      name: lineId
+      in: path
+      required: true
+      schema: { type: integer, minimum: 1 }
+    Page:
+      name: page
+      in: query
+      schema: { type: integer, minimum: 1, default: 1 }
+    PageSize:
+      name: pageSize
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+
+  responses:
+    Validacion:
+      description: Datos inválidos
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NoAutenticado:
+      description: Falta la sesión o es inválida o venció
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    SinPermiso:
+      description: El rol, o la propiedad de la orden, no permite la acción
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NoEncontrado:
+      description: El recurso no existe
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Conflicto:
+      description: Regla de negocio incumplida o estado incompatible (por ejemplo, transición inválida u orden abierta)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              description: Código estable (VALIDATION_ERROR, UNAUTHENTICATED, FORBIDDEN, NOT_FOUND, CONFLICT, INVALID_TRANSITION, SERVICE_UNAVAILABLE, INTERNAL_ERROR)
+            message: { type: string, description: Mensaje claro en español }
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field: { type: string }
+                  message: { type: string }
+
+    PageMeta:
+      type: object
+      properties:
+        page: { type: integer }
+        pageSize: { type: integer }
+        total: { type: integer }
+
+    AppointmentStatus:
+      type: string
+      enum: [PENDIENTE, CONFIRMADA, EN_PROCESO, COMPLETADA, CANCELADA]
+
+    OrderStatus:
+      type: string
+      enum: [RECIBIDO, DIAGNOSTICO, EN_REPARACION, ESPERANDO_REFACCION, TERMINADO, ENTREGADO, CANCELADA]
+
+    MechanicOption:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        openOrders: { type: integer, description: Órdenes abiertas asignadas }
+
+    AppointmentCreate:
+      type: object
+      required: [clientId, vehicleId, scheduledAt, reason]
+      properties:
+        clientId: { type: integer, minimum: 1 }
+        vehicleId: { type: integer, minimum: 1 }
+        scheduledAt: { type: string, format: date-time }
+        reason: { type: string, maxLength: 255 }
+        notes: { type: string, maxLength: 1000, nullable: true }
+
+    AppointmentUpdate:
+      type: object
+      required: [scheduledAt, reason]
+      properties:
+        scheduledAt: { type: string, format: date-time }
+        reason: { type: string, maxLength: 255 }
+        notes: { type: string, maxLength: 1000, nullable: true }
+
+    Appointment:
+      type: object
+      properties:
+        id: { type: integer }
+        clientId: { type: integer }
+        clientName: { type: string }
+        vehicleId: { type: integer }
+        vehicleLabel: { type: string, description: 'Placa y descripción, por ejemplo "ABC1234 · Nissan Versa 2020"' }
+        scheduledAt: { type: string, format: date-time }
+        reason: { type: string }
+        notes: { type: string, nullable: true }
+        status: { $ref: '#/components/schemas/AppointmentStatus' }
+        cancelReason: { type: string, nullable: true }
+        orderId: { type: integer, nullable: true }
+        orderFolio: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    OrderCreate:
+      type: object
+      required: [clientId, vehicleId, mechanicId, entryMileage, reportedProblem]
+      properties:
+        appointmentId: { type: integer, minimum: 1, nullable: true }
+        clientId: { type: integer, minimum: 1 }
+        vehicleId: { type: integer, minimum: 1 }
+        mechanicId: { type: integer, minimum: 1 }
+        entryMileage: { type: integer, minimum: 0 }
+        reportedProblem: { type: string, maxLength: 2000 }
+        correctMileage:
+          type: boolean
+          description: Solo ADMIN. Permite un kilometraje menor al registrado; exige mileageCorrectionReason
+        mileageCorrectionReason: { type: string, maxLength: 255, nullable: true }
+
+    OrderContentUpdate:
+      type: object
+      description: Todos los campos son opcionales; solo se modifican los enviados
+      properties:
+        reportedProblem: { type: string, maxLength: 2000 }
+        diagnosis: { type: string, maxLength: 4000, nullable: true }
+        notes: { type: string, maxLength: 4000, nullable: true }
+        recommendations: { type: string, maxLength: 4000, nullable: true }
+
+    LineInput:
+      type: object
+      description: Servicio (usa cost) o mano de obra (usa amount); el campo de importe se envía siempre como `amount`
+      required: [description, amount]
+      properties:
+        description: { type: string, maxLength: 255 }
+        amount: { type: number, minimum: 0, maximum: 99999999.99, multipleOf: 0.01 }
+
+    OrderLine:
+      type: object
+      properties:
+        id: { type: integer }
+        description: { type: string }
+        amount: { type: number }
+
+    StatusChange:
+      type: object
+      properties:
+        fromStatus: { $ref: '#/components/schemas/OrderStatus' }
+        toStatus: { $ref: '#/components/schemas/OrderStatus' }
+        changedBy: { type: string, description: Nombre del usuario }
+        reason: { type: string, nullable: true }
+        changedAt: { type: string, format: date-time }
+
+    OrderSummary:
+      type: object
+      properties:
+        id: { type: integer }
+        folio: { type: string }
+        status: { $ref: '#/components/schemas/OrderStatus' }
+        clientId: { type: integer }
+        clientName: { type: string }
+        vehicleId: { type: integer }
+        vehicleLabel: { type: string }
+        mechanicId: { type: integer }
+        mechanicName: { type: string }
+        entryMileage: { type: integer }
+        total: { type: number }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    OrderDetail:
+      allOf:
+        - $ref: '#/components/schemas/OrderSummary'
+        - type: object
+          properties:
+            appointmentId: { type: integer, nullable: true }
+            previousMileage: { type: integer }
+            mileageCorrectionReason: { type: string, nullable: true }
+            reportedProblem: { type: string }
+            diagnosis: { type: string, nullable: true }
+            notes: { type: string, nullable: true }
+            recommendations: { type: string, nullable: true }
+            cancelReason: { type: string, nullable: true }
+            deliveredAt: { type: string, format: date-time, nullable: true }
+            services:
+              type: array
+              items: { $ref: '#/components/schemas/OrderLine' }
+            labor:
+              type: array
+              items: { $ref: '#/components/schemas/OrderLine' }
+            servicesTotal: { type: number }
+            laborTotal: { type: number }
+            history:
+              type: array
+              items: { $ref: '#/components/schemas/StatusChange' }
+            allowedTransitions:
+              type: array
+              description: Estados a los que el usuario actual puede pasar la orden
+              items: { $ref: '#/components/schemas/OrderStatus' }
