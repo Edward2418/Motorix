@@ -48,7 +48,7 @@ npm run db:seed
 | 18 | Cancelar una orden con refacciones y con mantenimientos pendientes (como `recepcion`) | Las unidades regresan al inventario una sola vez y los mantenimientos pasan a Cancelado | FR-031 |
 | 19 | Como `admin`: modificar refacciones de una orden TERMINADA con y sin motivo; como `mecanico` | Con motivo se aplica; sin motivo se rechaza; el mecánico y recepción no pueden; en ENTREGADA nadie | FR-032 |
 | 20 | Como `admin`: abrir Inventario con refacciones por debajo del mínimo | Aviso visible con las refacciones en alerta, indicador por fila y filtro «Stock bajo»; desaparece al registrar una entrada | FR-035 a FR-037 |
-| 21 | Como `recepcion` y como `mecanico`: intentar abrir el inventario completo o las alertas | Se niega en el servidor (403) y el menú no ofrece la sección | FR-023, FR-038 |
+| 21 | Como `recepcion`: pedir `GET /api/parts`, los movimientos o las alertas. Como `mecanico`: pedir los movimientos, las alertas o una refacción inactiva | Todo se niega en el servidor (403, y 404 para la inactiva del mecánico); el mecánico sí lista el catálogo activo, sin precio de compra, y su menú (y el de recepción) no muestra «Inventario» | FR-023, FR-038 |
 | 22 | Repetir `npm run db:seed` | Sin duplicados; el stock de cada refacción coincide con la suma de sus movimientos | FR-040 |
 
 ## 4. Pruebas automatizadas

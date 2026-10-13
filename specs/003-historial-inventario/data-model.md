@@ -65,6 +65,8 @@ El total de la orden sigue **sin almacenarse**: ahora es `SUM(order_services.cos
 
 **Índices**: `idx_movements_part (part_id, created_at, id)`, `idx_movements_order (order_id)`.
 
+**Restricciones adicionales**: `CHECK (type <> 'SALIDA' OR order_id IS NOT NULL)`: una salida siempre pertenece a una orden.
+
 **Invariante**: para toda refacción, `parts.stock = SUM(inventory_movements.quantity)`. Los movimientos **no se actualizan ni se eliminan**; las correcciones son movimientos nuevos. El stock inicial al registrar una refacción es su primer movimiento `ENTRADA` (motivo «Stock inicial»; si es 0, no se genera).
 
 **Usos de cada tipo**: `ENTRADA` — stock inicial, reabastecimiento (administración) y devoluciones de refacciones de una orden; `SALIDA` — uso en una orden (solo desde órdenes); `AJUSTE` — corrección por conteo físico (administración).

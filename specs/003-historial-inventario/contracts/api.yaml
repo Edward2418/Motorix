@@ -501,7 +501,7 @@ paths:
       summary: Agrega una refacción a la orden y descuenta el inventario
       description: >
         MECHANIC asignado y ADMIN, en estados RECIBIDO a ESPERANDO_REFACCION. En TERMINADO solo ADMIN con reason
-        obligatorio. Nunca en ENTREGADO ni CANCELADA ni para recepción. La refacción debe estar activa. Copia el
+        obligatorio; en TERMINADO el mecánico y recepción reciben 403. En ENTREGADO y CANCELADA responde 409 para todos. Recepción siempre recibe 403. La refacción debe estar activa. Copia el
         precio de venta vigente a la línea y genera un movimiento SALIDA ligado a la orden, todo en una transacción.
         409 INSUFFICIENT_STOCK si no alcanza (el mensaje indica la existencia disponible); 409 PART_ALREADY_IN_ORDER
         si la refacción ya está en la orden; 409 PART_INACTIVE si está desactivada.
