@@ -1,3 +1,4 @@
+import * as orderModel from '../models/orderModel.js';
 import * as userModel from '../models/userModel.js';
 import { hashPassword } from '../utils/hash.js';
 import { AppError } from '../utils/AppError.js';
@@ -45,10 +46,27 @@ async function assertNotLastAdmin(user, message) {
   }
 }
 
+// Un mecánico con órdenes abiertas asignadas no puede desactivarse ni cambiar de rol hasta reasignarlas.
+async function assertNoOpenOrders(user, accion) {
+  if (user.role !== 'MECHANIC') {
+    return;
+  }
+  const open = await orderModel.listOpenByMechanic(user.id);
+  if (open.length > 0) {
+    const folios = open.map((order) => order.folio).join(', ');
+    throw AppError.conflict(
+      'No se puede ' + accion + ' al mecánico porque tiene órdenes abiertas asignadas: ' + folios + '. Reasígnalas primero.'
+    );
+  }
+}
+
 export async function updateUser(id, { name, email, role }) {
   const user = await getUser(id);
   if (role !== user.role && user.role === 'ADMIN') {
     await assertNotLastAdmin(user, 'No se puede quitar el rol de administrador al último administrador activo.');
+  }
+  if (role !== user.role) {
+    await assertNoOpenOrders(user, 'cambiar el rol de');
   }
   const sameEmail = await userModel.findByEmail(email);
   if (sameEmail && sameEmail.id !== id) {
@@ -69,6 +87,7 @@ export async function setUserStatus(id, active, actorId) {
       throw AppError.conflict('No puedes desactivar tu propia cuenta.');
     }
     await assertNotLastAdmin(user, 'No se puede desactivar al último administrador activo.');
+    await assertNoOpenOrders(user, 'desactivar');
   }
   return userModel.updateStatus(id, active);
 }

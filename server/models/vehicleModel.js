@@ -94,6 +94,20 @@ export async function updateStatus(id, active) {
   return findById(id);
 }
 
+// Bloquea la fila del vehículo dentro de una transacción para validar y actualizar su kilometraje sin carreras.
+export async function lockById(id, conn) {
+  const rows = await query(
+    'SELECT id, client_id, active, current_mileage, license_plate FROM vehicles WHERE id = ? FOR UPDATE',
+    [id],
+    conn
+  );
+  return rows[0] ?? null;
+}
+
+export async function updateMileage(id, mileage, conn) {
+  await query('UPDATE vehicles SET current_mileage = ? WHERE id = ?', [mileage, id], conn);
+}
+
 export async function countActiveByClient(clientId) {
   const [{ total }] = await query('SELECT COUNT(*) AS total FROM vehicles WHERE client_id = ? AND active = 1', [
     clientId

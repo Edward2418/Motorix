@@ -94,6 +94,19 @@ export async function updateStatus(id, active) {
   return findById(id);
 }
 
+// Mecánicos activos con la cantidad de órdenes abiertas que tienen asignadas.
+export async function listActiveMechanics() {
+  const rows = await query(
+    `SELECT u.id, u.name,
+            (SELECT COUNT(*) FROM service_orders o
+             WHERE o.mechanic_id = u.id AND o.status NOT IN ('ENTREGADO','CANCELADA')) AS open_orders
+     FROM users u
+     WHERE u.role = 'MECHANIC' AND u.active = 1
+     ORDER BY u.name, u.id`
+  );
+  return rows.map((row) => ({ id: row.id, name: row.name, openOrders: Number(row.open_orders) }));
+}
+
 export async function countActiveAdmins() {
   const [{ total }] = await query("SELECT COUNT(*) AS total FROM users WHERE role = 'ADMIN' AND active = 1");
   return Number(total);

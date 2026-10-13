@@ -5,6 +5,7 @@ import '../models/client.dart';
 import '../providers/vehicles_provider.dart';
 import '../services/api_client.dart';
 import '../utils/app_tokens.dart';
+import '../widgets/client_picker.dart';
 import '../widgets/confirm_dialog.dart';
 import '../widgets/section_navigator.dart';
 
@@ -145,8 +146,11 @@ class _VehicleFormScreenState extends State<VehicleFormScreen> {
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          _OwnerField(
+                          ClientPickerField(
                             controller: _owner,
+                            label: 'Propietario',
+                            emptyError: 'Elige al propietario del vehículo.',
+                            search: context.read<VehiclesProvider>().searchOwners,
                             locked: widget.initialOwner != null,
                             enabled: !_saving,
                             serverError: _serverErrors['clientId'],
@@ -281,108 +285,6 @@ class _VehicleFormScreenState extends State<VehicleFormScreen> {
                   ),
                 ),
               ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Campo de propietario con búsqueda entre los clientes activos. Exige elegir una opción de la lista.
-class _OwnerField extends StatefulWidget {
-  const _OwnerField({
-    required this.controller,
-    required this.locked,
-    required this.enabled,
-    required this.serverError,
-    required this.selected,
-    required this.onSelected,
-    required this.onCleared,
-  });
-
-  final TextEditingController controller;
-  final bool locked;
-  final bool enabled;
-  final String? serverError;
-  final Client? selected;
-  final ValueChanged<Client> onSelected;
-  final VoidCallback onCleared;
-
-  @override
-  State<_OwnerField> createState() => _OwnerFieldState();
-}
-
-class _OwnerFieldState extends State<_OwnerField> {
-  final _focusNode = FocusNode();
-
-  @override
-  void dispose() {
-    _focusNode.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (widget.locked) {
-      return TextFormField(
-        controller: widget.controller,
-        enabled: false,
-        decoration: const InputDecoration(labelText: 'Propietario'),
-      );
-    }
-    final provider = context.read<VehiclesProvider>();
-    return RawAutocomplete<Client>(
-      textEditingController: widget.controller,
-      focusNode: _focusNode,
-      displayStringForOption: (client) => client.name,
-      optionsBuilder: (value) async {
-        if (value.text.trim().length < 2) {
-          return const Iterable<Client>.empty();
-        }
-        try {
-          return await provider.searchOwners(value.text);
-        } on ApiException {
-          return const Iterable<Client>.empty();
-        }
-      },
-      onSelected: widget.onSelected,
-      fieldViewBuilder: (context, textController, focusNode, onFieldSubmitted) => TextFormField(
-        controller: textController,
-        focusNode: focusNode,
-        enabled: widget.enabled,
-        onChanged: (value) {
-          if (widget.selected != null && value != widget.selected!.name) {
-            widget.onCleared();
-          }
-        },
-        decoration: InputDecoration(
-          labelText: 'Propietario',
-          helperText: 'Escribe al menos 2 letras del nombre y elige un cliente de la lista.',
-          errorText: widget.serverError,
-        ),
-        validator: (_) => widget.selected == null ? 'Elige al propietario del vehículo.' : null,
-      ),
-      optionsViewBuilder: (context, onSelected, options) => Align(
-        alignment: Alignment.topLeft,
-        child: Material(
-          color: AppColors.surface,
-          elevation: 2,
-          borderRadius: BorderRadius.circular(AppRadius.panel),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: AppSizes.formMaxWidth - 2 * AppSpacing.xl, maxHeight: AppSizes.optionsMaxHeight),
-            child: ListView(
-              padding: EdgeInsets.zero,
-              shrinkWrap: true,
-              children: [
-                for (final client in options)
-                  ListTile(
-                    dense: true,
-                    title: Text(client.name),
-                    subtitle: Text(client.phone),
-                    onTap: () => onSelected(client),
-                  ),
-              ],
             ),
           ),
         ),

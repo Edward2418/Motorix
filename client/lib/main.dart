@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import 'providers/auth_provider.dart';
 import 'providers/clients_provider.dart';
+import 'providers/orders_provider.dart';
 import 'providers/sidebar_provider.dart';
 import 'providers/users_provider.dart';
 import 'providers/vehicles_provider.dart';
@@ -33,6 +34,7 @@ class MotorixApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ClientsProvider(api)),
         ChangeNotifierProvider(create: (_) => VehiclesProvider(api)),
         ChangeNotifierProvider(create: (_) => UsersProvider(api)),
+        ChangeNotifierProvider(create: (_) => OrdersProvider(api)),
       ],
       child: MaterialApp(
         title: 'Motorix',
