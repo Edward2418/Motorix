@@ -3,6 +3,7 @@ import app from '../../app.js';
 import { pool, resetTables, closePool, createClient, createVehicle, createAppointment, createPart, createOrderPart, createMaintenance } from '../helpers/db.js';
 import { bearer } from '../helpers/auth.js';
 import { escenarioOrden } from '../helpers/orders.js';
+import { createPayment, createTicket } from '../helpers/db.js';
 
 afterAll(closePool);
 
@@ -117,5 +118,31 @@ describe('refacciones, movimientos y mantenimientos: nada se elimina', () => {
     const [[lineas]] = await pool.query('SELECT COUNT(*) AS total FROM order_parts WHERE part_id = ?', [pieza.id]);
     expect(movimientos.total).toBe(2);
     expect(lineas.total).toBe(1);
+  });
+});
+
+describe('pagos y tickets: nada se elimina', () => {
+  beforeEach(resetTables);
+
+  test('no existe ruta para borrar o editar pagos ni tickets y la base impide borrar lo referenciado', async () => {
+    const { orden, tokens } = await escenarioOrden('TERMINADO');
+    const pago = await createPayment({ orderId: orden.id, amount: 100, status: 'CANCELADO' });
+    await createTicket({ orderId: orden.id, folio: 'TK-2026-0001', orderTotal: 0 });
+    for (const rol of ['admin', 'recepcion', 'mecanico']) {
+      for (const [metodo, ruta] of [
+        ['delete', `/api/payments/${pago.id}`],
+        ['put', `/api/payments/${pago.id}`],
+        ['patch', `/api/payments/${pago.id}`],
+        ['delete', `/api/orders/${orden.id}/payments`],
+        ['delete', `/api/orders/${orden.id}/ticket`],
+        ['put', `/api/orders/${orden.id}/ticket`]
+      ]) {
+        const res = await request(app)[metodo](ruta).set(bearer(tokens[rol]));
+        expect({ rol, metodo, ruta, status: res.status }).toEqual({ rol, metodo, ruta, status: rol === 'mecanico' && ruta.includes('/payments/') ? 403 : 404 });
+      }
+    }
+    await expect(pool.query('DELETE FROM service_orders WHERE id = ?', [orden.id])).rejects.toMatchObject({ code: 'ER_ROW_IS_REFERENCED_2' });
+    const [[{ total }]] = await pool.query('SELECT COUNT(*) AS total FROM payments WHERE id = ?', [pago.id]);
+    expect(total).toBe(1);
   });
 });

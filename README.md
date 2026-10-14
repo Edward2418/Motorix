@@ -4,7 +4,7 @@ Sistema de Gestión para Taller Mecánico. Proyecto académico cuyo MVP se const
 El alcance completo está en [`docs/project-context.md`](docs/project-context.md) y las reglas del
 proyecto en la [constitución](.specify/memory/constitution.md).
 
-**Estado actual: Sprint 3** — suma el **historial de servicios por vehículo**, los **mantenimientos programados** (con estado Normal, Próximo o Vencido) y el **inventario de refacciones** con movimientos, alertas de stock bajo y su uso en las órdenes. Sobre el Sprint 2 (citas y órdenes de servicio) y el Sprint 1 (inicio de sesión con JWT, usuarios y roles, clientes y vehículos) agrega **citas** y **órdenes de servicio**: la recepción registra citas y crea órdenes, el mecánico documenta diagnóstico, servicios y recomendaciones, y el estado avanza por un flujo controlado hasta la entrega.
+**Estado actual: Sprint 4** — suma los **pagos** de las órdenes (efectivo, tarjeta con terminal externa, transferencia y Mercado Pago en modo de pruebas), el **ticket de servicio** imprimible y el **panel de control** de la administración. Antes, el **Sprint 3** sumó el **historial de servicios por vehículo**, los **mantenimientos programados** (con estado Normal, Próximo o Vencido) y el **inventario de refacciones** con movimientos, alertas de stock bajo y su uso en las órdenes. Sobre el Sprint 2 (citas y órdenes de servicio) y el Sprint 1 (inicio de sesión con JWT, usuarios y roles, clientes y vehículos) agrega **citas** y **órdenes de servicio**: la recepción registra citas y crea órdenes, el mecánico documenta diagnóstico, servicios y recomendaciones, y el estado avanza por un flujo controlado hasta la entrega.
 
 ## Estructura
 
@@ -82,6 +82,11 @@ consecutivos la cuenta se bloquea 15 minutos.
 | Mantenimientos: consultar, atender, cancelar | Sí | Sí | Consultar; cerrar solo los de sus órdenes |
 | Inventario: catálogo, existencias, movimientos y alertas | Sí | No | Solo consulta el catálogo activo, sin precio de compra |
 | Órdenes: entregar o cancelar | Sí | Sí | No |
+| Pagos: registrar y consultar (órdenes terminadas o entregadas) | Sí | Sí | No |
+| Pagos: cancelar uno pendiente (con motivo) | Sí | Sí | No |
+| Pagos: cancelar uno ya cobrado (con motivo) | Sí | No | No |
+| Ticket de servicio: generar, consultar e imprimir | Sí | Sí | No |
+| Panel de control | Sí | No | No |
 
 Los permisos se validan siempre en el backend; ocultar un botón en la interfaz no es seguridad.
 Nada se elimina de forma definitiva: los registros se **desactivan** y se pueden reactivar, y las
@@ -119,6 +124,26 @@ Cancelación (con motivo): desde RECIBIDO, DIAGNOSTICO, EN_REPARACION o ESPERAND
   menos. Los umbrales se ajustan con `MAINTENANCE_SOON_DAYS` y `MAINTENANCE_SOON_KM` en `.env`.
 - El contrato de la API está en
   [`specs/003-historial-inventario/contracts/api.yaml`](specs/003-historial-inventario/contracts/api.yaml).
+
+## Pagos, tickets y panel
+
+- Se cobra una orden **TERMINADO o ENTREGADO** con total mayor que cero, en pagos parciales o totales. El
+  importe no puede superar lo **disponible** (total menos lo cobrado y lo reservado por pagos pendientes).
+  Entregar una orden no exige que esté pagada. Los pagos nunca se eliminan: se **cancelan con motivo**.
+- Efectivo, tarjeta (cobrada en una terminal externa) y transferencia quedan pagados al registrarlos. **Mercado
+  Pago** crea un enlace de pago y el pago queda pendiente hasta usar «Actualizar estado» (sin webhook).
+  La aplicación **no guarda datos de tarjeta ni credenciales**; la referencia es solo un número de autorización
+  o de rastreo.
+- Mercado Pago **solo funciona con credenciales de prueba** puestas en `.env` (`MERCADOPAGO_ACCESS_TOKEN`,
+  `MERCADOPAGO_BACK_URL`, `MERCADOPAGO_SANDBOX` y `PAYMENT_LINK_HOURS`). Sin ellas la opción aparece
+  deshabilitada y los demás métodos funcionan. Los datos del encabezado del ticket se ajustan con
+  `WORKSHOP_NAME`, `WORKSHOP_ADDRESS` y `WORKSHOP_PHONE`.
+- Cada orden tiene un único **ticket** (`TK-AAAA-NNNN`). Se imprime desde el cuadro de impresión del sistema,
+  sin guardar archivos; si la orden cambia después de generarlo, el ticket lo avisa y muestra los datos vigentes.
+- El **panel** (solo administración) muestra vehículos en reparación, órdenes pendientes, importe cobrado del
+  periodo (hoy, 7 días o mes) y stock bajo, una gráfica de órdenes por estado y listas de atención.
+- El contrato de la API está en
+  [`specs/004-pagos-tickets-dashboard/contracts/api.yaml`](specs/004-pagos-tickets-dashboard/contracts/api.yaml).
 
 ## Pruebas
 

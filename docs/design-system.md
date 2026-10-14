@@ -154,6 +154,20 @@ Estados del **Sprint 3**:
 | | Bajo (igual o menor al mínimo) | `warning` |
 | | Agotado (cero) | `danger` |
 
+Estados del **Sprint 4**:
+
+| Elemento | Estado | Color |
+|---|---|---|
+| Pago | Pendiente | `warning` |
+| | Pagado | `success` |
+| | Rechazado | `danger` |
+| | Cancelado | Gris (`textSecondary`) |
+| Estado de pago de la orden | Sin pago | Gris (`textSecondary`) |
+| | Pago parcial | `warning` |
+| | Pagada | `success` |
+
+El **panel de control** muestra como máximo cuatro indicadores (tarjeta con título, cifra grande y ayuda), una gráfica de barras horizontales de órdenes por estado (cada barra con el color de su estado, hecha con widgets propios) y tarjetas de listas de atención con estado vacío. El **ticket** usa una tarjeta de ancho fijo (`AppSizes.ticketWidth`) con aviso `warning` cuando la orden cambió. Registrar y cancelar pagos siempre pide confirmación.
+
 El **aviso de stock bajo** (`StockAlertBanner`) es una barra en la parte superior de Inventario, solo para la administración: fondo suave y borde fino de `warning` (de `danger` si hay refacciones agotadas), el ícono de advertencia, un resumen y las primeras refacciones afectadas. Cuando no hay alertas no se muestra ni deja un espacio vacío. En las líneas de movimientos, las cantidades que suman usan `success` y las que restan `danger`.
 
 ---

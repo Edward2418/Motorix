@@ -67,3 +67,23 @@ Las pruebas de integración usan una pasarela de Mercado Pago **falsa**: nunca l
 ## 5. Medición de rendimiento (SC-008)
 
 Con un script de datos sintéticos contra `motorix_test` (2 000 órdenes y 5 000 movimientos), medir `GET /api/dashboard` en los tres periodos; debe responder en menos de 3 segundos. Registrar el resultado y las limitaciones al final de este archivo.
+
+## Resultados de la validación (implementación)
+
+**Rendimiento (SC-008).** Con 2 000 órdenes (888 con pagos), 200 refacciones y 5 000 movimientos en `motorix_test`
+(script temporal fuera del repositorio): `GET /dashboard` tarda entre 140 y 220 ms en régimen normal para los tres
+periodos; justo después de una carga masiva, la primera ronda tardó hasta 2,9 s (estadísticas frías de MySQL), siempre
+por debajo de 3 s. Registrar un pago ≈ 27 ms y generar un ticket ≈ 28 ms.
+
+**Escenarios.** Los escenarios del flujo se verifican con pruebas automatizadas contra la API real y `motorix_test`,
+con la pasarela de Mercado Pago **falsa** (nunca se llama a la red): pago total y parcial, importe excedido y
+concurrencia (`payments-register`, `payments-concurrency`), métodos y referencia (`payments-methods`), cancelación
+con permisos (`payments-cancel`, `payments-permissions`), Mercado Pago de extremo a extremo (`payments-mercadopago*`),
+tickets y folios simultáneos (`tickets*`), panel e indicadores (`dashboard-*`) y los datos de ejemplo
+(`seeds-payments`).
+
+**Limitaciones declaradas.** No se pudieron comprobar sin una persona frente a la aplicación: los tiempos de captura y
+la usabilidad (SC-001, SC-004, SC-009), la revisión visual en pantalla, la impresión real en una impresora y el cobro
+real en Mercado Pago (requiere credenciales de prueba de un vendedor de prueba, que no se proporcionaron). El mensaje
+«Helvetica has no Unicode support» que imprime el paquete `pdf` en modo de depuración es informativo: el ticket usa
+solo caracteres latinos que la fuente estándar soporta.

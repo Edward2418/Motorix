@@ -1294,6 +1294,24 @@ Antes de asumirlas como definitivas, el equipo debe decidir:
     `validators`, `utils`) viven directamente en `server/`, manteniendo la
     separación de responsabilidades de la sección 11.
 
+### Decisiones resueltas durante el Sprint 4
+
+-   **Pagos**: parciales y múltiples por orden. Solo se cobra una orden `TERMINADO` o `ENTREGADO` con total
+    mayor que cero; entregar no exige pago. Efectivo, tarjeta (terminal externa) y transferencia nacen
+    `PAGADO`; Mercado Pago nace `PENDIENTE`. Un pago pendiente **reserva** su importe. Resumen en centavos:
+    cobrado, reservado, saldo, disponible, saldo a favor y estado (`SIN_PAGO`, `PARCIAL`, `PAGADA`).
+-   **Cancelación**: con motivo; recepción cancela pagos pendientes y solo administración los cobrados. Nada se
+    elimina y los pagos cancelados se conservan en el historial.
+-   **Mercado Pago**: Checkout Pro en modo de pruebas, aislado en una pasarela con `fetch` de Node (sin SDK ni
+    webhook). El estado se concilia por consulta (`POST /payments/{id}/refresh`) y al abrir una orden con
+    pagos pendientes; es idempotente. Sin credenciales la opción se deshabilita. No se guardan datos de
+    tarjeta (RN-14) y las credenciales viven en variables de entorno.
+-   **Ticket**: uno por orden (`TK-AAAA-NNNN`, contador atómico). Guarda solo el total como firma; el contenido
+    se arma al consultar y avisa si la orden cambió. Se imprime en memoria con los paquetes `pdf` y
+    `printing` (únicas dependencias nuevas), sin guardar archivos.
+-   **Panel**: solo administración; cuatro indicadores, gráfica de barras con widgets propios y listas de
+    atención calculadas al consultar para hoy, 7 días o mes. El mecánico no recibe campos de pago.
+
 ### Decisiones resueltas durante el Sprint 3
 
 -   **Historial del vehículo**: es una consulta derivada de las órdenes en `TERMINADO` o
