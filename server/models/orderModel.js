@@ -2,17 +2,26 @@ import { query } from '../config/db.js';
 import { likePattern } from '../validators/common.js';
 import { summarize } from '../services/paymentRules.js';
 
+// Fragmentos SQL compartidos para calcular los importes de una orden (alias `o`). El panel los reutiliza para que sus
+// cifras nunca difieran del total ni de lo cobrado que muestra la orden.
+export const SERVICES_TOTAL_SQL = '(SELECT COALESCE(SUM(s.cost), 0) FROM order_services s WHERE s.order_id = o.id)';
+export const LABOR_TOTAL_SQL = '(SELECT COALESCE(SUM(l.amount), 0) FROM order_labor l WHERE l.order_id = o.id)';
+export const PARTS_TOTAL_SQL = '(SELECT COALESCE(SUM(p.quantity * p.unit_price), 0) FROM order_parts p WHERE p.order_id = o.id)';
+export const ORDER_TOTAL_SQL = `(${SERVICES_TOTAL_SQL} + ${LABOR_TOTAL_SQL} + ${PARTS_TOTAL_SQL})`;
+export const PAID_TOTAL_SQL = "(SELECT COALESCE(SUM(py.amount), 0) FROM payments py WHERE py.order_id = o.id AND py.status = 'PAGADO')";
+export const RESERVED_TOTAL_SQL = "(SELECT COALESCE(SUM(py.amount), 0) FROM payments py WHERE py.order_id = o.id AND py.status = 'PENDIENTE')";
+
 const ORDER_SELECT = `
   SELECT o.id, o.folio, o.status, o.client_id, c.name AS client_name, o.vehicle_id,
          CONCAT(v.license_plate, ' · ', v.brand, ' ', v.model, ' ', v.year) AS vehicle_label,
          o.mechanic_id, m.name AS mechanic_name, o.entry_mileage, o.previous_mileage,
          o.mileage_correction_reason, o.service_mileage, o.service_mileage_correction_reason, o.appointment_id, o.reported_problem, o.diagnosis, o.notes,
          o.recommendations, o.cancel_reason, o.delivered_at, o.created_at, o.updated_at,
-         (SELECT COALESCE(SUM(s.cost), 0) FROM order_services s WHERE s.order_id = o.id) AS services_total,
-         (SELECT COALESCE(SUM(l.amount), 0) FROM order_labor l WHERE l.order_id = o.id) AS labor_total,
-         (SELECT COALESCE(SUM(p.quantity * p.unit_price), 0) FROM order_parts p WHERE p.order_id = o.id) AS parts_total,
-         (SELECT COALESCE(SUM(py.amount), 0) FROM payments py WHERE py.order_id = o.id AND py.status = 'PAGADO') AS paid_total,
-         (SELECT COALESCE(SUM(py.amount), 0) FROM payments py WHERE py.order_id = o.id AND py.status = 'PENDIENTE') AS reserved_total
+         ${SERVICES_TOTAL_SQL} AS services_total,
+         ${LABOR_TOTAL_SQL} AS labor_total,
+         ${PARTS_TOTAL_SQL} AS parts_total,
+         ${PAID_TOTAL_SQL} AS paid_total,
+         ${RESERVED_TOTAL_SQL} AS reserved_total
   FROM service_orders o
   JOIN clients c ON c.id = o.client_id
   JOIN vehicles v ON v.id = o.vehicle_id
