@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../models/service_order.dart';
 import '../providers/auth_provider.dart';
+import '../providers/navigation_provider.dart';
 import '../providers/orders_provider.dart';
 import '../utils/app_tokens.dart';
 import '../utils/formatters.dart';
@@ -29,7 +30,14 @@ class _OrdersScreenState extends State<OrdersScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => context.read<OrdersProvider>().load());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<OrdersProvider>().load();
+      // Si el panel de control pidió abrir una orden concreta, se abre su detalle.
+      final pending = context.read<NavigationProvider>().takePendingOrderId();
+      if (pending != null) {
+        _open(pending);
+      }
+    });
   }
 
   Future<void> _create() async {

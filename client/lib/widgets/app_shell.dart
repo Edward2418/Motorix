@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../models/user.dart';
 import '../providers/auth_provider.dart';
+import '../providers/navigation_provider.dart';
 import '../providers/sidebar_provider.dart';
 import '../screens/change_password_dialog.dart';
 import '../utils/app_navigation.dart';
@@ -19,7 +20,12 @@ class AppShell extends StatefulWidget {
 }
 
 class _AppShellState extends State<AppShell> {
-  int _index = 0;
+  @override
+  void initState() {
+    super.initState();
+    // Cada sesión empieza en la primera sección del menú.
+    context.read<NavigationProvider>().reset();
+  }
 
   Future<void> _logout() async {
     final confirmed = await showConfirmDialog(context, message: '¿Seguro que quieres cerrar sesión?');
@@ -35,7 +41,9 @@ class _AppShellState extends State<AppShell> {
       return const SizedBox.shrink();
     }
     final destinations = destinationsFor(user.role);
-    final selected = _index.clamp(0, destinations.length - 1);
+    final label = context.watch<NavigationProvider>().selectedLabel;
+    final found = destinations.indexWhere((destination) => destination.label == label);
+    final selected = found < 0 ? 0 : found;
     final sidebar = context.watch<SidebarProvider>();
 
     return LayoutBuilder(
@@ -53,7 +61,7 @@ class _AppShellState extends State<AppShell> {
                 selectedIndex: selected,
                 expanded: sidebar.expanded,
                 user: user,
-                onSelected: (index) => setState(() => _index = index),
+                onSelected: (index) => context.read<NavigationProvider>().select(destinations[index].label),
                 onToggle: context.read<SidebarProvider>().toggle,
                 onLogout: _logout,
               ),

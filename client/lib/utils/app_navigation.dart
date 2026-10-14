@@ -4,6 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../models/user.dart';
 import '../screens/appointments_screen.dart';
 import '../screens/clients_screen.dart';
+import '../screens/dashboard_screen.dart';
 import '../screens/inventory_screen.dart';
 import '../screens/maintenance_screen.dart';
 import '../screens/orders_screen.dart';
@@ -37,6 +38,12 @@ Widget pendingScreen(String name) => Builder(
 
 /// Destinos del menú, en orden. Cada historia reemplaza la pantalla provisional por la real.
 final List<NavDestination> allDestinations = [
+  NavDestination(
+    label: 'Panel',
+    icon: LucideIcons.layoutDashboard,
+    roles: {UserRole.admin},
+    builder: (_) => const SectionNavigator(root: _dashboardRoot),
+  ),
   NavDestination(
     label: 'Clientes',
     icon: LucideIcons.users,
@@ -83,6 +90,8 @@ final List<NavDestination> allDestinations = [
 
 List<NavDestination> destinationsFor(UserRole role) =>
     allDestinations.where((destination) => destination.roles.contains(role)).toList();
+
+Widget _dashboardRoot(BuildContext context) => const DashboardScreen();
 
 Widget _clientsRoot(BuildContext context) => const ClientsScreen();
 

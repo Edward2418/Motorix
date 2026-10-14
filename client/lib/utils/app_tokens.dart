@@ -93,4 +93,9 @@ class AppSizes {
   static const double historyDateWidth = 160;
   static const double ticketWidth = 560;
   static const double ticketLabelWidth = 140;
+  static const double indicatorWidth = 260;
+  static const double attentionCardWidth = 420;
+  static const double chartLabelWidth = 170;
+  static const double chartBarHeight = 16;
+  static const double chartCountWidth = 48;
 }
