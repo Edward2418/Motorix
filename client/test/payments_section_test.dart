@@ -98,6 +98,7 @@ FakeHandler servidor({
   List<Map<String, dynamic>> pagos = const [],
   Map<String, dynamic>? resumen,
   FakeResponse Function(http.Request)? alRegistrar,
+  FakeResponse Function(http.Request)? alActualizar,
 }) =>
     (request) {
       final path = request.url.path;
@@ -116,6 +117,9 @@ FakeHandler servidor({
         return FakeResponse(200, {
           'data': {'payments': pagos, 'summary': resumen ?? resumenJson()},
         });
+      }
+      if (path.endsWith('/refresh') && alActualizar != null) {
+        return alActualizar(request);
       }
       if (path.contains('/payments/') && path.endsWith('/cancel')) {
         return FakeResponse(200, {

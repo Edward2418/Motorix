@@ -12,6 +12,14 @@ class PaymentInput {
   final String? reference;
 }
 
+/// Resultado de actualizar un pago de Mercado Pago: el pago y un aviso opcional (`STILL_PENDING` o `EXTERNAL_APPROVED`).
+class RefreshResult {
+  const RefreshResult({required this.payment, this.warning});
+
+  final Payment payment;
+  final String? warning;
+}
+
 /// Pagos de la orden abierta en pantalla: lista, resumen, registro y cancelación.
 class PaymentsProvider extends ChangeNotifier {
   PaymentsProvider(this._api);
@@ -85,6 +93,37 @@ class PaymentsProvider extends ChangeNotifier {
     final payment = Payment.fromJson((response['data'] as Map<String, dynamic>)['payment'] as Map<String, dynamic>);
     await _afterChange(orderId);
     return payment;
+  }
+
+  /// Consulta a Mercado Pago el estado de un pago y vuelve a cargar la lista. Lanza [ApiException] si falla.
+  Future<RefreshResult> refresh(int orderId, int paymentId) async {
+    final response = await _api.post('/payments/$paymentId/refresh');
+    final data = response['data'] as Map<String, dynamic>;
+    final result = RefreshResult(
+      payment: Payment.fromJson(data['payment'] as Map<String, dynamic>),
+      warning: data['warning'] as String?,
+    );
+    await _afterChange(orderId);
+    return result;
+  }
+
+  /// Al abrir una orden, actualiza en silencio los pagos de Mercado Pago pendientes. Devuelve `true` si alguno cambió.
+  /// Los errores se ignoran: el usuario puede actualizar a mano desde cada pago.
+  Future<bool> refreshPendingMercadoPago(int orderId) async {
+    var changed = false;
+    for (final payment in _payments.where((p) => p.method == PaymentMethod.mercadoPago && p.status == PaymentStatus.pending)) {
+      try {
+        final response = await _api.post('/payments/${payment.id}/refresh');
+        final status = ((response['data'] as Map<String, dynamic>)['payment'] as Map<String, dynamic>)['status'] as String;
+        changed = changed || PaymentStatus.fromApi(status) != PaymentStatus.pending;
+      } catch (_) {
+        // Se ignora: no debe impedir ver la orden.
+      }
+    }
+    if (changed) {
+      await load(orderId);
+    }
+    return changed;
   }
 
   /// Cancela un pago con motivo. Lanza [ApiException] si el servidor lo rechaza.

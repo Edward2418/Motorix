@@ -8,6 +8,7 @@ import '../services/api_client.dart';
 import '../utils/app_tokens.dart';
 import '../utils/formatters.dart';
 import 'payment_dialog.dart';
+import 'payment_link_dialog.dart';
 import 'reason_dialog.dart';
 import 'status_badge.dart';
 import 'view_states.dart';
@@ -37,7 +38,12 @@ class _PaymentsSectionState extends State<PaymentsSection> {
       if (mounted) {
         final provider = context.read<PaymentsProvider>();
         provider.loadConfig();
-        provider.load(widget.orderId);
+        // Al abrir la orden se actualizan en silencio los pagos de Mercado Pago pendientes.
+        provider.load(widget.orderId).then((_) async {
+          if (mounted && await provider.refreshPendingMercadoPago(widget.orderId)) {
+            widget.onChanged?.call();
+          }
+        });
       }
     });
   }
@@ -48,14 +54,41 @@ class _PaymentsSectionState extends State<PaymentsSection> {
   }
 
   Future<void> _register(PaymentsProvider provider, PaymentSummary summary) async {
+    Payment? created;
     final saved = await showPaymentDialog(
       context,
       available: summary.available,
       mercadoPagoEnabled: provider.mercadoPagoEnabled,
-      onSubmit: (input) => provider.register(widget.orderId, input),
+      onSubmit: (input) async => created = await provider.register(widget.orderId, input),
     );
-    if (saved && mounted) {
+    if (!saved || !mounted) {
+      return;
+    }
+    if (created!.method == PaymentMethod.mercadoPago) {
+      _notify('Pago de Mercado Pago creado. Comparte el enlace con el cliente.');
+      await showPaymentLinkDialog(context, created!);
+    } else {
       _notify('Pago registrado.');
+    }
+  }
+
+  Future<void> _refresh(PaymentsProvider provider, Payment payment) async {
+    try {
+      final result = await provider.refresh(widget.orderId, payment.id);
+      if (!mounted) {
+        return;
+      }
+      final message = switch (result.warning) {
+        'STILL_PENDING' => 'Mercado Pago todavía no confirma el pago. Inténtalo de nuevo en unos minutos.',
+        'EXTERNAL_APPROVED' =>
+          'Mercado Pago reporta un cobro aprobado para un pago ya cancelado o rechazado. Revísalo manualmente.',
+        _ => result.payment.status == PaymentStatus.paid ? 'Pago cobrado.' : 'Pago ${result.payment.status.label.toLowerCase()}.',
+      };
+      _notify(message);
+    } on ApiException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      }
     }
   }
 
@@ -136,6 +169,10 @@ class _PaymentsSectionState extends State<PaymentsSection> {
               _PaymentRow(
                 payment: payment,
                 onCancel: _canCancel(payment) ? () => _cancel(provider, payment) : null,
+                onRefresh: payment.method == PaymentMethod.mercadoPago && payment.status == PaymentStatus.pending
+                    ? () => _refresh(provider, payment)
+                    : null,
+                onShowLink: payment.paymentLink == null ? null : () => showPaymentLinkDialog(context, payment),
               ),
               const Divider(height: 1),
             ],
@@ -189,10 +226,12 @@ class _Figure extends StatelessWidget {
 }
 
 class _PaymentRow extends StatelessWidget {
-  const _PaymentRow({required this.payment, required this.onCancel});
+  const _PaymentRow({required this.payment, required this.onCancel, this.onRefresh, this.onShowLink});
 
   final Payment payment;
   final VoidCallback? onCancel;
+  final VoidCallback? onRefresh;
+  final VoidCallback? onShowLink;
 
   String _detail() {
     final date = payment.paidAt ?? payment.createdAt;
@@ -229,6 +268,18 @@ class _PaymentRow extends StatelessWidget {
             ),
           ),
           StatusBadge.payment(payment.status),
+          if (onShowLink != null)
+            IconButton(
+              tooltip: 'Ver enlace de pago de ${formatMoney(payment.amount)}',
+              onPressed: onShowLink,
+              icon: const Icon(LucideIcons.link, size: AppSizes.icon),
+            ),
+          if (onRefresh != null)
+            IconButton(
+              tooltip: 'Actualizar estado del pago de ${formatMoney(payment.amount)}',
+              onPressed: onRefresh,
+              icon: const Icon(LucideIcons.refreshCw, size: AppSizes.icon),
+            ),
           if (onCancel != null)
             IconButton(
               tooltip: 'Cancelar pago de ${formatMoney(payment.amount)} (${payment.method.label})',
