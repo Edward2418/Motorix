@@ -239,6 +239,35 @@ Como administrador, quiero visualizar órdenes, citas, mantenimientos y alertas 
 - **SC-010**: Con los datos de ejemplo cargados, el panel, los pagos y los tickets muestran información desde el primer arranque, y repetir la carga no duplica registros.
 - **SC-011**: Un pago de Mercado Pago de pruebas pasa de Pendiente a su estado final con una sola consulta de estado una vez que el servicio lo resuelve, y consultarlo de nuevo no cambia el saldo.
 
+## Criterios de aceptación en EARS
+
+Estos criterios reescriben en formato EARS (Easy Approach to Requirements Syntax) los requisitos más importantes del sprint. Complementan los escenarios «Dado / Cuando / Entonces» de las historias: no los reemplazan. Cada criterio lleva un dato que se puede comprobar con una prueba y remite al requisito del que sale.
+
+**Eventos (Cuando…, el sistema debe…)**
+
+- **EARS-01** *(FR-004, SC-002)*: Cuando la recepcionista registre un pago con un importe mayor al disponible de la orden (total menos cobrado menos reservado), el sistema debe rechazarlo e indicar el importe disponible. Ejemplo: en una orden de $1,000 con $400 cobrados, un pago de $700 se rechaza y el mensaje informa $600.
+- **EARS-02** *(FR-034, SC-002)*: Cuando lleguen dos solicitudes de pago simultáneas para la misma orden y juntas superen el total, el sistema debe aceptar solo las que quepan, de modo que la suma de pagos vigentes sea siempre menor o igual al total.
+- **EARS-03** *(FR-007)*: Cuando se cancele un pago ya cobrado, el sistema debe exigir un motivo y permitirlo solo a la administración; el pago queda en el historial con estado Cancelado y su importe vuelve a estar disponible.
+- **EARS-04** *(FR-015, SC-011)*: Cuando la recepcionista pulse «Actualizar estado» de un pago de Mercado Pago pendiente que el servicio ya aprobó, el sistema debe pasarlo a Pagado con una sola consulta; si lo consulta de nuevo, el saldo de la orden no debe cambiar.
+- **EARS-05** *(FR-020, SC-006)*: Cuando se genere el ticket de una orden que ya tiene uno, el sistema debe devolver el mismo folio (formato TK-AAAA-NNNN) y no crear un segundo.
+- **EARS-06** *(FR-029)*: Cuando el administrador cambie el periodo del panel entre hoy, 7 días y mes, el sistema debe recalcular el importe cobrado y las órdenes terminadas solo para ese periodo; el valor inicial es el mes en curso.
+
+**Estados (Mientras…, el sistema debe…)**
+
+- **EARS-07** *(FR-002)*: Mientras una orden esté abierta (RECIBIDO, DIAGNOSTICO, EN_REPARACION o ESPERANDO_REFACCION) o cancelada, el sistema debe rechazar cualquier intento de registrar un pago o generar un ticket, con un mensaje que explique que solo se cobra una orden terminada o entregada.
+
+**Comportamientos no deseados (Si…, entonces el sistema debe…)**
+
+- **EARS-08** *(FR-009, FR-033)*: Si un usuario con rol mecánico intenta registrar o cancelar un pago, generar un ticket o abrir el panel, entonces el sistema debe negarlo en el servidor (respuesta 403) sin modificar datos, aunque la interfaz no le muestre esas opciones.
+- **EARS-09** *(FR-013, SC-003)*: Si la referencia de un pago tiene forma de número de tarjeta (de 13 a 19 dígitos que pasan la validación de Luhn), entonces el sistema debe rechazarla; en ningún caso debe guardar número de tarjeta, vencimiento ni código de seguridad.
+- **EARS-10** *(FR-018)*: Si el servicio de Mercado Pago no responde al iniciar un pago, entonces el sistema debe mostrar un mensaje claro y no crear ningún pago, y los demás métodos deben seguir disponibles.
+
+**Opcional y siempre vigente**
+
+- **EARS-11** *(FR-016)*: Donde no haya credenciales de Mercado Pago configuradas, el sistema debe mostrar esa opción deshabilitada con una explicación y dejar funcionando los demás métodos.
+- **EARS-12** *(FR-007, FR-024)*: El sistema no debe eliminar pagos ni tickets: el 100 % de los intentos de borrarlos o editarlos deben fallar y los registros deben conservarse.
+- **EARS-13** *(SC-008)*: El sistema debe cargar el panel en menos de 3 segundos con 2,000 órdenes y 5,000 movimientos de inventario registrados.
+
 ## Supuestos
 
 - El importe a cobrar es el total calculado de la orden (servicios + mano de obra + refacciones) del Sprint 3; Motorix no maneja impuestos, descuentos ni propinas en el MVP.
