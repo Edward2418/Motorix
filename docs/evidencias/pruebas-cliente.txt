@@ -1,0 +1,225 @@
+00:00 +0: loading C:/Users/Edward/Documents/Proyectos/Motorix/client/test/appointments_screen_test.dart
+00:00 +0: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/appointments_screen_test.dart: muestra fecha, cliente, vehículo, motivo, estado y orden de cada cita
+00:00 +1: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/appointments_screen_test.dart: muestra fecha, cliente, vehículo, motivo, estado y orden de cada cita
+00:00 +2: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/appointments_screen_test.dart: muestra fecha, cliente, vehículo, motivo, estado y orden de cada cita
+00:00 +3: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/appointments_screen_test.dart: muestra fecha, cliente, vehículo, motivo, estado y orden de cada cita
+00:00 +4: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/appointments_screen_test.dart: muestra fecha, cliente, vehículo, motivo, estado y orden de cada cita
+00:00 +5: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/appointments_screen_test.dart: muestra fecha, cliente, vehículo, motivo, estado y orden de cada cita
+00:00 +6: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/appointments_screen_test.dart: muestra fecha, cliente, vehículo, motivo, estado y orden de cada cita
+00:05 +7: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/clients_screen_test.dart: muestra la tabla de clientes con sus datos y el botón de alta para recepción
+00:06 +8: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/client_edit_test.dart: el formulario de edición llega precargado y valida los datos
+00:06 +9: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/client_edit_test.dart: el formulario de edición llega precargado y valida los datos
+00:06 +10: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/client_edit_test.dart: el formulario de edición llega precargado y valida los datos
+00:07 +11: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/client_edit_test.dart: el formulario de edición llega precargado y valida los datos
+00:07 +12: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/client_phone_duplicate_test.dart: avisa con el nombre del cliente existente y no guarda si se cancela
+00:07 +13: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/client_phone_duplicate_test.dart: avisa con el nombre del cliente existente y no guarda si se cancela
+00:07 +14: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/client_phone_duplicate_test.dart: avisa con el nombre del cliente existente y no guarda si se cancela
+00:08 +15: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/client_phone_duplicate_test.dart: avisa con el nombre del cliente existente y no guarda si se cancela
+00:08 +16: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/client_edit_test.dart: guardar la edición envía los datos al servidor y confirma el éxito
+00:08 +17: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/client_edit_test.dart: guardar la edición envía los datos al servidor y confirma el éxito
+00:08 +18: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/appointments_screen_test.dart: el filtro de estado consulta al servidor y se pueden quitar los filtros
+00:09 +19: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/client_phone_duplicate_test.dart: al confirmar reenvía con confirmDuplicate verdadero y cierra el formulario
+00:10 +20: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/client_phone_duplicate_test.dart: al confirmar reenvía con confirmDuplicate verdadero y cierra el formulario
+00:10 +21: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/client_edit_test.dart: salir del formulario con cambios sin guardar pide confirmación
+00:10 +22: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/appointments_screen_test.dart: el estado vacío con filtros lo indica
+00:11 +23: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/clients_screen_test.dart: el formulario de alta valida los campos obligatorios
+00:11 +24: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/client_phone_duplicate_test.dart: sin duplicado guarda directamente sin pedir confirmación
+00:12 +25: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/client_edit_test.dart: desactivar al cliente pide confirmación y no llama al servidor si se cancela
+00:12 +26: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/appointments_screen_test.dart: las acciones dependen del estado: crear orden solo en citas PENDIENTE o CONFIRMADA
+00:13 +27: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/client_edit_test.dart: muestra el mensaje del servidor cuando la baja se rechaza por vehículos activos
+00:14 +28: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/appointments_screen_test.dart: confirmar una cita llama al servidor y avisa el resultado
+00:14 +29: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/client_edit_test.dart: el mecánico no ve las acciones de edición ni de baja
+00:14 +30: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/appointments_screen_test.dart: cancelar una cita pide confirmación, el motivo es opcional y no llama al servidor si se cancela
+00:16 +31: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/dashboard_attention_test.dart: cada lista muestra sus elementos
+00:17 +32: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/dashboard_attention_test.dart: cada lista muestra sus elementos
+00:18 +33: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/dashboard_attention_test.dart: cada lista muestra sus elementos
+00:18 +34: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/dashboard_screen_test.dart: muestra los cuatro indicadores y la gráfica de órdenes por estado
+00:18 +35: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/dashboard_screen_test.dart: muestra los cuatro indicadores y la gráfica de órdenes por estado
+00:18 +36: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/inventory_screen_test.dart: la tabla muestra las refacciones con su nivel de stock y estado
+00:19 +37: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/inventory_screen_test.dart: la tabla muestra las refacciones con su nivel de stock y estado
+00:19 +38: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/inventory_screen_test.dart: la tabla muestra las refacciones con su nivel de stock y estado
+00:19 +39: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/inventory_screen_test.dart: la tabla muestra las refacciones con su nivel de stock y estado
+00:20 +40: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/inventory_screen_test.dart: la tabla muestra las refacciones con su nivel de stock y estado
+00:20 +41: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/inventory_screen_test.dart: la tabla muestra las refacciones con su nivel de stock y estado
+00:20 +42: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/inventory_screen_test.dart: la tabla muestra las refacciones con su nivel de stock y estado
+00:20 +43: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/inventory_screen_test.dart: la tabla muestra las refacciones con su nivel de stock y estado
+00:21 +44: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/inventory_screen_test.dart: la tabla muestra las refacciones con su nivel de stock y estado
+00:21 +45: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/inventory_screen_test.dart: la tabla muestra las refacciones con su nivel de stock y estado
+00:23 +46: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/inventory_screen_test.dart: la tabla muestra las refacciones con su nivel de stock y estado
+00:24 +47: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/inventory_screen_test.dart: la tabla muestra las refacciones con su nivel de stock y estado
+00:24 +48: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/login_screen_test.dart: muestra un solo campo para usuario o correo y valida los campos vacíos
+00:24 +49: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/login_screen_test.dart: muestra un solo campo para usuario o correo y valida los campos vacíos
+00:27 +50: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/login_screen_test.dart: muestra un solo campo para usuario o correo y valida los campos vacíos
+00:27 +51: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/maintenance_dialog_test.dart: el mecánico asignado ve los mantenimientos de la orden con su estado visual
+00:28 +52: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/maintenance_dialog_test.dart: el mecánico asignado ve los mantenimientos de la orden con su estado visual
+00:28 +53: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/maintenance_screen_test.dart: muestra la insignia de cada estado, el cliente con su teléfono y lo que falta
+00:28 +54: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/maintenance_screen_test.dart: muestra la insignia de cada estado, el cliente con su teléfono y lo que falta
+00:29 +55: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/maintenance_screen_test.dart: muestra la insignia de cada estado, el cliente con su teléfono y lo que falta
+00:29 +56: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/maintenance_screen_test.dart: muestra la insignia de cada estado, el cliente con su teléfono y lo que falta
+00:30 +57: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/maintenance_screen_test.dart: muestra la insignia de cada estado, el cliente con su teléfono y lo que falta
+00:30 +58: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/maintenance_screen_test.dart: muestra la insignia de cada estado, el cliente con su teléfono y lo que falta
+00:31 +59: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/maintenance_screen_test.dart: muestra la insignia de cada estado, el cliente con su teléfono y lo que falta
+00:31 +60: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/maintenance_screen_test.dart: muestra la insignia de cada estado, el cliente con su teléfono y lo que falta
+00:31 +61: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/maintenance_screen_test.dart: muestra la insignia de cada estado, el cliente con su teléfono y lo que falta
+00:32 +62: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/maintenance_screen_test.dart: muestra la insignia de cada estado, el cliente con su teléfono y lo que falta
+00:32 +63: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/maintenance_screen_test.dart: muestra la insignia de cada estado, el cliente con su teléfono y lo que falta
+00:33 +64: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/maintenance_screen_test.dart: muestra la insignia de cada estado, el cliente con su teléfono y lo que falta
+00:33 +65: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/maintenance_screen_test.dart: muestra la insignia de cada estado, el cliente con su teléfono y lo que falta
+00:34 +66: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/inventory_screen_test.dart: desactivar una refacción pide confirmación antes de llamar al servidor
+00:34 +67: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/maintenance_dialog_test.dart: los errores por campo del servidor se muestran junto al campo
+00:34 +68: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/maintenance_screen_test.dart: filtrar por estado visual consulta la API con ese filtro
+00:34 +69: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/maintenance_screen_test.dart: filtrar por estado visual consulta la API con ese filtro
+00:34 +70: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/maintenance_screen_test.dart: filtrar por estado visual consulta la API con ese filtro
+00:34 +71: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/maintenance_screen_test.dart: filtrar por estado visual consulta la API con ese filtro
+00:35 +72: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/maintenance_screen_test.dart: filtrar por estado visual consulta la API con ese filtro
+00:35 +73: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/maintenance_screen_test.dart: filtrar por estado visual consulta la API con ese filtro
+00:36 +74: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/maintenance_dialog_test.dart: cancelar el mantenimiento exige el motivo y lo envía
+00:36 +75: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/orders_screen_test.dart: muestra la tabla con folio, cliente, vehículo, mecánico, estado y total
+00:37 +76: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/orders_screen_test.dart: muestra la tabla con folio, cliente, vehículo, mecánico, estado y total
+00:38 +77: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/orders_screen_test.dart: muestra la tabla con folio, cliente, vehículo, mecánico, estado y total
+00:39 +78: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/orders_screen_test.dart: muestra la tabla con folio, cliente, vehículo, mecánico, estado y total
+00:40 +79: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/orders_screen_test.dart: muestra la tabla con folio, cliente, vehículo, mecánico, estado y total
+00:41 +80: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/orders_screen_test.dart: muestra la tabla con folio, cliente, vehículo, mecánico, estado y total
+00:41 +81: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/orders_screen_test.dart: muestra la tabla con folio, cliente, vehículo, mecánico, estado y total
+00:41 +82: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/orders_screen_test.dart: muestra la tabla con folio, cliente, vehículo, mecánico, estado y total
+00:41 +83: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/order_form_test.dart: valida los campos obligatorios antes de enviar
+00:41 +84: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/order_form_test.dart: valida los campos obligatorios antes de enviar
+00:42 +85: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/order_form_test.dart: valida los campos obligatorios antes de enviar
+00:42 +86: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/order_form_test.dart: valida los campos obligatorios antes de enviar
+00:42 +87: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/order_form_test.dart: valida los campos obligatorios antes de enviar
+00:42 +88: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/maintenance_screen_test.dart: el menú del rol MECHANIC incluye «Mantenimientos»
+00:43 +89: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/order_detail_edit_test.dart: agregar un servicio envía el importe y actualiza el total
+00:43 +90: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/order_detail_edit_test.dart: agregar un servicio envía el importe y actualiza el total
+00:44 +91: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/order_form_test.dart: muestra el kilometraje registrado del vehículo y rechaza uno menor
+00:44 +92: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/orders_screen_test.dart: recepción sin órdenes ve el estado vacío con la acción de crear
+00:44 +93: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/order_detail_edit_test.dart: el diálogo de línea valida la descripción y el importe
+00:44 +94: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/order_detail_edit_test.dart: el diálogo de línea valida la descripción y el importe
+00:45 +95: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/orders_screen_test.dart: muestra el error en español cuando el listado falla
+00:45 +96: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/order_form_test.dart: el administrador puede corregir el kilometraje indicando un motivo
+00:46 +97: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/order_detail_edit_test.dart: quitar una línea pide confirmación y no llama al servidor si se cancela
+00:46 +98: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/orders_screen_test.dart: la búsqueda y el filtro de estado consultan al servidor
+00:47 +99: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/order_parts_test.dart: el mecánico asignado agrega una refacción y el total se actualiza
+00:47 +100: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/order_parts_test.dart: el mecánico asignado agrega una refacción y el total se actualiza
+00:47 +101: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/order_parts_test.dart: el mecánico asignado agrega una refacción y el total se actualiza
+00:48 +102: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/order_parts_test.dart: el mecánico asignado agrega una refacción y el total se actualiza
+00:48 +103: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/order_parts_test.dart: el mecánico asignado agrega una refacción y el total se actualiza
+00:49 +104: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/order_parts_test.dart: el mecánico asignado agrega una refacción y el total se actualiza
+00:49 +105: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/order_parts_test.dart: el mecánico asignado agrega una refacción y el total se actualiza
+00:49 +106: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/order_parts_test.dart: el mecánico asignado agrega una refacción y el total se actualiza
+00:49 +107: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/order_parts_test.dart: el mecánico asignado agrega una refacción y el total se actualiza
+00:52 +108: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/order_status_actions_test.dart: el mecánico asignado solo ve los botones de las transiciones permitidas
+00:53 +109: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/order_status_actions_test.dart: el mecánico asignado solo ve los botones de las transiciones permitidas
+00:53 +110: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/order_status_actions_test.dart: el mecánico asignado solo ve los botones de las transiciones permitidas
+00:54 +111: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/order_status_actions_test.dart: el mecánico asignado solo ve los botones de las transiciones permitidas
+00:55 +112: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/part_detail_screen_test.dart: muestra los datos de la refacción y la lista de movimientos
+00:55 +113: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/payments_section_test.dart: muestra el resumen de pagos con los datos del servidor
+00:55 +114: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/payments_section_test.dart: muestra el resumen de pagos con los datos del servidor
+00:55 +115: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/payments_section_test.dart: muestra el resumen de pagos con los datos del servidor
+00:56 +116: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/payments_section_test.dart: muestra el resumen de pagos con los datos del servidor
+00:56 +117: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/part_detail_screen_test.dart: la entrada exige cantidad y motivo y actualiza el stock mostrado
+00:56 +118: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/part_detail_screen_test.dart: la entrada exige cantidad y motivo y actualiza el stock mostrado
+00:56 +119: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/part_detail_screen_test.dart: la entrada exige cantidad y motivo y actualiza el stock mostrado
+00:56 +120: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/part_detail_screen_test.dart: la entrada exige cantidad y motivo y actualiza el stock mostrado
+00:56 +121: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/part_detail_screen_test.dart: la entrada exige cantidad y motivo y actualiza el stock mostrado
+00:56 +122: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/part_detail_screen_test.dart: la entrada exige cantidad y motivo y actualiza el stock mostrado
+00:57 +123: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/part_detail_screen_test.dart: la entrada exige cantidad y motivo y actualiza el stock mostrado
+00:58 +124: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/payments_section_test.dart: registrar un pago pide confirmación y no llama al servidor si se cancela
+00:58 +125: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/order_status_actions_test.dart: un cambio de estado intermedio se aplica pidiendo solo el kilometraje al terminar
+00:58 +126: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/order_status_actions_test.dart: un cambio de estado intermedio se aplica pidiendo solo el kilometraje al terminar
+00:58 +127: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/part_detail_screen_test.dart: el ajuste muestra la diferencia, pide confirmación y envía el stock contado
+00:59 +128: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/payments_section_test.dart: al confirmar envía el importe, el método y la referencia, y avisa del resultado
+00:59 +129: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/payments_section_test.dart: al confirmar envía el importe, el método y la referencia, y avisa del resultado
+00:59 +130: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/payments_section_test.dart: al confirmar envía el importe, el método y la referencia, y avisa del resultado
+00:59 +131: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/payments_section_test.dart: al confirmar envía el importe, el método y la referencia, y avisa del resultado
+01:00 +132: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/part_detail_screen_test.dart: cancelar la confirmación del ajuste no llama al servidor
+01:00 +133: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/order_status_actions_test.dart: cancelar la orden exige un motivo y confirma antes de llamar al servidor
+01:00 +134: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/payments_section_test.dart: el importe mayor al disponible se rechaza en el formulario sin llamar al servidor
+01:00 +135: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/payments_section_test.dart: el importe mayor al disponible se rechaza en el formulario sin llamar al servidor
+01:01 +136: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/order_status_actions_test.dart: cancelar el diálogo de cancelación no llama al servidor
+01:01 +137: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/part_detail_screen_test.dart: el error del servidor al registrar se muestra y no cambia el stock
+01:01 +138: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/payments_section_test.dart: el error del servidor por importe excedido se muestra en el campo sin cerrar el diálogo
+01:02 +139: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/order_status_actions_test.dart: muestra el mensaje del servidor ante una transición inválida
+01:02 +140: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/payments_section_test.dart: recepción no ve «Cancelar» en un pago cobrado, pero administración sí
+01:02 +141: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/payments_section_test.dart: recepción no ve «Cancelar» en un pago cobrado, pero administración sí
+01:03 +142: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/payment_mercadopago_test.dart: con Mercado Pago configurado se crea el pago y se muestra el enlace para copiarlo
+01:03 +143: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/payment_mercadopago_test.dart: con Mercado Pago configurado se crea el pago y se muestra el enlace para copiarlo
+01:04 +144: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/payment_mercadopago_test.dart: con Mercado Pago configurado se crea el pago y se muestra el enlace para copiarlo
+01:04 +145: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/payment_mercadopago_test.dart: con Mercado Pago configurado se crea el pago y se muestra el enlace para copiarlo
+01:04 +146: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/payment_mercadopago_test.dart: con Mercado Pago configurado se crea el pago y se muestra el enlace para copiarlo
+01:05 +147: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/payment_mercadopago_test.dart: con Mercado Pago configurado se crea el pago y se muestra el enlace para copiarlo
+01:06 +148: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/payment_mercadopago_test.dart: con Mercado Pago configurado se crea el pago y se muestra el enlace para copiarlo
+01:06 +149: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/payment_mercadopago_test.dart: con Mercado Pago configurado se crea el pago y se muestra el enlace para copiarlo
+01:06 +150: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/payment_mercadopago_test.dart: con Mercado Pago configurado se crea el pago y se muestra el enlace para copiarlo
+01:06 +151: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/payment_mercadopago_test.dart: con Mercado Pago configurado se crea el pago y se muestra el enlace para copiarlo
+01:06 +152: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/payment_mercadopago_test.dart: con Mercado Pago configurado se crea el pago y se muestra el enlace para copiarlo
+01:06 +153: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/payment_mercadopago_test.dart: con Mercado Pago configurado se crea el pago y se muestra el enlace para copiarlo
+01:06 +154: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/payment_mercadopago_test.dart: con Mercado Pago configurado se crea el pago y se muestra el enlace para copiarlo
+01:06 +155: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/payment_mercadopago_test.dart: con Mercado Pago configurado se crea el pago y se muestra el enlace para copiarlo
+01:07 +156: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/payment_mercadopago_test.dart: con Mercado Pago configurado se crea el pago y se muestra el enlace para copiarlo
+01:07 +157: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/payment_mercadopago_test.dart: con Mercado Pago configurado se crea el pago y se muestra el enlace para copiarlo
+01:07 +158: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/payment_mercadopago_test.dart: con Mercado Pago configurado se crea el pago y se muestra el enlace para copiarlo
+01:07 +159: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/payment_mercadopago_test.dart: con Mercado Pago configurado se crea el pago y se muestra el enlace para copiarlo
+01:07 +160: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/payment_mercadopago_test.dart: con Mercado Pago configurado se crea el pago y se muestra el enlace para copiarlo
+01:08 +161: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/payment_mercadopago_test.dart: con Mercado Pago configurado se crea el pago y se muestra el enlace para copiarlo
+01:08 +162: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/payment_mercadopago_test.dart: con Mercado Pago configurado se crea el pago y se muestra el enlace para copiarlo
+01:08 +163: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/service_mileage_dialog_test.dart: cancelar el diálogo no devuelve ningún valor
+01:08 +164: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/payment_mercadopago_test.dart: sin configuración la opción de Mercado Pago aparece deshabilitada
+01:09 +165: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/payment_mercadopago_test.dart: sin configuración la opción de Mercado Pago aparece deshabilitada
+01:09 +166: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/stock_alert_banner_test.dart: StockAlertBanner resume las refacciones en alerta y lista las primeras
+01:09 +167: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/stock_alert_banner_test.dart: StockAlertBanner resume las refacciones en alerta y lista las primeras
+01:09 +168: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/stock_alert_banner_test.dart: StockAlertBanner resume las refacciones en alerta y lista las primeras
+01:10 +168: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/ticket_printer_test.dart: el documento del ticket se genera en memoria con contenido
+Helvetica-Bold has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+Helvetica has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+01:10 +169: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/stock_alert_banner_test.dart: StockAlertBanner resume las refacciones en alerta y lista las primeras
+01:10 +169: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/ticket_printer_test.dart: un ticket con muchas líneas se reparte en varias páginas sin errores
+Helvetica-Bold has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+Helvetica has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+Helvetica-Bold has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+Helvetica has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+01:10 +170: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/stock_alert_banner_test.dart: StockAlertBanner resume las refacciones en alerta y lista las primeras
+01:10 +170: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/ticket_printer_test.dart: los textos muy largos y los caracteres del español no provocan errores
+Helvetica-Bold has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+Helvetica has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+01:10 +171: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/stock_alert_banner_test.dart: StockAlertBanner resume las refacciones en alerta y lista las primeras
+01:10 +172: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/stock_alert_banner_test.dart: StockAlertBanner resume las refacciones en alerta y lista las primeras
+01:10 +172: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/ticket_printer_test.dart: un ticket sin pagos ni líneas también se genera
+Helvetica-Bold has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+Helvetica has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+01:10 +173: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/stock_alert_banner_test.dart: StockAlertBanner resume las refacciones en alerta y lista las primeras
+01:10 +174: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/stock_alert_banner_test.dart: StockAlertBanner resume las refacciones en alerta y lista las primeras
+01:10 +175: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/stock_alert_banner_test.dart: StockAlertBanner resume las refacciones en alerta y lista las primeras
+01:11 +176: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/stock_alert_banner_test.dart: StockAlertBanner resume las refacciones en alerta y lista las primeras
+01:11 +177: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/service_mileage_dialog_test.dart: la corrección envía el kilometraje y el motivo al servidor
+01:11 +178: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/service_mileage_dialog_test.dart: la corrección envía el kilometraje y el motivo al servidor
+01:11 +179: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/service_mileage_dialog_test.dart: la corrección envía el kilometraje y el motivo al servidor
+01:11 +180: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/service_mileage_dialog_test.dart: la corrección envía el kilometraje y el motivo al servidor
+01:11 +181: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/stock_alert_banner_test.dart: StockAlertBanner el botón alterna el filtro de stock bajo
+01:12 +182: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/stock_alert_banner_test.dart: StockAlertBanner el botón alterna el filtro de stock bajo
+01:12 +183: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/stock_alert_banner_test.dart: en la pantalla de Inventario el aviso aparece con las alertas, el botón filtra y desaparece al reabastecer
+01:17 +184: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/stock_alert_banner_test.dart: en la pantalla de Inventario el aviso aparece con las alertas, el botón filtra y desaparece al reabastecer
+01:17 +185: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/users_screen_test.dart: el administrador ve la tabla de usuarios con su rol y estado
+01:18 +186: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/users_screen_test.dart: el administrador ve la tabla de usuarios con su rol y estado
+01:18 +187: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/users_screen_test.dart: el administrador ve la tabla de usuarios con su rol y estado
+01:19 +188: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/users_screen_test.dart: el administrador ve la tabla de usuarios con su rol y estado
+01:19 +189: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/users_screen_test.dart: el administrador ve la tabla de usuarios con su rol y estado
+01:19 +190: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/users_screen_test.dart: el administrador ve la tabla de usuarios con su rol y estado
+01:19 +191: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/users_screen_test.dart: el administrador ve la tabla de usuarios con su rol y estado
+01:21 +192: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/users_screen_test.dart: el administrador ve la tabla de usuarios con su rol y estado
+01:22 +193: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/vehicles_screen_test.dart: lista los vehículos con placa, propietario y estado
+01:23 +194: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/vehicle_history_screen_test.dart: muestra los servicios del vehículo con sus detalles
+01:24 +195: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/vehicle_history_screen_test.dart: muestra los servicios del vehículo con sus detalles
+01:25 +196: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/vehicle_history_screen_test.dart: muestra los servicios del vehículo con sus detalles
+01:26 +197: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/vehicle_history_screen_test.dart: muestra los servicios del vehículo con sus detalles
+01:27 +198: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/vehicle_history_screen_test.dart: muestra los servicios del vehículo con sus detalles
+01:29 +199: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/vehicle_history_screen_test.dart: muestra los servicios del vehículo con sus detalles
+01:30 +200: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/users_screen_test.dart: el formulario de alta valida los campos y la política de contraseña
+01:30 +201: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/vehicles_screen_test.dart: el formulario exige propietario, marca, modelo, año y placa
+01:32 +202: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/vehicles_screen_test.dart: el formulario exige propietario, marca, modelo, año y placa
+01:32 +203: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/users_screen_test.dart: muestra el mensaje del servidor cuando el usuario ya existe
+01:32 +204: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/vehicle_history_screen_test.dart: un error del servidor se muestra con la opción de reintentar
+01:33 +205: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/vehicle_history_screen_test.dart: el rol ADMIN puede abrir el historial desde la lista de vehículos
+01:34 +206: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/vehicle_history_screen_test.dart: el rol RECEPTIONIST puede abrir el historial desde la lista de vehículos
+01:35 +207: C:/Users/Edward/Documents/Proyectos/Motorix/client/test/vehicle_history_screen_test.dart: el rol MECHANIC puede abrir el historial desde la lista de vehículos
+01:36 +208: All tests passed!
+FIN cliente: 0
