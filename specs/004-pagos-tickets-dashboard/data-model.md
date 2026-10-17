@@ -94,6 +94,33 @@ Todos salen de consultas de lectura; ninguno se almacena. Definiciones en `resea
 | Mantenimientos vencidos y próximos | `maintenance` clasificados con `maintenanceStatus` |
 | Saldo por cobrar | Órdenes `TERMINADO`/`ENTREGADO` con `total − cobrado > 0` |
 
+## Trazabilidad: de cada entidad al requisito que responde
+
+Cada tabla, columna importante o cálculo existe por un requisito del `spec.md`. La columna «Dónde se impone» indica si lo garantiza la base de datos (restricción en la migración `005_sprint4_payments_tickets.sql`) o el servicio.
+
+| Entidad o elemento | Requisito que cubre | Qué resuelve | Dónde se impone |
+|---|---|---|---|
+| `payments` (tabla) | FR-001, FR-003, US1 | Guardar cada cobro ligado a una orden, con importe, método, estado, quién lo registró y cuándo | Tabla `payments` |
+| `payments.order_id` | FR-001 (RN-13) | No existe un pago sin orden y no se puede borrar una orden con pagos | FK `fk_payments_order`, `ON DELETE RESTRICT` |
+| `payments.amount` | FR-003, FR-004, EARS-01 | Importe mayor que cero con dos decimales; que la suma vigente no pase del total | `CHECK chk_payments_amount` y regla de importes en el servicio, dentro de una transacción que bloquea la orden (EARS-02) |
+| `payments.method` | FR-011, FR-012, US2 | Los cuatro métodos (Efectivo, Tarjeta, Transferencia y Mercado Pago); el método es obligatorio | `ENUM` con `NOT NULL` |
+| `payments.status` | FR-006, FR-012, FR-014 | Pendiente, Pagado, Rechazado y Cancelado; los manuales nacen Pagado y Mercado Pago nace Pendiente | `ENUM` y reglas de transición en el servicio |
+| `payments.reference` | FR-012, FR-013, EARS-09 | Referencia opcional (autorización o rastreo) sin guardar datos de tarjeta | `VARCHAR(100)`; el validador rechaza referencias con forma de tarjeta |
+| `payments.external_reference`, `external_preference_id`, `external_payment_id`, `payment_link`, `expires_at` | FR-014, FR-015, FR-016, US3 | Enlazar el pago con Mercado Pago y consultar su estado sin guardar credenciales | `UNIQUE uq_payments_external_reference` (evita duplicados) |
+| `payments.cancel_reason`, `cancelled_by`, `cancelled_at` | FR-007, EARS-03 | Cancelar con motivo obligatorio y dejar quién y cuándo, sin borrar nada | `CHECK chk_payments_cancel_reason` y FK a `users` |
+| `payments.created_by` | FR-003 | Saber quién registró cada pago | FK `fk_payments_created_by` |
+| Índices `idx_payments_order` e `idx_payments_status_paid` | FR-005, FR-026, SC-008 | Calcular rápido el saldo de una orden y el importe cobrado del periodo (el panel carga en menos de 3 s) | Índices de la migración |
+| `tickets` (tabla) | FR-019, FR-024, US4 | Un comprobante con folio por orden terminada o entregada, que no se elimina | Tabla `tickets` con FK `ON DELETE RESTRICT` |
+| `tickets.folio` | FR-019, EARS-05 | Folio único con formato `TK-AAAA-NNNN` | `UNIQUE uq_tickets_folio` |
+| `tickets.order_id` | FR-019, FR-020, SC-006 | Un solo ticket por orden: generarlo otra vez devuelve el mismo folio | `UNIQUE uq_tickets_order` |
+| `tickets.order_total` | FR-021 | Avisar si la orden cambió después de generar el ticket, sin guardar una copia del contenido | Columna de firma; el contenido se arma al consultar |
+| `tickets.generated_by`, `generated_at` | FR-019 | Saber quién generó el ticket y cuándo | FK `fk_tickets_generated_by` y `DEFAULT CURRENT_TIMESTAMP` |
+| `ticket_folio_counters` | FR-019, FR-034, SC-006 | Consecutivo de folios por año, sin repetirse aunque haya solicitudes simultáneas | PK `year` y actualización atómica |
+| Resumen de pagos (calculado) | FR-005, US1 | Total, cobrado, reservado, saldo, disponible y estado de pago de cada orden, sin almacenarlos | Función `summarize` en centavos enteros |
+| Indicadores del panel (calculados) | FR-026, FR-027, FR-028, FR-032, US5, US6 | Cifras del panel desde datos reales, sin tablas de estadísticas | Consultas de lectura sobre las tablas existentes |
+
+No se crearon tablas para el panel ni para el contenido del ticket, porque FR-021 y FR-027 prohíben duplicar datos.
+
 ## Datos de ejemplo
 
 - `008_sample_payments.sql`: pagos en los cuatro métodos y los cuatro estados sobre las órdenes terminadas y entregadas de ejemplo, con fechas relativas a `NOW()`; al menos una orden pagada, una con pago parcial (saldo por cobrar) y un pago pendiente de Mercado Pago que reserva saldo.
