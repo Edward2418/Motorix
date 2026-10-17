@@ -17,7 +17,7 @@ No apliqué las ediciones al `tasks.md` antes de implementar, porque no había p
 | D3 | Riesgo de que la impresión no funcione en web o Windows | Parcial. La impresión se encapsuló en `TicketPrinter` y está probada con una impresora falsa, pero no la probé en una impresora real | `client/lib/services/ticket_printer.dart`, `client/test/ticket_printer_test.dart` |
 | D4 | El panel podía calcular un total distinto al de la orden | Resuelto. El total de la orden se exportó como fragmento SQL compartido y lo usan el saldo y el panel | `server/models/orderModel.js` (`ORDER_TOTAL_SQL`) |
 | D5 | T084 pedía inyectar la pasarela falsa en un servidor aparte, algo imposible | Resuelto. Los escenarios se verifican con pruebas automatizadas dentro del mismo proceso | `specs/004-pagos-tickets-dashboard/quickstart.md` (Resultados de la validación) |
-| D6 | Faltaba probar pagos y tickets de clientes o vehículos desactivados | **No resuelto.** No agregué esa prueba y la dejo como pendiente | Sin evidencia |
+| D6 | Faltaba probar pagos y tickets de clientes o vehículos desactivados | Resuelto al cierre, ya con el sprint terminado: agregué la prueba y confirma que pagos, ticket, detalle de la orden y panel siguen funcionando con el cliente y el vehículo desactivados | `server/tests/integration/payments-inactive.test.js` |
 | D7 | Faltaba probar que una orden entregada con saldo sigue aceptando pagos | Resuelto en parte: hay una prueba con una orden `ENTREGADO` que acepta pago | `server/tests/integration/payments-register.test.js` |
 | D8 | No había código de error para una orden con total cero | Resuelto. Es `ORDER_NOT_PAYABLE` con el mensaje «La orden no tiene importe por cobrar» | `server/services/paymentRules.js`, `payments-register.test.js` |
 | D9 | Nombres distintos entre el modelo (`paymentSummary`) y la API (`payment`, `paymentStatus`) | Resuelto. El detalle de la orden devuelve `payment` y el listado `paymentStatus` | `server/tests/contract/orders.contract.test.js`, `orders-list.contract.test.js` |
@@ -66,7 +66,7 @@ Cada criterio EARS de `spec.md` se comprueba con una prueba automatizada, salvo 
 | EARS-12: nada se elimina | Sí | `server/tests/integration/no-delete.test.js` |
 | EARS-13: panel en menos de 3 s | Parcial | Medición de 140 a 220 ms, registrada en `quickstart.md`; el script era temporal y no está en el repositorio |
 
-Resultado de la suite completa al cierre del sprint: **760 pruebas en el servidor y 208 en el cliente, todas pasando.**
+Resultado de la suite completa al cierre del sprint: **760 pruebas en el servidor y 208 en el cliente, todas pasando.** Después agregué 2 pruebas de servidor para D6 (`payments-inactive.test.js`), que también pasan.
 
 ## 4. Lo que todavía no cumple
 
@@ -75,5 +75,4 @@ Resultado de la suite completa al cierre del sprint: **760 pruebas en el servido
 - **Impresión real:** el ticket se imprime con una impresora simulada en las pruebas. No lo imprimí en papel.
 - **Revisión visual:** se ve en el navegador, pero no se hizo una revisión visual completa en pantallas distintas.
 - **Rendimiento:** la medición de 3 s se hizo con un script temporal que no quedó en el repositorio.
-- **D6:** falta la prueba de pagos y tickets de clientes o vehículos desactivados.
 - **Commits por tarea:** el historial agrupa varias tareas por commit, como se explica en la sección 2.
