@@ -101,6 +101,21 @@ export class AppError extends Error {
     return new AppError(404, 'TICKET_NOT_FOUND', 'La orden todavía no tiene ticket.');
   }
 
+  // Precios y cobro completo (Sprint 5)
+  static orderAlreadyPaid() {
+    return new AppError(409, 'ORDER_ALREADY_PAID', 'La orden ya está cobrada: no se pueden modificar las refacciones.');
+  }
+
+  static orderTotalLimit() {
+    return new AppError(422, 'ORDER_TOTAL_LIMIT_EXCEEDED', 'El total de la orden no puede superar $99,999,999.99.');
+  }
+
+  // El precio de venta es menor al de compra: se guarda solo si la administración lo confirma de forma explícita.
+  static priceBelowCost() {
+    const message = 'El precio de venta es menor al de compra.';
+    return new AppError(422, 'PRICE_BELOW_COST', `${message} Confirma para guardarlo.`, [{ field: 'salePrice', message }]);
+  }
+
   // Servicio externo (Mercado Pago) o base de datos caídos: 503 con mensaje propio, sin detalles internos.
   static serviceUnavailable(message = 'El servicio no está disponible por el momento. Inténtalo de nuevo en unos minutos.') {
     return new AppError(503, 'SERVICE_UNAVAILABLE', message);

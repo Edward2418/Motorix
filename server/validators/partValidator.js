@@ -14,6 +14,19 @@ export const STOCK_LEVELS = Object.freeze(['NORMAL', 'BAJO', 'AGOTADO']);
 
 const has = (data, field) => Object.prototype.hasOwnProperty.call(data, field);
 
+// Confirmación explícita para guardar un precio de venta menor al de compra: booleano opcional. Si la petición no lo
+// trae, el resultado no lo incluye (undefined) y se entiende como no confirmado.
+function parseConfirmBelowCost(errors, data) {
+  if (!has(data, 'confirmBelowCost')) {
+    return undefined;
+  }
+  if (typeof data.confirmBelowCost !== 'boolean') {
+    errors.add('confirmBelowCost', 'La confirmación debe ser verdadero o falso.');
+    return undefined;
+  }
+  return data.confirmBelowCost;
+}
+
 // Alta de una refacción. `initialStock` es opcional (0 por defecto) y genera el movimiento «Stock inicial».
 export function validatePartCreate(body) {
   const data = requireBody(body);
@@ -29,9 +42,10 @@ export function validatePartCreate(body) {
   const minStock = parseNonNegativeInt(errors, data.minStock, 'minStock', 'El stock mínimo', MAX_STOCK);
   const purchasePrice = parseAmount(errors, data.purchasePrice, 'purchasePrice', 'El precio de compra');
   const salePrice = parseAmount(errors, data.salePrice, 'salePrice', 'El precio de venta');
+  const confirmBelowCost = parseConfirmBelowCost(errors, data);
 
   errors.throwIfAny();
-  return { code, name, category, brand, initialStock, minStock, purchasePrice, salePrice };
+  return { code, name, category, brand, initialStock, minStock, purchasePrice, salePrice, confirmBelowCost };
 }
 
 // Edición parcial: solo se actualizan los campos enviados. El stock jamás se edita aquí.
@@ -63,12 +77,14 @@ export function validatePartUpdate(body) {
   if (has(data, 'salePrice')) {
     fields.salePrice = parseAmount(errors, data.salePrice, 'salePrice', 'El precio de venta');
   }
+  // La confirmación no es un campo para actualizar: solo acompaña a un cambio de precios.
+  const confirmBelowCost = parseConfirmBelowCost(errors, data);
   if (Object.keys(fields).length === 0 && errors.items.length === 0) {
     errors.add('body', 'Indica al menos un campo para actualizar.');
   }
 
   errors.throwIfAny();
-  return fields;
+  return { ...fields, confirmBelowCost };
 }
 
 function parseBooleanParam(value, name) {

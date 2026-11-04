@@ -1,8 +1,7 @@
 import * as vehicleHistoryModel from '../models/vehicleHistoryModel.js';
 import * as vehicleModel from '../models/vehicleModel.js';
 import { AppError } from '../utils/AppError.js';
-
-const money = (value) => Math.round(value * 100) / 100;
+import { fromCents, sumCents, toCents } from '../utils/money.js';
 
 const groupBy = (items, orderId) => items.filter((item) => item.orderId === orderId);
 const withoutOrder = ({ orderId, ...rest }) => rest;
@@ -19,7 +18,8 @@ export async function getHistory(vehicleId, { page, pageSize }) {
     const services = groupBy(lines.services, row.id).map(withoutOrder);
     const labor = groupBy(lines.labor, row.id).map(withoutOrder);
     const parts = groupBy(lines.parts, row.id).map(withoutOrder);
-    const sum = (items, value) => items.reduce((acc, item) => acc + value(item), 0);
+    // Importes en centavos enteros: el total del historial coincide con la suma exacta de sus líneas.
+    const centsOf = (items, value) => sumCents(items.map((item) => value(item)));
     return {
       orderId: row.id,
       folio: row.folio,
@@ -34,8 +34,10 @@ export async function getHistory(vehicleId, { page, pageSize }) {
       services,
       labor,
       parts,
-      total: money(
-        sum(services, (s) => s.amount) + sum(labor, (l) => l.amount) + sum(parts, (p) => p.quantity * p.unitPrice)
+      total: fromCents(
+        centsOf(services, (s) => toCents(s.amount)) +
+          centsOf(labor, (l) => toCents(l.amount)) +
+          centsOf(parts, (p) => p.quantity * toCents(p.unitPrice))
       )
     };
   });

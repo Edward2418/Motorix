@@ -6,7 +6,19 @@ import { randomUUID } from 'node:crypto';
 import { env } from '../config/env.js';
 import { getPaymentGateway } from './gateways/paymentGateway.js';
 import { resolveStatus } from './gateways/mercadoPagoStatus.js';
+import { toCents } from '../utils/money.js';
 import { canRegister } from './paymentRules.js';
+
+// Un pago de Mercado Pago pendiente está desfasado si el total vigente de la orden es distinto del que tenía al crearse
+// el pago. Se calcula al consultar (no se almacena). Los pagos anteriores al Sprint 5 no tienen ese dato y nunca se
+// marcan; un pago parcial pendiente no está desfasado mientras el total no cambie.
+const isOutdated = (payment, currentTotal) =>
+  payment.status === 'PENDIENTE' &&
+  payment.method === 'MERCADO_PAGO' &&
+  payment.totalAtCreation !== null &&
+  toCents(payment.totalAtCreation) !== toCents(currentTotal);
+
+const present = (payment, currentTotal) => ({ ...payment, outdated: isOutdated(payment, currentTotal) });
 
 // Métodos disponibles y si Mercado Pago está configurado en el servidor (hay credenciales).
 export function getConfig() {
@@ -30,7 +42,8 @@ async function requireOrder(orderId) {
 // Pagos de una orden (también los cancelados y rechazados) con su resumen.
 export async function listOrderPayments(orderId) {
   const order = await requireOrder(orderId);
-  return { payments: await paymentModel.listByOrder(orderId), summary: order.payment };
+  const payments = await paymentModel.listByOrder(orderId);
+  return { payments: payments.map((payment) => present(payment, order.total)), summary: order.payment };
 }
 
 // Registra un pago. Se bloquea la fila de la orden para que dos pagos simultáneos no superen el importe disponible.
@@ -75,6 +88,7 @@ export async function registerPayment(orderId, input, actor) {
           externalPreferenceId: preferenceId,
           paymentLink: link,
           expiresAt,
+          orderTotalAtCreation: order.total,
           createdBy: actor.id
         },
         conn
@@ -87,12 +101,14 @@ export async function registerPayment(orderId, input, actor) {
         method: input.method,
         status: 'PAGADO',
         reference: input.reference,
+        orderTotalAtCreation: order.total,
         createdBy: actor.id
       },
       conn
     );
   });
-  return { payment: await paymentModel.findById(paymentId), summary: await summaryOf(orderId) };
+  const summary = await summaryOf(orderId);
+  return { payment: present(await paymentModel.findById(paymentId), summary.total), summary };
 }
 
 // Actualiza un pago de Mercado Pago consultando al servicio externo (sin webhook). Es idempotente: consultar de nuevo
@@ -105,11 +121,10 @@ export async function refreshPayment(paymentId) {
   if (found.method !== 'MERCADO_PAGO') {
     throw AppError.paymentNotRefreshable();
   }
-  const respond = async (warning = null) => ({
-    payment: await paymentModel.findById(paymentId),
-    summary: await summaryOf(found.order_id),
-    warning
-  });
+  const respond = async (warning = null) => {
+    const summary = await summaryOf(found.order_id);
+    return { payment: present(await paymentModel.findById(paymentId), summary.total), summary, warning };
+  };
   if (found.status === 'PAGADO') {
     return respond();
   }
@@ -167,5 +182,6 @@ export async function cancelPayment(paymentId, { reason }, actor) {
       throw AppError.paymentNotCancellable('El pago cambió de estado mientras se cancelaba. Revisa su estado actual.');
     }
   });
-  return { payment: await paymentModel.findById(paymentId), summary: await summaryOf(found.order_id) };
+  const summary = await summaryOf(found.order_id);
+  return { payment: present(await paymentModel.findById(paymentId), summary.total), summary };
 }
