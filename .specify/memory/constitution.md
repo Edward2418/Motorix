@@ -1,5 +1,12 @@
 <!--
-Reporte de Impacto de la Sincronización
+Reporte de Impacto de la Sincronización (enmienda 1.1.0, 2026-11-03)
+- Cambio de versión: 1.0.0 → 1.1.0 (MINOR)
+- Principios modificados: I (alcance de los sprints posteriores al MVP) y III (MySQL local)
+- Secciones añadidas / eliminadas: ninguna
+- Origen: Sprint 5 (hallazgo H-01 de docs/aseguramiento-calidad-sprint-5.md)
+- Pendientes: ratificación por el equipo, coordinada por el director del proyecto
+
+Reporte de Impacto de la Sincronización (versión inicial)
 - Cambio de versión: plantilla sin completar → 1.0.0
 - Fuente: reglas definidas en `docs/reglas.md` (derivadas de MOTORIX_PROJECT_CONTEXT.md)
 - Principios modificados: todos nuevos (I a VIII)
@@ -26,8 +33,12 @@ desarrollarlo, tanto por el equipo como por el agente de IA.
 - El agente DEBE leer `docs/project-context.md` antes de implementar cualquier sprint.
 - NO se permite agregar funcionalidades fuera del alcance sin indicarlo y obtener
   aprobación del equipo.
-- El desarrollo DEBE seguir los sprints en orden (1 → 4); NO se implementa todo el
-  sistema de una sola vez. No iniciar por Mercado Pago, dashboard o tickets.
+- El MVP DEBE construirse siguiendo los sprints en orden (1 → 4); NO se implementa todo
+  el sistema de una sola vez. No iniciar por Mercado Pago, dashboard o tickets.
+- Los sprints posteriores al MVP (del 5 en adelante) DEBEN partir de un insumo en
+  `docs/sprints/`, contrastado con el código real, y su alcance DEBE ser aprobado por el
+  equipo, coordinado por el director del proyecto, antes de implementar. Siguen el mismo
+  flujo, las mismas reglas de esta constitución y el mismo registro de calidad.
 - El chatbot de WhatsApp está FUERA del MVP; solo puede tratarse como integración
   externa futura.
 - DEBE mantenerse la trazabilidad: requisito de alto nivel → historia de usuario →
@@ -61,7 +72,8 @@ desarrollarlo, tanto por el equipo como por el agente de IA.
   backend DEBE usar ES Modules (`import`/`export`). NO se usa CommonJS
   (`require`/`module.exports`). `package.json` del backend DEBE declarar
   `"type": "module"`.
-- Base de datos: MySQL, ejecutada de forma LOCAL durante los cuatro sprints del MVP.
+- Base de datos: MySQL, ejecutada de forma LOCAL durante el MVP y los sprints posteriores,
+  mientras el equipo no apruebe otra política.
 - Autenticación: JWT con contraseñas cifradas mediante bcrypt.
 - Login: acepta usuario (`username`) o correo electrónico (`email`) en el mismo campo,
   para todos los roles.
@@ -238,4 +250,4 @@ asumirlas como definitivas:
 - El cumplimiento se revisa en cada contribución; cualquier desviación DEBE justificarse
   explícitamente o descartarse.
 
-**Versión**: 1.0.0 | **Redactada**: 2026-10-01 | **Ratificación**: pendiente del equipo | **Última enmienda**: 2026-10-12
+**Versión**: 1.1.0 | **Redactada**: 2026-10-01 | **Ratificación**: pendiente del equipo | **Última enmienda**: 2026-11-03
