@@ -41,7 +41,9 @@ const orderDetailShape = {
     balance: 0,
     available: 0,
     creditBalance: 0,
-    status: 'SIN_PAGO'
+    status: 'SIN_PAGO',
+    // Sprint 5 (campo aditivo, ajuste registrado en H-10).
+    hasOutdatedPending: false
   },
   history: [
     {

@@ -15,7 +15,8 @@ describe('seeds de pagos y tickets', () => {
 
   test('cargan pagos y tickets y repetir el seed no duplica nada', async () => {
     const antes = { pagos: await count('payments'), tickets: await count('tickets') };
-    expect(antes).toEqual({ pagos: 8, tickets: 2 });
+    // Sprint 5 (seed 010, ajuste registrado en H-10): un ticket más (TK-2026-0003, con su contenido guardado).
+    expect(antes).toEqual({ pagos: 8, tickets: 3 });
     await runSeeds(pool, () => {});
     expect({ pagos: await count('payments'), tickets: await count('tickets') }).toEqual(antes);
   });
@@ -56,10 +57,11 @@ describe('seeds de pagos y tickets', () => {
 
   test('los tickets tienen folio único, uno por orden, y el contador coincide', async () => {
     const [tickets] = await pool.query('SELECT folio, order_id FROM tickets ORDER BY folio');
-    expect(tickets.map((t) => t.folio)).toEqual([formatTicketFolio(2026, 1), formatTicketFolio(2026, 2)]);
-    expect(new Set(tickets.map((t) => t.order_id)).size).toBe(2);
+    // Sprint 5 (seed 010, ajuste registrado en H-10): el tercer ticket es el del Sprint 5.
+    expect(tickets.map((t) => t.folio)).toEqual([formatTicketFolio(2026, 1), formatTicketFolio(2026, 2), formatTicketFolio(2026, 3)]);
+    expect(new Set(tickets.map((t) => t.order_id)).size).toBe(3);
     const [[contador]] = await pool.query('SELECT last_number FROM ticket_folio_counters WHERE year = 2026');
-    expect(contador.last_number).toBe(2);
+    expect(contador.last_number).toBe(3);
   });
 
   test('el ticket de ejemplo no muestra el aviso de orden modificada', async () => {

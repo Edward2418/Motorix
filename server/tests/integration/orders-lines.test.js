@@ -50,9 +50,15 @@ describe('órdenes: servicios y mano de obra', () => {
           expect({ valor: String(invalido), status: res.status }).toEqual({ valor: String(invalido), status: 400 });
           expect(res.body.error.details.map((d) => d.field)).toContain('amount');
         }
-        for (const valido of [0, 0.01, 99999999.99, 10.5]) {
+        for (const valido of [0, 0.01, 10.5]) {
           expect((await agregar(tokens.mecanico, orden.id, tipo, { description: 'Prueba', amount: valido })).status).toBe(201);
         }
+        // Sprint 5 (FR-009): el máximo de un importe solo cabe en una orden vacía; con otras líneas el total pasaría de
+        // 99,999,999.99. Por eso se prueba aparte, en una orden nueva (ajuste registrado en H-10).
+        await resetTables();
+        const vacia = await escenarioOrden();
+        const maximo = await agregar(vacia.tokens.mecanico, vacia.orden.id, tipo, { description: 'Prueba', amount: 99999999.99 });
+        expect(maximo.status).toBe(201);
       });
 
       test('permisos: mecánico asignado y administrador sí; otro mecánico y recepción 403', async () => {
