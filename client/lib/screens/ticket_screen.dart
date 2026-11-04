@@ -139,7 +139,9 @@ class _ChangedBanner extends StatelessWidget {
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Text(
-              'La orden se modificó después de generar este ticket. Se muestran los datos vigentes.',
+              // Desde el Sprint 5 un ticket nuevo muestra lo emitido; el de antes del sprint se arma con datos vigentes.
+              // El aviso solo informa que la orden cambió, sin decir qué datos se muestran.
+              'La orden se modificó después de generar este ticket.',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
           ),

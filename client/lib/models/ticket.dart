@@ -32,7 +32,8 @@ class Workshop {
       );
 }
 
-/// Comprobante de una orden. Se arma con los datos vigentes de la orden y sus pagos.
+/// Comprobante de una orden. Un ticket emitido desde el Sprint 5 trae el contenido que se guardó al emitirlo; el de antes
+/// del sprint se arma con los datos vigentes. En ambos casos los pagos y su estado son vigentes.
 class Ticket {
   const Ticket({
     required this.id,

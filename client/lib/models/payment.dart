@@ -65,7 +65,15 @@ class Payment {
     this.cancelReason,
     this.createdByName = '',
     this.cancelledByName,
+    this.totalAtCreation,
+    this.outdated = false,
   });
+
+  /// Total de la orden con el que se creó el pago (nulo en los pagos anteriores al Sprint 5).
+  final double? totalAtCreation;
+
+  /// Pago de Mercado Pago pendiente cuyo total de creación ya no coincide con el total de la orden.
+  final bool outdated;
 
   final int id;
   final int orderId;
@@ -96,6 +104,8 @@ class Payment {
         cancelReason: json['cancelReason'] as String?,
         createdByName: (json['createdByName'] ?? '') as String,
         cancelledByName: json['cancelledByName'] as String?,
+        totalAtCreation: (json['totalAtCreation'] as num?)?.toDouble(),
+        outdated: json['outdated'] == true,
         createdAt: DateTime.parse(json['createdAt'] as String).toLocal(),
       );
 }
@@ -110,7 +120,11 @@ class PaymentSummary {
     required this.available,
     required this.creditBalance,
     required this.status,
+    this.hasOutdatedPending = false,
   });
+
+  /// La orden tiene un pago de Mercado Pago pendiente desfasado (el total cambió después de crearlo).
+  final bool hasOutdatedPending;
 
   final double total;
   final double collected;
@@ -128,6 +142,7 @@ class PaymentSummary {
         available: (json['available'] as num).toDouble(),
         creditBalance: ((json['creditBalance'] ?? 0) as num).toDouble(),
         status: OrderPaymentStatus.fromApi(json['status'] as String),
+        hasOutdatedPending: json['hasOutdatedPending'] == true,
       );
 
   /// Hay algo que cobrar ahora mismo (y la orden admite nuevos pagos).

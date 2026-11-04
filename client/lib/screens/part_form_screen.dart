@@ -88,6 +88,12 @@ class _PartFormScreenState extends State<PartFormScreen> {
     if (!_formKey.currentState!.validate()) {
       return;
     }
+    await _save();
+  }
+
+  /// Guarda la refacción. La regla del precio vive en el servidor: si responde PRICE_BELOW_COST (el precio de venta es
+  /// menor al de compra), se pide una confirmación explícita y solo entonces se reenvía con `confirmBelowCost`.
+  Future<void> _save({bool confirmBelowCost = false}) async {
     setState(() => _saving = true);
     try {
       final parts = context.read<PartsProvider>();
@@ -104,6 +110,7 @@ class _PartFormScreenState extends State<PartFormScreen> {
           minStock: minStock,
           purchasePrice: purchasePrice,
           salePrice: salePrice,
+          confirmBelowCost: confirmBelowCost,
         );
       } else {
         await parts.create(
@@ -115,6 +122,7 @@ class _PartFormScreenState extends State<PartFormScreen> {
           minStock: minStock,
           purchasePrice: purchasePrice,
           salePrice: salePrice,
+          confirmBelowCost: confirmBelowCost,
         );
       }
       if (!mounted) {
@@ -124,6 +132,25 @@ class _PartFormScreenState extends State<PartFormScreen> {
       Navigator.of(context).pop(true);
     } on ApiException catch (e) {
       if (!mounted) {
+        return;
+      }
+      if (e.code == 'PRICE_BELOW_COST' && !confirmBelowCost) {
+        setState(() => _saving = false);
+        final confirmed = await showConfirmDialog(
+          context,
+          title: 'Precio de venta menor al de compra',
+          message: 'El precio de venta es menor al de compra: la refacción se vendería con pérdida. '
+              '¿Quieres guardarla de todos modos?',
+        );
+        if (!mounted) {
+          return;
+        }
+        if (confirmed) {
+          await _save(confirmBelowCost: true);
+        } else {
+          // Sin confirmar no se guarda: el aviso queda en el campo del precio de venta.
+          setState(() => _serverErrors = e.fieldErrors);
+        }
         return;
       }
       setState(() {

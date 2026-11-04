@@ -119,6 +119,16 @@ class _PaymentsSectionState extends State<PaymentsSection> {
   bool _canCancel(Payment payment) =>
       payment.status == PaymentStatus.pending || (payment.status == PaymentStatus.paid && widget.isAdmin);
 
+  /// Un pago de Mercado Pago aprobado después de que cambió el total quedó por su importe original: lo que falta del
+  /// total vigente se muestra como diferencia por cobrar.
+  bool _hasLateApprovedDifference(PaymentSummary summary, List<Payment> payments) =>
+      summary.balance > 0 &&
+      payments.any((payment) =>
+          payment.method == PaymentMethod.mercadoPago &&
+          payment.status == PaymentStatus.paid &&
+          payment.totalAtCreation != null &&
+          (payment.totalAtCreation! - summary.total).abs() > 0.004);
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<PaymentsProvider>();
@@ -139,6 +149,19 @@ class _PaymentsSectionState extends State<PaymentsSection> {
       body = Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // Avisos del Sprint 5 (color de advertencia): se ven en la primera pantalla de la orden, sin acciones extra.
+          if (summary.hasOutdatedPending || provider.payments.any((payment) => payment.outdated))
+            _Notice(
+              title: 'Pago de Mercado Pago desfasado',
+              message: 'El total de la orden cambió después de crear el pago de Mercado Pago pendiente, por eso quedó '
+                  'desfasado. Cancélalo para poder cobrar el total vigente de ${formatMoney(summary.total)}.',
+            ),
+          if (_hasLateApprovedDifference(summary, provider.payments))
+            _Notice(
+              title: 'Diferencia por cobrar: ${formatMoney(summary.balance)}',
+              message: 'Mercado Pago aprobó el pago por su importe original, antes de que el total cambiara. '
+                  'La diferencia se resuelve fuera del sistema o con un nuevo cobro.',
+            ),
           Padding(
             padding: const EdgeInsets.all(AppSpacing.xl),
             child: Wrap(
@@ -199,6 +222,45 @@ class _PaymentsSectionState extends State<PaymentsSection> {
           ),
           const SizedBox(height: AppSpacing.md),
           Card(clipBehavior: Clip.antiAlias, child: body),
+        ],
+      ),
+    );
+  }
+}
+
+/// Aviso dentro de la tarjeta de pagos: fondo suave y borde fino de `warning` (docs/design-system.md).
+class _Notice extends StatelessWidget {
+  const _Notice({required this.title, required this.message});
+
+  final String title;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      margin: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.xl, AppSpacing.xl, 0),
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.warning.withValues(alpha: 0.1),
+        border: Border.all(color: AppColors.warning.withValues(alpha: 0.4)),
+        borderRadius: BorderRadius.circular(AppRadius.panel),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(LucideIcons.triangleAlert, size: AppSizes.icon, color: AppColors.warning),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: theme.textTheme.titleMedium?.copyWith(color: AppColors.warning)),
+                const SizedBox(height: AppSpacing.xs),
+                Text(message, style: theme.textTheme.bodyMedium),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -267,6 +329,10 @@ class _PaymentRow extends StatelessWidget {
               ],
             ),
           ),
+          if (payment.outdated) ...[
+            const StatusBadge(label: 'Desfasado', color: AppColors.warning),
+            const SizedBox(width: AppSpacing.sm),
+          ],
           StatusBadge.payment(payment.status),
           if (onShowLink != null)
             IconButton(
