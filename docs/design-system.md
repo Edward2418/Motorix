@@ -170,6 +170,8 @@ El **panel de control** muestra como máximo cuatro indicadores (tarjeta con tí
 
 El **aviso de stock bajo** (`StockAlertBanner`) es una barra en la parte superior de Inventario, solo para la administración: fondo suave y borde fino de `warning` (de `danger` si hay refacciones agotadas), el ícono de advertencia, un resumen y las primeras refacciones afectadas. Cuando no hay alertas no se muestra ni deja un espacio vacío. En las líneas de movimientos, las cantidades que suman usan `success` y las que restan `danger`.
 
+Los **avisos de pagos** (Sprint 5) viven dentro de la tarjeta de pagos de la orden, antes de las cifras, y usan el mismo estilo de aviso: fondo suave y borde fino de `warning` y el ícono de advertencia, con un título y un texto breve. El **pago de Mercado Pago desfasado** (el total de la orden cambió después de crear el pago) se avisa en la primera pantalla de la orden, sin acciones extra, y el pago lleva una insignia «Desfasado» de `warning` junto a su estado y la acción de cancelarlo. La **diferencia por cobrar** tras una aprobación tardía usa el mismo aviso. En el ticket, el aviso «La orden se modificó después de generar este ticket» sigue el mismo estilo.
+
 ---
 
 ## 6. Tipografía, espacio, forma y movimiento
@@ -322,6 +324,7 @@ Antes de ejecutar cualquiera de las siguientes acciones, el sistema **DEBE** mos
 - Cancelar, anular o marcar como entregada una orden de servicio.
 - Eliminar o desactivar cualquier registro (clientes, vehículos, usuarios, refacciones).
 - Registrar un pago de forma definitiva.
+- Guardar una refacción con un precio de venta menor al de compra (la regla la valida el servidor y la pantalla solo pide la confirmación).
 - Salir de un formulario con cambios sin guardar (por ejemplo, al pulsar "atrás" o cerrar la ventana).
 - Cualquier otra operación que el equipo considere destructiva o irreversible.
 

@@ -2,6 +2,7 @@ import { withTransaction } from '../config/db.js';
 import * as inventoryMovementModel from '../models/inventoryMovementModel.js';
 import * as partModel from '../models/partModel.js';
 import { AppError } from '../utils/AppError.js';
+import { assertPriceConfirmed } from './partPriceRules.js';
 
 // Catálogo de refacciones. El mecánico solo consulta refacciones activas y nunca recibe el precio de compra.
 
@@ -20,6 +21,8 @@ async function requirePart(id, actor) {
 
 // Registra la refacción y, si trae stock inicial, su primer movimiento de ENTRADA, todo en una transacción.
 export async function createPart(input, actor) {
+  // Un precio de venta menor al de compra se guarda solo con confirmación explícita (se valida en el servidor).
+  assertPriceConfirmed({ changes: input, confirmed: input.confirmBelowCost });
   let id;
   try {
     id = await withTransaction(async (conn) => {
@@ -67,8 +70,14 @@ export async function listCategories(actor) {
 }
 
 // Edita datos descriptivos, precios y mínimo. El stock nunca se toca: solo cambia mediante movimientos.
-export async function updatePart(id, fields, actor) {
-  await requirePart(id, actor);
+export async function updatePart(id, input, actor) {
+  const current = await requirePart(id, actor);
+  const { confirmBelowCost, ...fields } = input;
+  assertPriceConfirmed({
+    current: { purchasePrice: Number(current.purchase_price), salePrice: Number(current.sale_price) },
+    changes: fields,
+    confirmed: confirmBelowCost
+  });
   try {
     await partModel.update(id, fields);
   } catch (error) {

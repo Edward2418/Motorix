@@ -9,10 +9,12 @@ import * as orderPartModel from '../models/orderPartModel.js';
 import * as userModel from '../models/userModel.js';
 import * as vehicleModel from '../models/vehicleModel.js';
 import { AppError } from '../utils/AppError.js';
+import { toCents } from '../utils/money.js';
 import { nextFolio } from './folioService.js';
 import { listByOrder as listMaintenanceByOrder } from './maintenanceService.js';
 import { returnAllParts } from './orderPartService.js';
 import { allowedTransitions, canTransition, isFinalStatus } from './orderStateMachine.js';
+import { assertWithinLimit } from './orderTotalRules.js';
 
 const formatKm = (km) => Number(km).toLocaleString('en-US');
 
@@ -360,8 +362,8 @@ export async function updateContent(id, fields, actor) {
   return buildOrderDetail(await orderModel.findById(id), actor);
 }
 
-async function loadEditableOrder(orderId, actor) {
-  const order = await requireOrder(orderId);
+async function loadEditableOrder(orderId, actor, conn) {
+  const order = await requireOrder(orderId, conn);
   if (!canEditTechnical(order, actor)) {
     throw AppError.forbidden('Solo el mecánico asignado o un administrador pueden modificar servicios y mano de obra.');
   }
@@ -369,19 +371,29 @@ async function loadEditableOrder(orderId, actor) {
   return order;
 }
 
-// Agrega un servicio (kind = 'services') o una línea de mano de obra (kind = 'labor').
+// Agrega un servicio (kind = 'services') o una línea de mano de obra (kind = 'labor'). Se ejecuta en una transacción con
+// la orden bloqueada para que el límite del total nunca se supere, tampoco con solicitudes simultáneas.
 export async function addLine(kind, orderId, input, actor) {
-  await loadEditableOrder(orderId, actor);
-  await orderItemModel.insertLine(kind, orderId, input);
+  await withTransaction(async (conn) => {
+    await orderModel.lockById(orderId, conn);
+    const order = await loadEditableOrder(orderId, actor, conn);
+    assertWithinLimit(toCents(order.total), toCents(input.amount));
+    await orderItemModel.insertLine(kind, orderId, input, conn);
+  });
   return buildOrderDetail(await orderModel.findById(orderId), actor);
 }
 
 export async function updateLine(kind, orderId, lineId, input, actor) {
-  await loadEditableOrder(orderId, actor);
-  if (!(await orderItemModel.findLine(kind, orderId, lineId))) {
-    throw AppError.notFound('La línea no existe en esta orden.');
-  }
-  await orderItemModel.updateLine(kind, orderId, lineId, input);
+  await withTransaction(async (conn) => {
+    await orderModel.lockById(orderId, conn);
+    const order = await loadEditableOrder(orderId, actor, conn);
+    const line = await orderItemModel.findLine(kind, orderId, lineId, conn);
+    if (!line) {
+      throw AppError.notFound('La línea no existe en esta orden.');
+    }
+    assertWithinLimit(toCents(order.total), toCents(input.amount) - toCents(line.amount));
+    await orderItemModel.updateLine(kind, orderId, lineId, input, conn);
+  });
   return buildOrderDetail(await orderModel.findById(orderId), actor);
 }
 

@@ -35,4 +35,14 @@ describe('concurrencia al generar tickets', () => {
     expect(numeros).toEqual([1, 2, 3, 4, 5]);
     expect(new Set(respuestas.map((r) => r.body.data.folio)).size).toBe(5);
   });
+
+  test('dos solicitudes simultáneas guardan un solo contenido y los dos devuelven lo mismo (Sprint 5)', async () => {
+    const { orden, tokens } = await escenarioPago();
+    const respuestas = await Promise.all([generar(tokens.recepcion, orden.id), generar(tokens.admin, orden.id)]);
+    expect(respuestas.map((r) => r.status).sort()).toEqual([200, 201]);
+    const [[{ total }]] = await pool.query('SELECT COUNT(*) AS total FROM tickets WHERE order_id = ? AND content IS NOT NULL', [orden.id]);
+    expect(total).toBe(1);
+    expect(respuestas[0].body.data.services).toEqual(respuestas[1].body.data.services);
+    expect(respuestas[0].body.data.total).toBe(respuestas[1].body.data.total);
+  });
 });

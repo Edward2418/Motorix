@@ -296,6 +296,12 @@ Cuando una refacción sea utilizada en una orden, el sistema debe
 reflejar la salida correspondiente del inventario. La implementación
 debe evitar que el stock quede en valores inválidos.
 
+Precios (Sprint 5): los precios son importes de máximo dos decimales y no superan 99,999,999.99. La línea
+de la orden conserva el precio de venta vigente al agregarla y no cambia si el precio de la refacción cambia
+después. Guardar un precio de venta menor al de compra (o un precio de venta cero con precio de compra mayor
+que cero) exige confirmación explícita, que valida el servidor. El precio de compra solo lo ve la
+administración.
+
 ------------------------------------------------------------------------
 
 ## 6.8 Pagos
@@ -312,6 +318,13 @@ Métodos contemplados: - Efectivo. - Tarjeta. - Transferencia. - Mercado
 Pago.
 
 Estados sugeridos: - Pendiente. - Pagado. - Rechazado. - Cancelado.
+
+Reglas del Sprint 5: el total de la orden (servicios, mano de obra y refacciones) se calcula en centavos
+enteros y no puede superar 99,999,999.99. Una orden con un pago Pagado no admite agregar, quitar ni cambiar la
+cantidad de sus refacciones. Todo pago guarda el total de la orden con el que se creó; un pago de Mercado
+Pago pendiente cuyo total de creación difiere del total vigente se marca como desfasado y debe cancelarse
+antes de cobrar de nuevo; si el proveedor lo aprueba después, queda Pagado por su importe original y la
+diferencia se resuelve fuera del sistema.
 
 ------------------------------------------------------------------------
 
@@ -339,6 +352,11 @@ obra. - Subtotal. - Total. - Método de pago. - Estado del pago. - Fecha.
 
 Debe contemplarse visualización e impresión. La generación PDF puede
 implementarse conforme avance el MVP.
+
+Desde el Sprint 5 el ticket guarda al emitirse el taller, el cliente, el vehículo, el folio de la orden, las
+líneas, los subtotales y el total, y los muestra siempre tal como se emitieron; los pagos y su estado se
+muestran vigentes, y un aviso indica si el total de la orden cambió después. Los tickets anteriores se siguen
+armando con datos vigentes.
 
 ------------------------------------------------------------------------
 
@@ -837,10 +855,15 @@ database/
 ├── migrations/
 │   ├── 001_sprint1_users_clients_vehicles.sql
 │   ├── 002_sprint2_appointments_service_orders.sql
-│   ├── 003_sprint3_maintenance_inventory.sql
-│   └── 004_sprint4_payments_tickets.sql
+│   ├── 003_login_attempts.sql
+│   ├── 004_sprint3_maintenance_inventory.sql
+│   ├── 005_sprint4_payments_tickets.sql
+│   ├── 006_sprint5_ticket_content.sql
+│   └── 007_sprint5_payment_order_total.sql
 ├── seeds/
-│   └── 001_initial_roles_and_admin.sql
+│   ├── 001_initial_users.sql ... 009_sample_tickets.sql   (usuarios, clientes, vehículos, citas, órdenes,
+│   │                                                      refacciones, mantenimientos, pagos y tickets)
+│   └── 010_sample_sprint5.sql                              (dos órdenes terminadas con refacciones y un ticket con contenido)
 ├── scripts/
 │   └── (creación de base de datos, reinicio local, respaldo)
 ├── data/            (opcional, ignorada por Git)
@@ -855,6 +878,7 @@ database/
 | 2 | `appointments`, `service_orders` y tablas de servicios realizados y mano de obra por orden |
 | 3 | `parts`, `inventory_movements`, `maintenance` y tabla de refacciones utilizadas por orden |
 | 4 | `payments`, `tickets` |
+| 5 | columnas nuevas: `tickets.content` (contenido guardado al emitir) y `payments.order_total_at_creation` (total de la orden al crear el pago) |
 
 Los nombres y campos definitivos se validan al especificar cada sprint.
 El script de seeds no debe contener contraseñas en texto plano: el
@@ -1294,6 +1318,35 @@ Antes de asumirlas como definitivas, el equipo debe decidir:
     `validators`, `utils`) viven directamente en `server/`, manteniendo la
     separación de responsabilidades de la sección 11.
 
+### Decisiones resueltas durante el Sprint 5 (2026-11-03)
+
+El Sprint 5 es el primero posterior al MVP (enmienda 1.1.0 de la constitución). Su insumo original fue
+reencuadrado tras comprobar que el código ya tenía precios, instantánea del precio y total con refacciones;
+el sprint protege eso con pruebas y cierra los huecos reales.
+
+-   **Ticket**: guarda al emitirse el taller, el cliente, el vehículo, el folio de la orden, las líneas, los
+    subtotales y el total (columna `tickets.content`, JSON); no guarda pagos ni el estado de la orden. Los
+    tickets anteriores (contenido nulo) se siguen armando con datos vigentes. Conserva el aviso de orden
+    cambiada. **Reemplaza** la decisión del Sprint 4 («el ticket se arma siempre vigente»).
+-   **Orden cobrada**: con un pago Pagado se rechaza (409 `ORDER_ALREADY_PAID`) agregar, quitar o cambiar la
+    cantidad de una refacción; con solo pagos pendientes se permite. **Reemplaza** la regla del Sprint 4 que
+    permitía a la administración cambiarlas con motivo.
+-   **Pago desfasado**: todo pago guarda el total de la orden al crearse (`payments.order_total_at_creation`).
+    Un pago de Mercado Pago pendiente es desfasado si el total vigente es distinto; se cancela antes de cobrar de
+    nuevo (recepción o administración, con motivo). La aprobación tardía lo deja Pagado por su importe original y
+    el saldo muestra la diferencia, que se resuelve fuera del sistema.
+-   **Mecánico**: conserva lo que ve (precio de venta, importe de las líneas y total); nunca el precio de
+    compra ni los pagos.
+-   **Importes**: el total y el importe de cada línea se calculan en centavos enteros, sin regla de redondeo
+    (la cantidad es entera). El total de una orden no puede superar 99,999,999.99, también al agregar servicios
+    y mano de obra (cambia el Sprint 2).
+-   **Precios**: un precio de venta menor al de compra se guarda solo con confirmación explícita
+    (`confirmBelowCost`, validada en el servidor); el precio de venta cero se permite. La categoría y la marca
+    siguen siendo texto libre. No se corrige el precio de una línea: se quita y se vuelve a agregar. No hay
+    historial de auditoría de precios.
+-   **Datos de ejemplo**: el seed 010 agrega OS-2026-0009 (terminada, con refacciones, sin pagos ni ticket, para
+    cobrarla) y OS-2026-0010 (con el ticket TK-2026-0003 que ya guarda su contenido).
+
 ### Decisiones resueltas durante el Sprint 4
 
 -   **Pagos**: parciales y múltiples por orden. Solo se cobra una orden `TERMINADO` o `ENTREGADO` con total
@@ -1306,8 +1359,9 @@ Antes de asumirlas como definitivas, el equipo debe decidir:
     webhook). El estado se concilia por consulta (`POST /payments/{id}/refresh`) y al abrir una orden con
     pagos pendientes; es idempotente. Sin credenciales la opción se deshabilita. No se guardan datos de
     tarjeta (RN-14) y las credenciales viven en variables de entorno.
--   **Ticket**: uno por orden (`TK-AAAA-NNNN`, contador atómico). Guarda solo el total como firma; el contenido
-    se arma al consultar y avisa si la orden cambió. Se imprime en memoria con los paquetes `pdf` y
+-   **Ticket**: uno por orden (`TK-AAAA-NNNN`, contador atómico). En el Sprint 4 guardaba solo el total como
+    firma y armaba el contenido al consultar; el Sprint 5 lo reemplaza (ver «Decisiones resueltas durante el
+    Sprint 5»), pero el aviso de orden cambiada se conserva. Se imprime en memoria con los paquetes `pdf` y
     `printing` (únicas dependencias nuevas), sin guardar archivos.
 -   **Panel**: solo administración; cuatro indicadores, gráfica de barras con widgets propios y listas de
     atención calculadas al consultar para hoy, 7 días o mes. El mecánico no recibe campos de pago.

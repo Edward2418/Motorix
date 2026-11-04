@@ -154,6 +154,7 @@ class PartsProvider extends ChangeNotifier {
     required int minStock,
     required double purchasePrice,
     required double salePrice,
+    bool confirmBelowCost = false,
   }) async {
     final response = await _api.post('/parts', body: {
       'code': code,
@@ -164,6 +165,8 @@ class PartsProvider extends ChangeNotifier {
       'minStock': minStock,
       'purchasePrice': purchasePrice,
       'salePrice': salePrice,
+      // Solo se envía cuando la administración confirma un precio de venta menor al de compra.
+      if (confirmBelowCost) 'confirmBelowCost': true,
     });
     await Future.wait([load(), loadCategories()]);
     return Part.fromJson(response['data'] as Map<String, dynamic>);
@@ -179,6 +182,7 @@ class PartsProvider extends ChangeNotifier {
     required int minStock,
     required double purchasePrice,
     required double salePrice,
+    bool confirmBelowCost = false,
   }) async {
     final response = await _api.put('/parts/$id', body: {
       'code': code,
@@ -188,6 +192,7 @@ class PartsProvider extends ChangeNotifier {
       'minStock': minStock,
       'purchasePrice': purchasePrice,
       'salePrice': salePrice,
+      if (confirmBelowCost) 'confirmBelowCost': true,
     });
     await Future.wait([load(), loadCategories()]);
     return Part.fromJson(response['data'] as Map<String, dynamic>);

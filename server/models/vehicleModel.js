@@ -39,8 +39,8 @@ export async function raiseMileage(vehicleId, mileage, conn) {
   await query('UPDATE vehicles SET current_mileage = GREATEST(current_mileage, ?) WHERE id = ?', [mileage, vehicleId], conn);
 }
 
-export async function findById(id) {
-  const rows = await query(`${VEHICLE_SELECT} WHERE v.id = ? LIMIT 1`, [id]);
+export async function findById(id, conn) {
+  const rows = await query(`${VEHICLE_SELECT} WHERE v.id = ? LIMIT 1`, [id], conn);
   return toVehicle(rows[0]);
 }
 

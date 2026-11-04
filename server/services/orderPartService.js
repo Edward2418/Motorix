@@ -3,9 +3,12 @@ import * as inventoryMovementModel from '../models/inventoryMovementModel.js';
 import * as orderModel from '../models/orderModel.js';
 import * as orderPartModel from '../models/orderPartModel.js';
 import * as partModel from '../models/partModel.js';
+import * as paymentModel from '../models/paymentModel.js';
 import { AppError } from '../utils/AppError.js';
+import { toCents } from '../utils/money.js';
 import { translateRuleError } from './inventoryService.js';
 import { buildOrderDetail } from './orderService.js';
+import { assertWithinLimit } from './orderTotalRules.js';
 import { applyDelta } from './stockRules.js';
 
 // Refacciones usadas en una orden. Cada cambio mueve el inventario en la misma transacción:
@@ -17,8 +20,10 @@ const clip = (text) => (text.length > MAX_REASON ? `${text.slice(0, MAX_REASON -
 const withMotive = (base, reason) => clip(reason ? `${base} · Motivo: ${reason}` : base);
 
 // Quién puede modificar refacciones y cuándo. Orden de las comprobaciones: rol (403), propiedad (403),
-// estado final (409), orden TERMINADA solo para administración (403) y, en ese caso, motivo obligatorio (400).
-function assertCanModify(order, actor, reason) {
+// estado final (409), orden TERMINADA solo para administración (403), orden ya cobrada (409) y, en ese caso,
+// motivo obligatorio (400). Una orden con un pago cobrado está terminada o entregada, así que un mecánico recibe antes
+// un 403 o el 409 de estado final y nunca se entera de que hay pagos. Con conexión: se ejecuta dentro de la transacción.
+async function assertCanModify(order, actor, reason, conn) {
   if (actor.role === 'RECEPTIONIST') {
     throw AppError.forbidden('Recepción no puede modificar las refacciones de una orden.');
   }
@@ -31,6 +36,9 @@ function assertCanModify(order, actor, reason) {
   if (order.status === 'TERMINADO') {
     if (actor.role !== 'ADMIN') {
       throw AppError.forbidden('Solo la administración puede modificar las refacciones de una orden terminada.');
+    }
+    if (await paymentModel.hasPaidPayment(order.id, conn)) {
+      throw AppError.orderAlreadyPaid();
     }
     if (!reason) {
       throw AppError.validation('Indica el motivo del cambio en una orden terminada.', [
@@ -96,11 +104,20 @@ async function moveStock(part, delta, { order, actor, reason }, conn) {
 
 const detailOf = async (orderId, actor) => buildOrderDetail(await orderModel.findById(orderId), actor);
 
+// Rechaza (422) un aumento que haría pasar el total de la orden del máximo. La orden ya está bloqueada en la transacción.
+async function assertTotalFits(orderId, extraCents, conn) {
+  if (extraCents <= 0) {
+    return;
+  }
+  const current = await orderModel.findById(orderId, conn);
+  assertWithinLimit(toCents(current.total), extraCents);
+}
+
 // Agrega una refacción a la orden: copia el precio de venta vigente, descuenta el stock y registra la salida.
 export async function addPart(orderId, { partId, quantity, reason }, actor) {
   await withTransaction(async (conn) => {
     const order = await requireLockedOrder(orderId, conn);
-    assertCanModify(order, actor, reason);
+    await assertCanModify(order, actor, reason, conn);
     const part = await requireLockedPart(partId, conn);
     if (!part.active) {
       throw AppError.partInactive();
@@ -108,6 +125,7 @@ export async function addPart(orderId, { partId, quantity, reason }, actor) {
     if (await orderPartModel.findByOrderAndPart(orderId, partId, conn)) {
       throw AppError.partAlreadyInOrder();
     }
+    await assertTotalFits(orderId, quantity * toCents(part.sale_price), conn);
     await moveStock(part, -quantity, { order, actor, reason: withMotive(`Uso en la orden ${order.folio}`, reason) }, conn);
     await orderPartModel.insert({ orderId, partId, quantity, unitPrice: part.sale_price }, conn);
   });
@@ -118,7 +136,7 @@ export async function addPart(orderId, { partId, quantity, reason }, actor) {
 export async function updatePartQuantity(orderId, lineId, { quantity, reason }, actor) {
   await withTransaction(async (conn) => {
     const order = await requireLockedOrder(orderId, conn);
-    assertCanModify(order, actor, reason);
+    await assertCanModify(order, actor, reason, conn);
     const line = await requireLine(orderId, lineId, conn);
     const delta = quantity - line.quantity;
     if (delta === 0) {
@@ -128,6 +146,7 @@ export async function updatePartQuantity(orderId, lineId, { quantity, reason }, 
     if (delta > 0 && !part.active) {
       throw AppError.partInactive();
     }
+    await assertTotalFits(orderId, delta * toCents(line.unit_price), conn);
     const base =
       delta > 0
         ? `Más unidades en la orden ${order.folio}`
@@ -142,7 +161,7 @@ export async function updatePartQuantity(orderId, lineId, { quantity, reason }, 
 export async function removePart(orderId, lineId, { reason }, actor) {
   await withTransaction(async (conn) => {
     const order = await requireLockedOrder(orderId, conn);
-    assertCanModify(order, actor, reason);
+    await assertCanModify(order, actor, reason, conn);
     const line = await requireLine(orderId, lineId, conn);
     const part = await requireLockedPart(line.part_id, conn);
     await moveStock(

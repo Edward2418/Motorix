@@ -1,18 +1,19 @@
 import { query } from '../config/db.js';
+import { fromCents, toCents } from '../utils/money.js';
 
 // Refacciones usadas en una orden: una línea por refacción, con la cantidad y el precio de venta copiado al agregarla.
 
-const money = (value) => Math.round(Number(value) * 100) / 100;
-
+// El importe de la línea es cantidad entera × precio en centavos: un número exacto de centavos, sin regla de redondeo.
 function toLine(row) {
+  const unitCents = toCents(row.unit_price);
   return {
     id: row.id,
     partId: row.part_id,
     code: row.code,
     name: row.name,
     quantity: row.quantity,
-    unitPrice: money(row.unit_price),
-    subtotal: money(row.quantity * Number(row.unit_price))
+    unitPrice: fromCents(unitCents),
+    subtotal: fromCents(row.quantity * unitCents)
   };
 }
 

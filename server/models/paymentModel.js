@@ -3,7 +3,7 @@ import { query } from '../config/db.js';
 const PAYMENT_SELECT = `
   SELECT p.id, p.order_id, o.folio AS order_folio, p.amount, p.method, p.status, p.reference, p.external_reference,
          p.external_preference_id, p.external_payment_id, p.payment_link, p.expires_at, p.paid_at, p.cancel_reason,
-         p.cancelled_at, p.created_at, u.name AS created_by_name, cu.name AS cancelled_by_name
+         p.cancelled_at, p.created_at, p.order_total_at_creation, u.name AS created_by_name, cu.name AS cancelled_by_name
   FROM payments p
   JOIN service_orders o ON o.id = p.order_id
   JOIN users u ON u.id = p.created_by
@@ -27,6 +27,8 @@ export function toPayment(row) {
     expiresAt: row.expires_at,
     paidAt: row.paid_at,
     cancelReason: row.cancel_reason,
+    // Total de la orden con el que se creó el pago (nulo en los pagos anteriores al Sprint 5). Sirve para detectar el desfase.
+    totalAtCreation: row.order_total_at_creation === null ? null : Number(row.order_total_at_creation),
     createdByName: row.created_by_name,
     cancelledByName: row.cancelled_by_name,
     createdAt: row.created_at
@@ -37,6 +39,12 @@ export function toPayment(row) {
 export async function listByOrder(orderId, conn) {
   const rows = await query(`${PAYMENT_SELECT} WHERE p.order_id = ? ORDER BY p.created_at DESC, p.id DESC`, [orderId], conn);
   return rows.map(toPayment);
+}
+
+// ¿La orden tiene un pago cobrado (PAGADO)? Una orden cobrada no admite cambios de refacciones (FR-011).
+export async function hasPaidPayment(orderId, conn) {
+  const rows = await query("SELECT id FROM payments WHERE order_id = ? AND status = 'PAGADO' LIMIT 1", [orderId], conn);
+  return rows.length > 0;
 }
 
 // Solo estado e importe, para calcular el resumen.
@@ -59,8 +67,8 @@ export async function insert(data, conn) {
   const result = await query(
     `INSERT INTO payments
        (order_id, amount, method, status, reference, external_reference, external_preference_id, payment_link,
-        expires_at, paid_at, created_by)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        expires_at, paid_at, order_total_at_creation, created_by)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       data.orderId,
       data.amount,
@@ -72,6 +80,7 @@ export async function insert(data, conn) {
       data.paymentLink ?? null,
       data.expiresAt ?? null,
       data.status === 'PAGADO' ? new Date() : null,
+      data.orderTotalAtCreation ?? null,
       data.createdBy
     ],
     conn

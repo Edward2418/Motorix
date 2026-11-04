@@ -47,8 +47,8 @@ export async function list({ search, active, page, pageSize }) {
   return { items: rows.map(toClient), total: Number(total) };
 }
 
-export async function findById(id) {
-  const rows = await query(`${CLIENT_SELECT} WHERE c.id = ? LIMIT 1`, [id]);
+export async function findById(id, conn) {
+  const rows = await query(`${CLIENT_SELECT} WHERE c.id = ? LIMIT 1`, [id], conn);
   return toClient(rows[0]);
 }
 

@@ -18,7 +18,10 @@ const paymentShape = {
   cancelReason: null,
   createdByName: expect.any(String),
   cancelledByName: null,
-  createdAt: expect.any(String)
+  createdAt: expect.any(String),
+  // Sprint 5 (campos aditivos, ajuste registrado en H-10): total de la orden al crear el pago y aviso de desfase.
+  totalAtCreation: expect.any(Number),
+  outdated: false
 };
 
 const summaryShape = {
@@ -28,7 +31,9 @@ const summaryShape = {
   balance: expect.any(Number),
   available: expect.any(Number),
   creditBalance: expect.any(Number),
-  status: expect.stringMatching(/^(SIN_PAGO|PARCIAL|PAGADA)$/)
+  status: expect.stringMatching(/^(SIN_PAGO|PARCIAL|PAGADA)$/),
+  // Sprint 5 (campo aditivo, ajuste registrado en H-10).
+  hasOutdatedPending: false
 };
 
 describe('contrato de los pagos', () => {
@@ -49,7 +54,8 @@ describe('contrato de los pagos', () => {
     const res = await listarPagos(tokens.admin, orden.id);
     expect(res.status).toBe(200);
     expect(res.body.data.payments).toHaveLength(1);
-    expect(res.body.data.payments[0]).toEqual(paymentShape);
+    // Un pago creado directo en la base no tiene total de creación (como los anteriores al Sprint 5): viene en null.
+    expect(res.body.data.payments[0]).toEqual({ ...paymentShape, totalAtCreation: null });
     expect(res.body.data.summary).toEqual(summaryShape);
   });
 
@@ -64,7 +70,8 @@ describe('contrato de los pagos', () => {
       method: 'MERCADO_PAGO',
       paidAt: null,
       cancelReason: 'Prueba de contrato',
-      cancelledByName: expect.any(String)
+      cancelledByName: expect.any(String),
+      totalAtCreation: null
     });
     expect(res.body.data.summary).toEqual(summaryShape);
   });

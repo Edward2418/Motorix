@@ -1,10 +1,12 @@
 // Reglas puras de los pagos. Módulo sin acceso a la base de datos ni a la red: recibe números y decide.
 // Los importes se manejan en centavos enteros para evitar errores de redondeo de los decimales.
 
+import { toCents, fromCents } from '../utils/money.js';
+
 export const PAYABLE_STATUSES = Object.freeze(['TERMINADO', 'ENTREGADO']);
 
-export const toCents = (amount) => Math.round(Number(amount) * 100);
-export const fromCents = (cents) => cents / 100;
+// Las funciones de centavos viven en utils/money.js; se reexportan para no cambiar a quienes ya las importan.
+export { toCents, fromCents };
 
 /**
  * Resumen de pagos de una orden.

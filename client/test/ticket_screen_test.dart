@@ -106,12 +106,14 @@ void main() {
     expect(find.text('Transferencia'), findsOneWidget);
     expect(find.text(r'$560.00'), findsOneWidget); // saldo por cobrar
     expect(find.text('Pago parcial'), findsOneWidget);
-    expect(find.text('La orden se modificó después de generar este ticket. Se muestran los datos vigentes.'), findsNothing);
+    // Sprint 5 (FR-015, ajuste registrado en H-10): el aviso ya no dice «Se muestran los datos vigentes», porque un ticket
+    // nuevo muestra lo emitido.
+    expect(find.text('La orden se modificó después de generar este ticket.'), findsNothing);
   });
 
   testWidgets('avisa cuando la orden cambió después de generar el ticket', (tester) async {
     await abrir(tester, handler: (_) => FakeResponse(200, {'data': ticketJson(cambio: true)}));
-    expect(find.text('La orden se modificó después de generar este ticket. Se muestran los datos vigentes.'), findsOneWidget);
+    expect(find.text('La orden se modificó después de generar este ticket.'), findsOneWidget);
   });
 
   testWidgets('Imprimir envía el ticket a la impresora', (tester) async {

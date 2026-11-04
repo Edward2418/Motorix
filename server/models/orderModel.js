@@ -1,6 +1,7 @@
 import { query } from '../config/db.js';
 import { likePattern } from '../validators/common.js';
 import { summarize } from '../services/paymentRules.js';
+import { fromCents, sumCents, toCents } from '../utils/money.js';
 
 // Fragmentos SQL compartidos para calcular los importes de una orden (alias `o`). El panel los reutiliza para que sus
 // cifras nunca difieran del total ni de lo cobrado que muestra la orden.
@@ -10,6 +11,10 @@ export const PARTS_TOTAL_SQL = '(SELECT COALESCE(SUM(p.quantity * p.unit_price),
 export const ORDER_TOTAL_SQL = `(${SERVICES_TOTAL_SQL} + ${LABOR_TOTAL_SQL} + ${PARTS_TOTAL_SQL})`;
 export const PAID_TOTAL_SQL = "(SELECT COALESCE(SUM(py.amount), 0) FROM payments py WHERE py.order_id = o.id AND py.status = 'PAGADO')";
 export const RESERVED_TOTAL_SQL = "(SELECT COALESCE(SUM(py.amount), 0) FROM payments py WHERE py.order_id = o.id AND py.status = 'PENDIENTE')";
+// ¿La orden tiene un pago de Mercado Pago pendiente cuyo total de creación difiere del total vigente (pago desfasado)?
+// Los pagos anteriores al Sprint 5 (total de creación nulo) nunca cuentan. Solo se evalúa para las filas que se consultan.
+export const OUTDATED_PENDING_SQL = `EXISTS (SELECT 1 FROM payments pd WHERE pd.order_id = o.id AND pd.status = 'PENDIENTE'
+  AND pd.method = 'MERCADO_PAGO' AND pd.order_total_at_creation IS NOT NULL AND pd.order_total_at_creation <> ${ORDER_TOTAL_SQL})`;
 
 const ORDER_SELECT = `
   SELECT o.id, o.folio, o.status, o.client_id, c.name AS client_name, o.vehicle_id,
@@ -21,23 +26,26 @@ const ORDER_SELECT = `
          ${LABOR_TOTAL_SQL} AS labor_total,
          ${PARTS_TOTAL_SQL} AS parts_total,
          ${PAID_TOTAL_SQL} AS paid_total,
-         ${RESERVED_TOTAL_SQL} AS reserved_total
+         ${RESERVED_TOTAL_SQL} AS reserved_total,
+         ${OUTDATED_PENDING_SQL} AS has_outdated_pending
   FROM service_orders o
   JOIN clients c ON c.id = o.client_id
   JOIN vehicles v ON v.id = o.vehicle_id
   JOIN users m ON m.id = o.mechanic_id`;
 
-const money = (value) => Math.round(Number(value) * 100) / 100;
-
-// Convierte una fila SQL en el objeto de la API (camelCase). El total se calcula, nunca se almacena.
+// Convierte una fila SQL en el objeto de la API (camelCase). El total se calcula, nunca se almacena. Los importes se
+// suman en centavos enteros (los sumandos de SQL son DECIMAL exactos): el total siempre coincide con la suma de sus partes.
 export function toOrder(row) {
   if (!row) {
     return null;
   }
-  const servicesTotal = money(row.services_total);
-  const laborTotal = money(row.labor_total);
-  const partsTotal = money(row.parts_total);
-  const total = money(servicesTotal + laborTotal + partsTotal);
+  const servicesCents = toCents(row.services_total);
+  const laborCents = toCents(row.labor_total);
+  const partsCents = toCents(row.parts_total);
+  const servicesTotal = fromCents(servicesCents);
+  const laborTotal = fromCents(laborCents);
+  const partsTotal = fromCents(partsCents);
+  const total = fromCents(sumCents([servicesCents, laborCents, partsCents]));
   return {
     id: row.id,
     folio: row.folio,
@@ -65,13 +73,16 @@ export function toOrder(row) {
     partsTotal,
     total,
     // Resumen de pagos calculado con las reglas puras; el servicio lo quita de las respuestas para el mecánico.
-    payment: summarize({
-      total,
-      payments: [
-        { status: 'PAGADO', amount: row.paid_total },
-        { status: 'PENDIENTE', amount: row.reserved_total }
-      ]
-    }),
+    payment: {
+      ...summarize({
+        total,
+        payments: [
+          { status: 'PAGADO', amount: row.paid_total },
+          { status: 'PENDIENTE', amount: row.reserved_total }
+        ]
+      }),
+      hasOutdatedPending: Boolean(row.has_outdated_pending)
+    },
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };

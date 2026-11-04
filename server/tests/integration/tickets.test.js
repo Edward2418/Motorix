@@ -113,7 +113,9 @@ describe('tickets de servicio', () => {
     expect(folios).toEqual([`TK-${anio}-0001`, `TK-${anio}-0002`, `TK-${anio}-0003`]);
   });
 
-  test('avisa si la orden cambió después de generar el ticket y muestra los datos vigentes', async () => {
+  // Sprint 5 (FR-015, ajuste registrado en H-10): el ticket nuevo guarda lo emitido, así que ya no muestra los datos
+  // vigentes de la orden; solo avisa que la orden cambió.
+  test('avisa si la orden cambió después de generar el ticket y sigue mostrando lo emitido', async () => {
     const { orden, tokens } = await escenarioPago({ total: 1000 });
     const creado = await generar(tokens.recepcion, orden.id);
     expect(creado.body.data.orderChangedSinceGenerated).toBe(false);
@@ -125,8 +127,8 @@ describe('tickets de servicio', () => {
     expect(consulta.status).toBe(200);
     expect(consulta.body.data.folio).toBe(creado.body.data.folio);
     expect(consulta.body.data.orderChangedSinceGenerated).toBe(true);
-    expect(consulta.body.data.total).toBe(1100);
-    expect(consulta.body.data.parts).toHaveLength(1);
+    expect(consulta.body.data.total).toBe(1000);
+    expect(consulta.body.data.parts).toHaveLength(0);
   });
 
   test('sigue disponible si el cliente o el vehículo se desactivan después', async () => {

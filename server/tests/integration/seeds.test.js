@@ -56,10 +56,11 @@ describe('seeds', () => {
       clients: 8,
       vehicles: 12,
       appointments: 6,
-      orders: 8,
+      // Sprint 5 (seed 010, ajuste registrado en H-10): 2 órdenes, 5 líneas de refacciones y 5 salidas de inventario más.
+      orders: 10,
       parts: 13,
-      movements: 25,
-      orderParts: 7,
+      movements: 30,
+      orderParts: 12,
       maintenance: 8
     });
     expect(primera.services).toBeGreaterThan(0);
@@ -207,7 +208,8 @@ describe('citas y órdenes de ejemplo', () => {
   test('una orden nueva continúa la numeración después de los datos de ejemplo', async () => {
     await runSeeds(pool, () => {});
     const { nextFolio } = await import('../../services/folioService.js');
-    expect(await nextFolio(pool, new Date(2026, 5, 1))).toBe('OS-2026-0009');
+    // Sprint 5 (seed 010, ajuste registrado en H-10): los datos de ejemplo llegan hasta OS-2026-0010.
+    expect(await nextFolio(pool, new Date(2026, 5, 1))).toBe('OS-2026-0011');
   });
 });
 

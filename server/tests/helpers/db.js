@@ -232,6 +232,7 @@ export async function createPayment({
   externalReference = null,
   expiresAt = null,
   cancelReason,
+  orderTotalAtCreation = null,
   createdBy
 }) {
   let creator = createdBy;
@@ -243,25 +244,25 @@ export async function createPayment({
   const motivo = status === 'CANCELADO' ? cancelReason ?? 'Cancelado en la prueba' : cancelReason ?? null;
   const [result] = await pool.query(
     `INSERT INTO payments
-       (order_id, amount, method, status, reference, external_reference, expires_at, paid_at, cancel_reason, created_by)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [orderId, amount, method, status, reference, externalReference, expiresAt, cobrado, motivo, creator]
+       (order_id, amount, method, status, reference, external_reference, expires_at, paid_at, cancel_reason,
+        order_total_at_creation, created_by)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [orderId, amount, method, status, reference, externalReference, expiresAt, cobrado, motivo, orderTotalAtCreation, creator]
   );
   return { id: result.insertId, orderId, amount, method, status };
 }
 
-// Crea el ticket de una orden directamente en la base, con su folio.
-export async function createTicket({ orderId, folio, orderTotal = 0, generatedBy }) {
+// Crea el ticket de una orden directamente en la base, con su folio. `content` (opcional) es el contenido guardado al
+// emitirlo; sin él, el ticket es como los anteriores al Sprint 5.
+export async function createTicket({ orderId, folio, orderTotal = 0, content = null, generatedBy }) {
   let creator = generatedBy;
   if (!creator) {
     const [rows] = await pool.query('SELECT id FROM users ORDER BY id LIMIT 1');
     creator = rows[0]?.id ?? (await createUser({ username: 'creador-tickets', role: 'ADMIN' })).id;
   }
-  const [result] = await pool.query('INSERT INTO tickets (folio, order_id, order_total, generated_by) VALUES (?, ?, ?, ?)', [
-    folio,
-    orderId,
-    orderTotal,
-    creator
-  ]);
+  const [result] = await pool.query(
+    'INSERT INTO tickets (folio, order_id, order_total, content, generated_by) VALUES (?, ?, ?, ?, ?)',
+    [folio, orderId, orderTotal, content === null ? null : JSON.stringify(content), creator]
+  );
   return { id: result.insertId, folio, orderId };
 }

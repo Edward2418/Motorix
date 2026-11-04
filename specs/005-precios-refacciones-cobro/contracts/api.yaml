@@ -1,0 +1,371 @@
+openapi: 3.0.3
+info:
+  title: API de Motorix - Sprint 5 (precios de refacciones y cobro completo)
+  version: 1.4.0
+  description: >
+    Describe solo los CAMBIOS respecto a los contratos anteriores (ver ../../003-historial-inventario/contracts/api.yaml
+    y ../../004-pagos-tickets-dashboard/contracts/api.yaml). Todas las rutas cuelgan de /api, requieren un token JWT
+    (Bearer) y usan los formatos de siempre ({ data }, { data, meta } y { error }). No se agregan rutas nuevas: se agregan
+    campos opcionales y códigos de error a rutas existentes. Los permisos por rol se validan en el servidor.
+    Cambios de contrato declarados - el ticket nuevo guarda su contenido (reemplaza el FR-021 del Sprint 4), una
+    orden con un pago Pagado no admite cambios de refacciones (reemplaza la regla del Sprint 4) y el total de la orden
+    tiene un máximo de 99,999,999.99 también al agregar servicios y mano de obra (cambia el Sprint 2).
+servers:
+  - url: http://localhost:3000/api
+security:
+  - bearerAuth: []
+tags:
+  - name: Refacciones
+  - name: Órdenes
+  - name: Pagos
+  - name: Tickets
+
+paths:
+  /parts:
+    post:
+      tags: [Refacciones]
+      summary: Registrar una refacción (ADMIN)
+      description: >
+        Sin cambios, salvo que el campo opcional confirmBelowCost permite guardar un precio de venta menor al de compra
+        (FR-003). Un precio de venta igual a cero se permite (FR-004); si el precio de compra es mayor que cero, también
+        exige la confirmación. El servidor exige la confirmación en toda petición.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PartInput' }
+      responses:
+        '201':
+          description: Refacción registrada
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '422': { $ref: '#/components/responses/PrecioBajoElCosto' }
+
+  /parts/{id}:
+    put:
+      tags: [Refacciones]
+      summary: Editar una refacción (ADMIN)
+      description: >
+        Igual que antes, con el campo opcional confirmBelowCost. La confirmación se exige solo si la petición trae
+        purchasePrice o salePrice y el resultado deja el precio de venta menor al de compra; editar solo otros campos
+        de una refacción que ya está en esa situación no la exige.
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PartInput' }
+      responses:
+        '200':
+          description: Refacción actualizada
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '422': { $ref: '#/components/responses/PrecioBajoElCosto' }
+
+  /orders/{id}/parts:
+    post:
+      tags: [Órdenes]
+      summary: Agregar una refacción a la orden
+      description: >
+        Sin cambios de forma. Nuevas respuestas de error - 409 ORDER_ALREADY_PAID si la orden tiene un pago Pagado
+        (FR-011) y 422 ORDER_TOTAL_LIMIT_EXCEEDED si el total superaría 99,999,999.99 (FR-009). La línea guarda el precio
+        de venta vigente (FR-006) y su importe se calcula en centavos enteros (FR-007).
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: Orden con la refacción agregada
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '409': { $ref: '#/components/responses/OrdenCobrada' }
+        '422': { $ref: '#/components/responses/LimiteDelTotal' }
+
+  /orders/{id}/parts/{lineId}:
+    put:
+      tags: [Órdenes]
+      summary: Cambiar la cantidad de una refacción de la orden
+      description: Mismos errores nuevos que al agregar (409 ORDER_ALREADY_PAID y 422 ORDER_TOTAL_LIMIT_EXCEEDED).
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - { name: lineId, in: path, required: true, schema: { type: integer, minimum: 1 } }
+      responses:
+        '200':
+          description: Orden con la cantidad cambiada
+        '409': { $ref: '#/components/responses/OrdenCobrada' }
+        '422': { $ref: '#/components/responses/LimiteDelTotal' }
+    delete:
+      tags: [Órdenes]
+      summary: Quitar una refacción de la orden
+      description: Con un pago Pagado responde 409 ORDER_ALREADY_PAID sin tocar líneas, existencias ni movimientos.
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - { name: lineId, in: path, required: true, schema: { type: integer, minimum: 1 } }
+      responses:
+        '200':
+          description: Orden con la refacción quitada
+        '409': { $ref: '#/components/responses/OrdenCobrada' }
+
+  /orders/{id}/services:
+    post:
+      tags: [Órdenes]
+      summary: Agregar un servicio a la orden
+      description: Cambia respecto al Sprint 2 - responde 422 ORDER_TOTAL_LIMIT_EXCEEDED si el total superaría 99,999,999.99.
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: Orden con el servicio agregado
+        '422': { $ref: '#/components/responses/LimiteDelTotal' }
+
+  /orders/{id}/labor:
+    post:
+      tags: [Órdenes]
+      summary: Agregar mano de obra a la orden
+      description: Igual que los servicios - 422 ORDER_TOTAL_LIMIT_EXCEEDED si el total superaría 99,999,999.99.
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: Orden con la mano de obra agregada
+        '422': { $ref: '#/components/responses/LimiteDelTotal' }
+
+  /orders/{id}/services/{lineId}:
+    put:
+      tags: [Órdenes]
+      summary: Cambiar un servicio de la orden
+      description: Cambia respecto al Sprint 2 - responde 422 ORDER_TOTAL_LIMIT_EXCEEDED si el nuevo importe haría pasar el total de 99,999,999.99.
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - { name: lineId, in: path, required: true, schema: { type: integer, minimum: 1 } }
+      responses:
+        '200':
+          description: Orden con el servicio cambiado
+        '422': { $ref: '#/components/responses/LimiteDelTotal' }
+
+  /orders/{id}/labor/{lineId}:
+    put:
+      tags: [Órdenes]
+      summary: Cambiar una línea de mano de obra de la orden
+      description: Igual que los servicios - 422 ORDER_TOTAL_LIMIT_EXCEEDED si el nuevo importe haría pasar el total de 99,999,999.99.
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - { name: lineId, in: path, required: true, schema: { type: integer, minimum: 1 } }
+      responses:
+        '200':
+          description: Orden con la mano de obra cambiada
+        '422': { $ref: '#/components/responses/LimiteDelTotal' }
+
+  /orders/{id}/payments:
+    get:
+      tags: [Pagos]
+      summary: Pagos de una orden (ADMIN, RECEPTIONIST)
+      description: >
+        Cada pago agrega los campos totalAtCreation (total de la orden al crearse; nulo en los pagos anteriores al
+        sprint) y outdated (verdadero si es un pago de Mercado Pago Pendiente con totalAtCreation distinto del total
+        vigente). El resumen conserva sus campos; balance es la diferencia por cobrar cuando un pago aprobado tarde
+        quedó por su importe original.
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: Pagos de la orden y su resumen
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      payments:
+                        type: array
+                        items: { $ref: '#/components/schemas/Payment' }
+                      summary: { $ref: '#/components/schemas/PaymentSummary' }
+    post:
+      tags: [Pagos]
+      summary: Registrar un pago (ADMIN, RECEPTIONIST)
+      description: >
+        Sin cambios de forma. El pago nuevo guarda el total vigente de la orden en totalAtCreation. Se rechaza lo que
+        supere el importe disponible (409 AMOUNT_EXCEEDS_BALANCE) como antes; mientras exista un pago desfasado, su
+        importe sigue reservado hasta que se cancele.
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '201':
+          description: Pago registrado
+        '409':
+          description: ORDER_NOT_PAYABLE o AMOUNT_EXCEEDS_BALANCE
+
+  /payments/{id}/refresh:
+    post:
+      tags: [Pagos]
+      summary: Actualizar el estado de un pago de Mercado Pago (ADMIN, RECEPTIONIST)
+      description: >
+        Sin cambios de forma. Si el pago estaba desfasado y el proveedor lo aprueba, queda Pagado por su importe
+        original (sin cambiarlo) y no se crea otro pago; el saldo del resumen muestra la diferencia con el total vigente
+        y se resuelve fuera del sistema. Si el servicio no responde se aplica lo del Sprint 4 (503 y el pago no cambia).
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: Pago y resumen actualizados
+
+  /orders/{id}/ticket:
+    post:
+      tags: [Tickets]
+      summary: Generar el ticket de la orden (ADMIN, RECEPTIONIST)
+      description: >
+        La forma de la respuesta no cambia. Cambio de contrato - el ticket nuevo guarda al emitirse el taller, el
+        cliente, el vehículo, el folio de la orden, las líneas, los subtotales y el total, y los devuelve siempre tal
+        como se emitieron; los pagos y su estado se devuelven vigentes. Generar el ticket de una orden que ya lo tiene
+        devuelve el existente.
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: Ticket existente
+        '201':
+          description: Ticket emitido con su contenido guardado
+    get:
+      tags: [Tickets]
+      summary: Consultar el ticket de la orden (ADMIN, RECEPTIONIST)
+      description: >
+        Para un ticket nuevo devuelve lo emitido. Para un ticket anterior al sprint (sin contenido guardado) lo arma con
+        los datos vigentes, como en el Sprint 4. orderChangedSinceGenerated es verdadero si el total vigente de la orden
+        difiere del total guardado al emitir; el ticket sigue mostrando lo emitido.
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: Ticket
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/TicketChange' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer, minimum: 1 }
+
+  responses:
+    Validacion:
+      description: Datos inválidos
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    SinPermiso:
+      description: El rol no permite la acción
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NoEncontrado:
+      description: El recurso no existe
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    OrdenCobrada:
+      description: >
+        La orden tiene un pago Pagado y no admite cambios de refacciones. Código ORDER_ALREADY_PAID con el mensaje
+        «La orden ya está cobrada: no se pueden modificar las refacciones.». No cambia líneas, existencias ni
+        movimientos de inventario. Un mecánico nunca lo recibe (antes responde 403 o el 409 de estado final).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    LimiteDelTotal:
+      description: >
+        El total de la orden superaría 99,999,999.99. Código ORDER_TOTAL_LIMIT_EXCEEDED; la orden no cambia.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    PrecioBajoElCosto:
+      description: >
+        El precio de venta es menor al de compra y no se envió confirmBelowCost verdadero. Código PRICE_BELOW_COST con un
+        detalle en el campo salePrice; no se guarda nada.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: { type: string }
+            message: { type: string }
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field: { type: string }
+                  message: { type: string }
+
+    PartInput:
+      type: object
+      description: Campos de siempre más confirmBelowCost (solo se exige cuando el precio de venta quedaría menor al de compra).
+      properties:
+        code: { type: string, maxLength: 40 }
+        name: { type: string, maxLength: 120 }
+        category: { type: string, maxLength: 60 }
+        brand: { type: string, maxLength: 60 }
+        minStock: { type: integer, minimum: 0 }
+        initialStock: { type: integer, minimum: 0 }
+        purchasePrice: { type: number, minimum: 0, maximum: 99999999.99, multipleOf: 0.01 }
+        salePrice: { type: number, minimum: 0, maximum: 99999999.99, multipleOf: 0.01 }
+        confirmBelowCost: { type: boolean, default: false }
+
+    Payment:
+      type: object
+      description: Campos de siempre más totalAtCreation y outdated.
+      properties:
+        id: { type: integer }
+        orderId: { type: integer }
+        amount: { type: number }
+        method: { type: string, enum: [EFECTIVO, TARJETA, TRANSFERENCIA, MERCADO_PAGO] }
+        status: { type: string, enum: [PENDIENTE, PAGADO, RECHAZADO, CANCELADO] }
+        totalAtCreation:
+          type: number
+          nullable: true
+          description: Total de la orden con el que se creó el pago; nulo en los pagos anteriores al sprint.
+        outdated:
+          type: boolean
+          description: Verdadero solo para un pago de Mercado Pago Pendiente cuyo totalAtCreation difiere del total vigente.
+
+    PaymentSummary:
+      type: object
+      description: Resumen de siempre; sus importes se calculan en centavos enteros.
+      properties:
+        total: { type: number }
+        collected: { type: number }
+        reserved: { type: number }
+        balance: { type: number }
+        available: { type: number }
+        creditBalance: { type: number }
+        status: { type: string, enum: [SIN_PAGO, PARCIAL, PAGADA] }
+        hasOutdatedPending:
+          type: boolean
+          description: Verdadero si la orden tiene un pago de Mercado Pago Pendiente desfasado. Solo ADMIN y RECEPTIONIST.
+
+    TicketChange:
+      type: object
+      description: Misma forma que el ticket del Sprint 4; cambia el origen de los datos (contenido guardado al emitir).
+      properties:
+        id: { type: integer }
+        folio: { type: string }
+        orderChangedSinceGenerated: { type: boolean }
+        total: { type: number }
