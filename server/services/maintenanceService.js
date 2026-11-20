@@ -5,9 +5,12 @@ import * as orderModel from '../models/orderModel.js';
 import * as vehicleModel from '../models/vehicleModel.js';
 import { AppError } from '../utils/AppError.js';
 import { classifyMaintenance, compareUrgency } from './maintenanceStatus.js';
+import { settingsService } from './settingsService.js';
 
 // Próximos mantenimientos de un vehículo: programarlos desde una orden, atenderlos, cancelarlos y consultarlos.
-// El estado visual (Normal, Próximo, Vencido) se calcula al consultar; nunca se almacena.
+// El estado visual (Normal, Próximo, Vencido) se calcula al consultar; nunca se almacena. Los márgenes de «Próximo» son
+// los de la configuración del taller (Sprint 7), con respaldo en el servidor y en 30 días y 1,000 km: la lista de
+// Mantenimientos, el panel y los avisos pasan por aquí y por eso cambian juntos.
 
 const formatKm = (km) => Number(km).toLocaleString('en-US');
 
@@ -39,7 +42,8 @@ export function withVisualStatus(maintenance, { now = new Date(), thresholds = e
 }
 
 export async function listByOrder(orderId, conn) {
-  return (await maintenanceModel.listByOrder(orderId, conn)).map((item) => withVisualStatus(item));
+  const thresholds = await settingsService.getMaintenanceThresholds(conn);
+  return (await maintenanceModel.listByOrder(orderId, conn)).map((item) => withVisualStatus(item, { thresholds }));
 }
 
 // Programa el próximo mantenimiento desde una orden. Orden de comprobaciones: la orden existe (404), el rol y la
@@ -83,7 +87,7 @@ export async function createMaintenance(orderId, input, actor, { now = new Date(
       throw error;
     }
   });
-  return withVisualStatus(await maintenanceModel.findById(id), { now });
+  return withVisualStatus(await maintenanceModel.findById(id), { now, thresholds: await settingsService.getMaintenanceThresholds() });
 }
 
 // Cierra un mantenimiento pendiente (atendido o cancelado). Administración y recepción cierran cualquiera; el
@@ -102,7 +106,7 @@ async function closePending(id, actor, close) {
     }
     await close(locked, conn);
   });
-  return withVisualStatus(await maintenanceModel.findById(id));
+  return withVisualStatus(await maintenanceModel.findById(id), { thresholds: await settingsService.getMaintenanceThresholds() });
 }
 
 export async function fulfillMaintenance(id, { orderId }, actor) {
@@ -129,16 +133,20 @@ export async function cancelMaintenance(id, { reason }, actor) {
 
 // Todos los mantenimientos pendientes que piden atención (PROXIMO y VENCIDO), sin paginar y ordenados por urgencia.
 // Lo usan los avisos del centro de notificaciones; clasifica con los mismos umbrales que el listado y el panel, así
-// que las cifras coinciden. `model` se inyecta solo para poder probarlo sin base de datos.
-export async function listAttentionMaintenance({ now = new Date(), thresholds = env.maintenance, model = maintenanceModel } = {}) {
-  const items = (await model.listWithContext({ status: 'PROGRAMADO' })).map((item) => withVisualStatus(item, { now, thresholds }));
+// que las cifras coinciden. Sin `thresholds` usa los márgenes de la configuración. `model` y `settings` se inyectan
+// solo para poder probarlo sin base de datos.
+export async function listAttentionMaintenance({ now = new Date(), thresholds, model = maintenanceModel, settings = settingsService } = {}) {
+  const margins = thresholds ?? (await settings.getMaintenanceThresholds());
+  const items = (await model.listWithContext({ status: 'PROGRAMADO' })).map((item) => withVisualStatus(item, { now, thresholds: margins }));
   return items.filter((item) => item.visualStatus === 'VENCIDO' || item.visualStatus === 'PROXIMO').sort(compareUrgency);
 }
 
-// Consulta con estado visual: clasifica, filtra por estado visual, ordena por urgencia y pagina en memoria.
-export async function listMaintenance(filters, { now = new Date(), thresholds = env.maintenance } = {}) {
+// Consulta con estado visual: clasifica, filtra por estado visual, ordena por urgencia y pagina en memoria. Sin
+// `thresholds` usa los márgenes de la configuración.
+export async function listMaintenance(filters, { now = new Date(), thresholds, model = maintenanceModel, settings = settingsService } = {}) {
   const { visualStatus, page, pageSize, ...rest } = filters;
-  const items = (await maintenanceModel.listWithContext(rest)).map((item) => withVisualStatus(item, { now, thresholds }));
+  const margins = thresholds ?? (await settings.getMaintenanceThresholds());
+  const items = (await model.listWithContext(rest)).map((item) => withVisualStatus(item, { now, thresholds: margins }));
   const filtered = visualStatus ? items.filter((item) => item.visualStatus === visualStatus) : items;
   // Los pendientes se ordenan por urgencia; los ya cerrados, del más reciente al más antiguo.
   const ordered =

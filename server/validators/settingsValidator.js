@@ -7,7 +7,8 @@ import { validateSetting } from '../services/settingsRules.js';
 
 // Grupo → campo del cuerpo → clave guardada.
 const GROUPS = Object.freeze({
-  workshop: Object.freeze({ name: 'workshop_name', address: 'workshop_address', phone: 'workshop_phone' })
+  workshop: Object.freeze({ name: 'workshop_name', address: 'workshop_address', phone: 'workshop_phone' }),
+  maintenance: Object.freeze({ soonDays: 'maintenance_soon_days', soonKm: 'maintenance_soon_km' })
 });
 
 /** Devuelve las entradas a guardar: `[{ key, value }]` con el valor ya normalizado. */
