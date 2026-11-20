@@ -5,11 +5,13 @@ import 'package:provider/provider.dart';
 import '../models/user.dart';
 import '../providers/auth_provider.dart';
 import '../providers/navigation_provider.dart';
+import '../providers/notifications_provider.dart';
 import '../providers/sidebar_provider.dart';
 import '../screens/change_password_dialog.dart';
 import '../utils/app_navigation.dart';
 import '../utils/app_tokens.dart';
 import 'confirm_dialog.dart';
+import 'notification_bell.dart';
 
 /// Estructura general: sidebar colapsable, encabezado y contenido (docs/design-system.md §7).
 class AppShell extends StatefulWidget {
@@ -20,11 +22,29 @@ class AppShell extends StatefulWidget {
 }
 
 class _AppShellState extends State<AppShell> {
+  late final NavigationProvider _navigation;
+
   @override
   void initState() {
     super.initState();
     // Cada sesión empieza en la primera sección del menú.
-    context.read<NavigationProvider>().reset();
+    _navigation = context.read<NavigationProvider>()..reset();
+    // El contador de avisos se consulta al iniciar sesión y cada vez que se cambia de módulo (sin consulta periódica).
+    final notifications = context.read<NotificationsProvider>()..reset();
+    notifications.refreshCount();
+    _navigation.addListener(_onNavigated);
+  }
+
+  void _onNavigated() {
+    if (mounted) {
+      context.read<NotificationsProvider>().refreshCount();
+    }
+  }
+
+  @override
+  void dispose() {
+    _navigation.removeListener(_onNavigated);
+    super.dispose();
   }
 
   Future<void> _logout() async {
@@ -198,6 +218,8 @@ class _Header extends StatelessWidget {
         children: [
           Text(title, style: textTheme.titleLarge),
           const Spacer(),
+          const NotificationBell(),
+          const SizedBox(width: AppSpacing.md),
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.end,

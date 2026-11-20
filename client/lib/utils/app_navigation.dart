@@ -3,6 +3,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../models/user.dart';
 import '../screens/appointments_screen.dart';
+import '../screens/client_notices_screen.dart';
 import '../screens/clients_screen.dart';
 import '../screens/dashboard_screen.dart';
 import '../screens/inventory_screen.dart';
@@ -75,6 +76,12 @@ final List<NavDestination> allDestinations = [
     builder: (_) => const SectionNavigator(root: _maintenanceRoot),
   ),
   NavDestination(
+    label: 'Clientes por avisar',
+    icon: LucideIcons.phone,
+    roles: {UserRole.admin, UserRole.receptionist},
+    builder: (_) => const SectionNavigator(root: _clientNoticesRoot),
+  ),
+  NavDestination(
     label: 'Inventario',
     icon: LucideIcons.package,
     roles: {UserRole.admin},
@@ -106,3 +113,5 @@ Widget _appointmentsRoot(BuildContext context) => const AppointmentsScreen();
 Widget _inventoryRoot(BuildContext context) => const InventoryScreen();
 
 Widget _maintenanceRoot(BuildContext context) => const MaintenanceScreen();
+
+Widget _clientNoticesRoot(BuildContext context) => const ClientNoticesScreen();

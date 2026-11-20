@@ -98,4 +98,6 @@ class AppSizes {
   static const double chartLabelWidth = 170;
   static const double chartBarHeight = 16;
   static const double chartCountWidth = 48;
+  static const double notificationPanelWidth = 420;
+  static const double notificationPanelMaxHeight = 560;
 }
