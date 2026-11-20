@@ -1,0 +1,17 @@
+Punto de control de los fundamentos del Sprint 7 (T016), 2026-11-19 23:57.
+Método: resolvedor alterno de H-07 (node --require).
+
+===== unitarias =====
+Test Suites: 30 passed, 30 total
+Tests:       352 passed, 352 total
+Time:        5.869 s, estimated 6 s
+
+===== contrato =====
+Test Suites: 27 passed, 27 total
+Tests:       144 passed, 144 total
+Time:        235.468 s, estimated 243 s
+
+===== integración (suites que dependen de resetTables y del arranque) =====
+Test Suites: 6 passed, 6 total
+Tests:       75 passed, 75 total
+Time:        79.629 s, estimated 83 s
