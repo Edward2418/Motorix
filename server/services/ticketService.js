@@ -1,4 +1,3 @@
-import { env } from '../config/env.js';
 import { withTransaction } from '../config/db.js';
 import * as clientModel from '../models/clientModel.js';
 import * as orderItemModel from '../models/orderItemModel.js';
@@ -10,12 +9,15 @@ import * as vehicleModel from '../models/vehicleModel.js';
 import { AppError } from '../utils/AppError.js';
 import { toCents } from '../utils/money.js';
 import { PAYABLE_STATUSES } from './paymentRules.js';
+import { settingsService } from './settingsService.js';
 import { nextTicketFolio } from './ticketFolio.js';
 
 // Contenido del ticket: lo que describe el servicio cobrado (taller, cliente, vehículo, líneas, subtotales y total).
 // No incluye los pagos ni el estado de la orden: esos se leen vigentes cada vez que se consulta el ticket.
 async function buildContent(order, conn) {
-  const [client, vehicle, services, labor, parts] = await Promise.all([
+  // Los datos del taller son los vigentes en la configuración (Sprint 7); el ticket nuevo los guarda y ya no cambian.
+  const [workshop, client, vehicle, services, labor, parts] = await Promise.all([
+    settingsService.getWorkshop(conn),
     clientModel.findById(order.clientId, conn),
     vehicleModel.findById(order.vehicleId, conn),
     orderItemModel.listServices(order.id, conn),
@@ -24,7 +26,7 @@ async function buildContent(order, conn) {
   ]);
   const toLine = (line) => ({ description: line.description, quantity: 1, unitPrice: line.amount, amount: line.amount });
   return {
-    workshop: { name: env.workshop.name, address: env.workshop.address, phone: env.workshop.phone },
+    workshop,
     order: { id: order.id, folio: order.folio },
     client: { name: client.name, phone: client.phone },
     vehicle: {

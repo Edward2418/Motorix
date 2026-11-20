@@ -1,3 +1,4 @@
+import { withTransaction } from '../config/db.js';
 import * as settingModel from '../models/settingModel.js';
 import { DEFAULT_SETTINGS, SETTING_KEYS, resolveSetting } from './settingsRules.js';
 
@@ -13,6 +14,17 @@ const ENV_NAMES = Object.freeze({
   maintenance_soon_days: 'MAINTENANCE_SOON_DAYS',
   maintenance_soon_km: 'MAINTENANCE_SOON_KM'
 });
+
+const WORKSHOP_KEYS = ['workshop_name', 'workshop_address', 'workshop_phone'];
+const MAINTENANCE_KEYS = ['maintenance_soon_days', 'maintenance_soon_km'];
+
+// Origen de un grupo: `saved` si al menos un dato está guardado; si no, `environment` si alguno viene del servidor.
+function groupSource(values, keys) {
+  const sources = keys.map((key) => values[key].source);
+  if (sources.includes('saved')) return 'saved';
+  if (sources.includes('environment')) return 'environment';
+  return 'default';
+}
 
 /**
  * `model` y `env` se inyectan para poder probar el servicio con datos falsos. `env` es el objeto de variables de entorno
@@ -54,7 +66,36 @@ export function createSettingsService({ model = settingModel, env = process.env 
     return { soonDays: values.maintenance_soon_days.value, soonKm: values.maintenance_soon_km.value };
   }
 
-  return { resolveAll, getWorkshop, getMaintenanceThresholds };
+  /** Configuración vigente con el origen de cada grupo, para la pantalla de Configuración (solo administración). */
+  async function getView(conn) {
+    const { values, updatedAt, updatedByName } = await resolveAll(conn);
+    return {
+      workshop: {
+        name: values.workshop_name.value,
+        address: values.workshop_address.value,
+        phone: values.workshop_phone.value,
+        source: groupSource(values, WORKSHOP_KEYS)
+      },
+      maintenance: {
+        soonDays: values.maintenance_soon_days.value,
+        soonKm: values.maintenance_soon_km.value,
+        source: groupSource(values, MAINTENANCE_KEYS)
+      },
+      updatedAt,
+      updatedByName
+    };
+  }
+
+  /**
+   * Guarda las entradas ya validadas (`[{ key, value }]`) en una sola transacción (todo o nada) y devuelve la
+   * configuración vigente. Dos guardados simultáneos se serializan: gana el último y nunca se mezclan sus campos.
+   */
+  async function update(entries, actor) {
+    await withTransaction((conn) => model.saveMany(entries, actor.id, conn));
+    return getView();
+  }
+
+  return { resolveAll, getWorkshop, getMaintenanceThresholds, getView, update };
 }
 
 export const settingsService = createSettingsService();
