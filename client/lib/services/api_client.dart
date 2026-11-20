@@ -16,6 +16,9 @@ class ApiException implements Exception {
 
   bool get isUnauthorized => statusCode == 401;
 
+  /// El servidor exige aceptar los términos y condiciones vigentes antes de continuar.
+  bool get isTermsRequired => statusCode == 403 && code == 'TERMS_NOT_ACCEPTED';
+
   @override
   String toString() => message;
 }
@@ -33,6 +36,9 @@ class ApiClient {
 
   /// Se invoca cuando el servidor responde 401 con una sesión iniciada (token vencido o inválido).
   void Function()? onUnauthorized;
+
+  /// Se invoca cuando el servidor responde 403 `TERMS_NOT_ACCEPTED` con una sesión iniciada: hay que mostrar los términos.
+  void Function()? onTermsRequired;
 
   void setToken(String? token) => _token = token;
 
@@ -110,6 +116,9 @@ class ApiClient {
     );
     if (exception.isUnauthorized && _token != null) {
       onUnauthorized?.call();
+    }
+    if (exception.isTermsRequired && _token != null) {
+      onTermsRequired?.call();
     }
     throw exception;
   }

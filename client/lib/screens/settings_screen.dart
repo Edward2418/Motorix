@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 
 import '../models/app_settings.dart';
 import '../providers/settings_provider.dart';
+import '../providers/terms_provider.dart';
+import '../widgets/table_footer.dart';
 import '../services/api_client.dart';
 import '../utils/app_tokens.dart';
 import '../utils/formatters.dart';
@@ -22,7 +24,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => context.read<SettingsProvider>().load());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<SettingsProvider>().load();
+      final terms = context.read<TermsProvider>();
+      terms.load();
+      terms.loadAcceptances();
+    });
   }
 
   @override
@@ -50,6 +57,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 _WorkshopCard(settings: settings),
                 const SizedBox(height: AppSpacing.lg),
                 _MaintenanceCard(settings: settings),
+                const SizedBox(height: AppSpacing.lg),
+                const _TermsCard(),
               ],
             ),
           ),
@@ -326,6 +335,93 @@ class _MaintenanceCardState extends State<_MaintenanceCard> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Términos y condiciones: versión vigente y quién la aceptó. Es solo de lectura; las versiones nuevas las publica quien
+/// administra el servidor con un script (no hay edición desde la aplicación).
+class _TermsCard extends StatelessWidget {
+  const _TermsCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final terms = context.watch<TermsProvider>();
+    final theme = Theme.of(context);
+    final current = terms.current;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('Términos y condiciones', style: theme.textTheme.titleMedium),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              current == null
+                  ? (terms.loading ? 'Cargando…' : 'Todavía no se ha publicado ninguna versión.')
+                  : 'Versión vigente: ${current.version}, publicada el ${formatDate(current.publishedAt)}.',
+              style: theme.textTheme.bodySmall,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Text('Aceptaciones', style: theme.textTheme.titleSmall),
+            const SizedBox(height: AppSpacing.sm),
+            _acceptances(context, terms),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _acceptances(BuildContext context, TermsProvider terms) {
+    if (terms.acceptancesLoading && terms.acceptances.isEmpty) {
+      return const SizedBox(height: 120, child: LoadingState());
+    }
+    if (terms.acceptancesError != null) {
+      return SizedBox(
+        height: 160,
+        child: ErrorState(message: terms.acceptancesError!, onRetry: () => context.read<TermsProvider>().loadAcceptances()),
+      );
+    }
+    if (terms.acceptances.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+        child: Text('Nadie ha aceptado los términos todavía.', style: Theme.of(context).textTheme.bodyMedium),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: DataTable(
+            columns: const [
+              DataColumn(label: Text('Usuario')),
+              DataColumn(label: Text('Nombre')),
+              DataColumn(label: Text('Versión')),
+              DataColumn(label: Text('Fecha de aceptación')),
+            ],
+            rows: [
+              for (final row in terms.acceptances)
+                DataRow(
+                  cells: [
+                    DataCell(Text(row.username)),
+                    DataCell(Text(row.userName)),
+                    DataCell(Text('${row.version}')),
+                    DataCell(Text(formatDateTime(row.acceptedAt))),
+                  ],
+                ),
+            ],
+          ),
+        ),
+        const Divider(),
+        TableFooter(
+          page: terms.acceptancesPage,
+          pageSize: TermsProvider.acceptancesPageSize,
+          total: terms.acceptancesTotal,
+          onPageChanged: (page) => context.read<TermsProvider>().goToAcceptancesPage(page),
+        ),
+      ],
     );
   }
 }

@@ -35,7 +35,12 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final theme = Theme.of(context);
-    final message = auth.error ?? (auth.sessionExpired ? 'Tu sesión terminó. Inicia sesión de nuevo.' : null);
+    final message = auth.error ??
+        (auth.endedByInactivity
+            ? 'Tu sesión se cerró por inactividad. Inicia sesión de nuevo.'
+            : auth.sessionExpired
+                ? 'Tu sesión terminó. Inicia sesión de nuevo.'
+                : null);
 
     return Scaffold(
       body: Center(

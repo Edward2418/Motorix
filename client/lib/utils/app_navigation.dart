@@ -3,6 +3,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../models/user.dart';
 import '../screens/appointments_screen.dart';
+import '../screens/audit_screen.dart';
 import '../screens/client_notices_screen.dart';
 import '../screens/clients_screen.dart';
 import '../screens/dashboard_screen.dart';
@@ -100,6 +101,12 @@ final List<NavDestination> allDestinations = [
     roles: {UserRole.admin},
     builder: (_) => const SectionNavigator(root: _settingsRoot),
   ),
+  NavDestination(
+    label: 'Bitácora',
+    icon: LucideIcons.scrollText,
+    roles: {UserRole.admin},
+    builder: (_) => const SectionNavigator(root: _auditRoot),
+  ),
 ];
 
 List<NavDestination> destinationsFor(UserRole role) =>
@@ -124,3 +131,5 @@ Widget _maintenanceRoot(BuildContext context) => const MaintenanceScreen();
 Widget _clientNoticesRoot(BuildContext context) => const ClientNoticesScreen();
 
 Widget _settingsRoot(BuildContext context) => const SettingsScreen();
+
+Widget _auditRoot(BuildContext context) => const AuditScreen();

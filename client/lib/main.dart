@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
 import 'providers/appointments_provider.dart';
+import 'providers/audit_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/client_notices_provider.dart';
 import 'providers/clients_provider.dart';
@@ -12,6 +13,7 @@ import 'providers/navigation_provider.dart';
 import 'providers/notifications_provider.dart';
 import 'providers/payments_provider.dart';
 import 'providers/settings_provider.dart';
+import 'providers/terms_provider.dart';
 import 'providers/ticket_provider.dart';
 import 'services/ticket_printer.dart';
 import 'providers/orders_provider.dart';
@@ -20,9 +22,11 @@ import 'providers/sidebar_provider.dart';
 import 'providers/users_provider.dart';
 import 'providers/vehicles_provider.dart';
 import 'screens/login_screen.dart';
+import 'screens/terms_screen.dart';
 import 'services/api_client.dart';
 import 'utils/app_theme.dart';
 import 'widgets/app_shell.dart';
+import 'widgets/inactivity_guard.dart';
 
 void main() {
   runApp(MotorixApp(api: ApiClient()));
@@ -56,6 +60,8 @@ class MotorixApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => NotificationsProvider(api)),
         ChangeNotifierProvider(create: (_) => ClientNoticesProvider(api)),
         ChangeNotifierProvider(create: (_) => SettingsProvider(api)),
+        ChangeNotifierProvider(create: (_) => AuditProvider(api)),
+        ChangeNotifierProvider(create: (_) => TermsProvider(api)),
         // La impresión es una dependencia reemplazable: las pruebas usan una impresora falsa.
         Provider<TicketPrinter>.value(value: const PdfTicketPrinter()),
       ],
@@ -67,6 +73,8 @@ class MotorixApp extends StatelessWidget {
         locale: const Locale('es', 'MX'),
         supportedLocales: const [Locale('es', 'MX'), Locale('es')],
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        // Cierra la sesión tras 30 minutos sin actividad.
+        builder: (context, child) => InactivityGuard(child: child ?? const SizedBox.shrink()),
         home: const _SessionGate(),
       ),
     );
@@ -80,6 +88,11 @@ class _SessionGate extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authenticated = context.select<AuthProvider, bool>((auth) => auth.isAuthenticated);
-    return authenticated ? const AppShell() : const LoginScreen();
+    final termsPending = context.select<AuthProvider, bool>((auth) => auth.termsPending);
+    if (!authenticated) {
+      return const LoginScreen();
+    }
+    // Con términos pendientes no se muestra ningún módulo hasta aceptarlos.
+    return termsPending ? const TermsScreen() : const AppShell();
   }
 }
