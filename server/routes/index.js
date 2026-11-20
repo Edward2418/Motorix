@@ -13,6 +13,8 @@ import dashboardRoutes from './dashboardRoutes.js';
 import notificationRoutes from './notificationRoutes.js';
 import clientNoticeRoutes from './clientNoticeRoutes.js';
 import settingsRoutes from './settingsRoutes.js';
+import auditRoutes from './auditRoutes.js';
+import termsRoutes from './termsRoutes.js';
 
 // Agrupa las rutas de la API bajo /api. Cada módulo agrega su router aquí.
 const router = Router();
@@ -31,6 +33,8 @@ router.use('/dashboard', dashboardRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/client-notices', clientNoticeRoutes);
 router.use('/settings', settingsRoutes);
+router.use('/audit-log', auditRoutes);
+router.use('/terms', termsRoutes);
 
 router.get('/health', (req, res) => {
   res.json({ data: { status: 'ok' } });

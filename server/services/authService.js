@@ -4,6 +4,8 @@ import { toUser } from '../models/userModel.js';
 import { comparePassword, hashPassword } from '../utils/hash.js';
 import { decodeExpiresIn, signToken } from '../utils/jwt.js';
 import { AppError } from '../utils/AppError.js';
+import { auditService } from './auditService.js';
+import * as termsService from './termsService.js';
 
 const INVALID_CREDENTIALS = 'Credenciales incorrectas.';
 
@@ -22,7 +24,19 @@ function lockedMessage(lockedUntil) {
   return `Demasiados intentos fallidos. Inténtalo de nuevo en ${minutes} minuto${minutes === 1 ? '' : 's'}.`;
 }
 
-async function registerFailure(key) {
+// Registra en la bitácora un inicio fallido y, si con él se alcanza el límite, el bloqueo de la cuenta. Con una cuenta
+// inexistente no se guarda el texto escrito (podría ser una contraseña), solo que hubo un intento fallido.
+async function auditFailure(row, locked) {
+  const who = row
+    ? { userId: row.id, actor: row.username, entity: 'USER', entityId: row.id }
+    : { userId: null, actor: null, entity: null, entityId: null };
+  await auditService.record({ ...who, action: 'LOGIN_FAILED' });
+  if (locked) {
+    await auditService.record({ ...who, action: 'ACCOUNT_LOCKED', detail: `bloqueo de ${LOCK_MINUTES} minutos` });
+  }
+}
+
+async function registerFailure(key, row) {
   const previous = await loginAttemptModel.get(key);
   const lockExpired = previous?.lockedUntil && previous.lockedUntil.getTime() <= Date.now();
   const count = (previous && !lockExpired ? previous.failedCount : 0) + 1;
@@ -32,6 +46,7 @@ async function registerFailure(key) {
       ? new Date(Math.floor((Date.now() + LOCK_MINUTES * 60000) / 1000) * 1000)
       : null;
   await loginAttemptModel.save(key, count, lockedUntil);
+  await auditFailure(row, lockedUntil !== null);
 }
 
 // Inicia sesión con usuario o correo. Usa el mismo mensaje para usuario inexistente,
@@ -48,7 +63,7 @@ export async function login({ identifier, password }) {
 
   const valid = row && row.active && (await comparePassword(password, row.password_hash));
   if (!valid) {
-    await registerFailure(key);
+    await registerFailure(key, row);
     throw AppError.unauthenticated(INVALID_CREDENTIALS);
   }
 
@@ -56,7 +71,9 @@ export async function login({ identifier, password }) {
     await loginAttemptModel.reset(key);
   }
   const token = signToken({ sub: row.id, role: row.role });
-  return { token, expiresIn: decodeExpiresIn(token), user: toUser(row) };
+  // `termsAccepted: false` indica al cliente que debe mostrar los términos antes de cualquier módulo.
+  const termsAccepted = await termsService.hasAcceptedCurrent(row.id);
+  return { token, expiresIn: decodeExpiresIn(token), user: toUser(row), termsAccepted };
 }
 
 export async function getCurrentUser(id) {
