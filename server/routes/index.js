@@ -10,6 +10,8 @@ import partRoutes from './partRoutes.js';
 import maintenanceRoutes from './maintenanceRoutes.js';
 import paymentRoutes from './paymentRoutes.js';
 import dashboardRoutes from './dashboardRoutes.js';
+import notificationRoutes from './notificationRoutes.js';
+import clientNoticeRoutes from './clientNoticeRoutes.js';
 
 // Agrupa las rutas de la API bajo /api. Cada módulo agrega su router aquí.
 const router = Router();
@@ -25,6 +27,8 @@ router.use('/parts', partRoutes);
 router.use('/maintenance', maintenanceRoutes);
 router.use('/payments', paymentRoutes);
 router.use('/dashboard', dashboardRoutes);
+router.use('/notifications', notificationRoutes);
+router.use('/client-notices', clientNoticeRoutes);
 
 router.get('/health', (req, res) => {
   res.json({ data: { status: 'ok' } });

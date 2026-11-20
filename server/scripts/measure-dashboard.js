@@ -17,13 +17,15 @@ const REPETITIONS = 5;
 const COUNTS = { clients: 200, vehicles: 400, parts: 60, orders: 2000, movements: 5000, tickets: 500, openOrders: 300 };
 
 const TABLES = [
-  'login_attempts', 'payments', 'tickets', 'ticket_folio_counters', 'maintenance', 'inventory_movements',
+  'notification_reads', 'client_notices', 'login_attempts', 'payments', 'tickets', 'ticket_folio_counters', 'maintenance', 'inventory_movements',
   'order_parts', 'parts', 'order_status_history', 'order_services', 'order_labor', 'service_orders', 'appointments',
   'folio_counters', 'vehicles', 'clients', 'users'
 ];
 const OPEN_STATUSES = ['RECIBIDO', 'DIAGNOSTICO', 'EN_REPARACION', 'ESPERANDO_REFACCION', 'TERMINADO'];
 
-async function truncateAll() {
+// Se exportan `truncateAll`, `loadData`, `refreshStatistics` y `describeTimes` para que `measure-notifications.js` use la
+// misma carga masiva (Sprint 6).
+export async function truncateAll() {
   await pool.query('SET FOREIGN_KEY_CHECKS = 0');
   for (const table of TABLES) {
     await pool.query(`TRUNCATE TABLE ${table}`);
@@ -41,7 +43,7 @@ async function bulkInsert(table, columns, rows, batch = 500) {
 const daysAgo = (days) => new Date(Date.now() - days * 86400000);
 const pad = (value, size = 4) => String(value).padStart(size, '0');
 
-async function loadData() {
+export async function loadData() {
   const hash = await hashPassword('Carga2026!');
   await bulkInsert('users', ['username', 'name', 'email', 'password_hash', 'role', 'active'], [
     ['carga.admin', 'Administrador de carga', 'carga.admin@motorix.test', hash, 'ADMIN', 1],
@@ -144,13 +146,13 @@ async function measure(repetitions = REPETITIONS) {
 // Hallazgo H-17 del Sprint 5: justo después de una carga masiva, con las estadísticas de MySQL desactualizadas, las
 // primeras consultas del panel tardaron de 4 a 8 segundos; con las estadísticas al día tardan unos 200 ms. Por eso se
 // mide en las dos situaciones: la primera solo se informa y la segunda es la que decide si el script falla.
-async function refreshStatistics() {
+export async function refreshStatistics() {
   for (const table of ['service_orders', 'order_services', 'order_labor', 'order_parts', 'payments', 'order_status_history', 'inventory_movements', 'parts', 'tickets']) {
     await pool.query(`ANALYZE TABLE ${table}`);
   }
 }
 
-const describeTimes = (times) =>
+export const describeTimes = (times) =>
   `mínimo ${Math.min(...times).toFixed(0)} ms, promedio ${(times.reduce((sum, value) => sum + value, 0) / times.length).toFixed(0)} ms, máximo ${Math.max(...times).toFixed(0)} ms`;
 
 export async function main({ keep = false } = {}) {

@@ -127,6 +127,14 @@ export async function cancelMaintenance(id, { reason }, actor) {
   });
 }
 
+// Todos los mantenimientos pendientes que piden atención (PROXIMO y VENCIDO), sin paginar y ordenados por urgencia.
+// Lo usan los avisos del centro de notificaciones; clasifica con los mismos umbrales que el listado y el panel, así
+// que las cifras coinciden. `model` se inyecta solo para poder probarlo sin base de datos.
+export async function listAttentionMaintenance({ now = new Date(), thresholds = env.maintenance, model = maintenanceModel } = {}) {
+  const items = (await model.listWithContext({ status: 'PROGRAMADO' })).map((item) => withVisualStatus(item, { now, thresholds }));
+  return items.filter((item) => item.visualStatus === 'VENCIDO' || item.visualStatus === 'PROXIMO').sort(compareUrgency);
+}
+
 // Consulta con estado visual: clasifica, filtra por estado visual, ordena por urgencia y pagina en memoria.
 export async function listMaintenance(filters, { now = new Date(), thresholds = env.maintenance } = {}) {
   const { visualStatus, page, pageSize, ...rest } = filters;

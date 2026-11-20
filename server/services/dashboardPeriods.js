@@ -29,3 +29,9 @@ export function resolvePeriod(key, now = new Date()) {
 export function upcomingRange(now = new Date()) {
   return { from: new Date(now.getTime()), to: endOfDay(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7)) };
 }
+
+/** Rango de mañana: del inicio al fin del día siguiente (lo usa «Clientes por avisar» para las citas de mañana). */
+export function tomorrowRange(now = new Date()) {
+  const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  return { from: startOfDay(tomorrow), to: endOfDay(tomorrow) };
+}

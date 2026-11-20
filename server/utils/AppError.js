@@ -116,6 +116,22 @@ export class AppError extends Error {
     return new AppError(422, 'PRICE_BELOW_COST', `${message} Confirma para guardarlo.`, [{ field: 'salePrice', message }]);
   }
 
+  // Notificaciones internas (Sprint 6)
+  // El aviso no existe o no corresponde al rol del usuario (404): no se distingue, para no revelar avisos ajenos.
+  static notificationNotFound() {
+    return new AppError(404, 'NOTIFICATION_NOT_FOUND', 'El aviso no existe o no te corresponde.');
+  }
+
+  // El hecho ya se avisó al cliente (409); un hecho nuevo (otra orden, cita o mantenimiento) sí se puede avisar.
+  static noticeAlreadyRegistered() {
+    return new AppError(409, 'NOTICE_ALREADY_REGISTERED', 'Ese hecho ya se avisó al cliente.');
+  }
+
+  // El hecho ya no está vigente (409), por ejemplo la orden ya se entregó o la cita se canceló.
+  static noticeNotApplicable() {
+    return new AppError(409, 'NOTICE_NOT_APPLICABLE', 'Ese hecho ya no está vigente.');
+  }
+
   // Servicio externo (Mercado Pago) o base de datos caídos: 503 con mensaje propio, sin detalles internos.
   static serviceUnavailable(message = 'El servicio no está disponible por el momento. Inténtalo de nuevo en unos minutos.') {
     return new AppError(503, 'SERVICE_UNAVAILABLE', message);
