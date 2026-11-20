@@ -1,0 +1,12 @@
+Historia 5 (tipos de servicio): regresión de órdenes, tickets, pagos, mantenimientos y bloqueo por términos, 2026-11-20 02:29.
+FAIL tests/contract/orders-content.contract.test.js (11.528 s)
+FAIL tests/integration/orderParts.prices.concurrency.test.js (21.576 s)
+FAIL tests/integration/orders-lines.test.js (53.719 s)
+Test Suites: 3 failed, 43 passed, 46 total
+Tests:       4 failed, 379 passed, 383 total
+Time:        962.493 s
+
+Cambios esperados de forma (los servicios ahora traen serviceTypeId y serviceTypeName): orders-lines y orders-content.contract; se actualizaron.
+orderParts.prices.concurrency (inestable heredada H-10) agotó 20 s por la carga de las pruebas del cliente en paralelo; sola pasa.
+Repetición de las tres suites tras los ajustes: 23 de 23 en verde.
+Cliente: flutter analyze sin problemas; flutter test 328 de 328.

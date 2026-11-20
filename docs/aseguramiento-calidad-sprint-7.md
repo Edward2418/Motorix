@@ -91,7 +91,7 @@ Decisiones por defecto tomadas sin consulta (documentadas en `spec.md`, sección
 |---|---|---|---|
 | FR-001 y FR-002 | T017, T018, T023 | T019 a T022, T024, T025 | Verificado (etapa 1) |
 | FR-003 y FR-004 | T005, T026, T027, T031 | T028 a T030, T032 | Verificado (etapa 1) |
-| FR-005 a FR-007 | T067 a T073 | T074 a T079 | Pendiente |
+| FR-005 a FR-007 | T067 a T073 | T074 a T079 | Verificado (historia 5) |
 | FR-008 | T080, T081 | T082, T083 | Pendiente |
 | FR-009, FR-010 y FR-015 | T084 a T087, T112 | T088 a T091, T113 | Pendiente |
 | FR-011 a FR-013 | T099, T103 a T106 | T101, T107, T108 | Pendiente (etapa 3) |
@@ -116,6 +116,8 @@ Decisiones por defecto tomadas sin consulta (documentadas en `spec.md`, sección
 | H-07 | Al diseñar la prueba de integración de `audit.log` se anticipó un caso real al registrar la configuración (la prueba lo cubre desde el inicio): un teléfono largo (por ejemplo `+52 55 1234 5678 9012`) se parece a un número de tarjeta y la protección de la bitácora lo rechaza, lo que habría convertido un guardado válido en un error 500 | Media | G-07 (T044) | Corregido | `settingsService` anota solo «teléfono del taller: modificado» cuando el detalle parece un secreto, de modo que el guardado funciona y la bitácora nunca guarda ese valor | `server/services/settingsService.js`, `audit.log.test.js` |
 | H-08 | Las pruebas del cliente de la historia 4 (bitácora e inactividad) se escribieron antes que el código pero no se ejecutaron en rojo antes de implementar; pasaron todas al primer intento junto con la implementación | Baja | G-03 | Aceptado | Se deja constancia. La validez de las pruebas se apoya en que cada una comprueba un resultado visible (texto, solicitud enviada, vuelta al inicio de sesión) y no solo que no haya errores | `client/test/{audit_screen,inactivity_guard}_test.dart` |
 | H-09 | T049 pedía envolver con el guardia de inactividad `app_shell.dart` y, aparte, la pantalla de términos. Se colocó una sola vez en el `builder` de `MaterialApp`, por encima de todas las pantallas | Informativa | G-07 (T049) | Aceptado | Cubre la aplicación autenticada y, cuando exista, la pantalla de términos, sin duplicar el guardia ni olvidar una pantalla futura. El temporizador solo corre con una sesión abierta | `client/lib/main.dart`, `client/lib/widgets/inactivity_guard.dart` |
+| H-15 | Cambiar la forma de las líneas de servicio (ahora con serviceTypeId y serviceTypeName) rompió tres pruebas existentes que comparaban la forma exacta: orders-lines, orders-content.contract y, en el cliente, ninguna | Baja | G-05 (T075) | Corregido | Cambio esperado y compatible hacia atrás para los consumidores (solo agrega campos). Se actualizaron las dos pruebas y la mano de obra conserva su forma sin tipo | `server/tests/integration/orders-lines.test.js`, `server/tests/contract/orders-content.contract.test.js` |
+| H-16 | El selector de tipo y el de propuestas desbordaban con nombres largos (hallado por la prueba de la línea con un tipo desactivado) y la tarjeta de error de Configuración desbordaba su altura | Baja | G-03 | Corregido | Los selectores usan todo el ancho del campo y la tarjeta de error tiene altura suficiente | `client/lib/widgets/order_line_dialog.dart`, `maintenance_dialog.dart`, `settings_screen.dart` |
 
 **Pruebas inestables heredadas (no se modifican en este sprint):** H-10 (`orderParts.prices.concurrency`, roza su límite de 20 s) y H-14 (`payments.paidOrder`, sensible a la carga del equipo), ambas del Sprint 6. Si fallan en la regresión se repiten solas y se registra el resultado.
 
