@@ -14,7 +14,10 @@ database/
 │                 006 contenido guardado del ticket (`tickets.content`) y 007 total de la orden al crear
 │                 el pago (`payments.order_total_at_creation`), una sola sentencia cada una;
 │                 008 notificaciones: lecturas por usuario (`notification_reads`) y avisos a clientes
-│                 (`client_notices`), repetible (`CREATE TABLE IF NOT EXISTS`)
+│                 (`client_notices`), repetible (`CREATE TABLE IF NOT EXISTS`);
+│                 009 Sprint 7: configuración (`settings`), tipos de servicio (`service_types`), versiones y
+│                 aceptaciones de los términos y bitácora (`audit_log`), repetible; sin disparadores (el usuario
+│                 de la aplicación no tiene `SUPER`); 010 `order_services.service_type_id`, una sola sentencia
 ├── seeds/        Datos de ejemplo idempotentes: 001 usuarios, 002 clientes, 003 vehículos, 004 citas,
 │                 005 órdenes de servicio (crea también al segundo mecánico, `mecanico2`),
 │                 006 refacciones, movimientos y su uso en las órdenes, 007 mantenimientos,
@@ -23,8 +26,12 @@ database/
 │                 OS-2026-0010 (terminada, con el ticket TK-2026-0003 que ya guarda su contenido),
 │                 011 Sprint 6: OS-2026-0011 (en diagnóstico hace 5 días, asignada a `mecanico`, para el aviso
 │                 de orden detenida) y un aviso ya hecho a un cliente (OS-2026-0008); con los seeds 004, 006,
-│                 007 y 008 el centro muestra los seis tipos de aviso
-├── scripts/      Creación de las bases y del usuario de la aplicación
+│                 007 y 008 el centro muestra los seis tipos de aviso,
+│                 012 Sprint 7: configuración inicial, tipos de servicio con intervalos (y el tipo de las líneas
+│                 de servicio que coinciden), términos versión 1 con su aceptación por los cuatro usuarios
+│                 sembrados y registros de bitácora de ejemplo
+├── scripts/      Creación de las bases y del usuario de la aplicación y, opcional, `audit-log-protection.sql`
+│                 (disparadores que impiden editar o borrar la bitácora; solo para quien tenga `SUPER`)
 ├── data/         (opcional, ignorada por Git) archivos físicos de MySQL
 └── README.md
 ```
@@ -49,6 +56,24 @@ Mide dos veces: justo después de la carga, sin actualizar las estadísticas de 
 tardó de 4 a 8 segundos), y con las estadísticas al día (`ANALYZE TABLE`), que es la medición que decide el resultado
 (unos 200 ms). Si cargas muchos datos de golpe en otra base, ejecuta `ANALYZE TABLE` sobre las tablas de órdenes,
 líneas, pagos y movimientos para que las primeras consultas no sean lentas.
+
+## Publicar una versión de los términos y condiciones
+
+Los términos no se editan desde la aplicación. Con un archivo de texto que tenga la sección de términos, una línea
+`=== AVISO DE PRIVACIDAD ===` y la sección del aviso, desde `server/`:
+
+```
+npm run terms:publish -- ../ruta/al/archivo.txt
+```
+
+Crea la versión siguiente y no modifica las anteriores. Al publicarla, todas las personas deben aceptarla en su
+siguiente inicio de sesión. Sin ninguna versión publicada nadie queda bloqueado.
+
+## Medir el tiempo de los reportes
+
+`server/scripts/measure-reports.js` usa la misma carga sintética que el panel (2 000 órdenes, 5 000 movimientos) y mide
+cada reporte, el panel y el centro de avisos, con el filtro de términos activo. Falla si alguno tarda 3 segundos o más.
+Desde `server/`: `node --env-file=../.env.test scripts/measure-reports.js`.
 
 ## Preparar la base desde cero
 

@@ -403,3 +403,26 @@ Una pantalla se considera terminada cuando:
 - [ ] Si los indicadores numéricos del dashboard animan el contador al aparecer.
 
 > CLAUDE puede proponer opciones para estas decisiones, pero **no debe asumir una solución irreversible**.
+
+---
+
+## 13. Pantallas de administración del Sprint 7
+
+Todas siguen las secciones anteriores (tokens, estados vacío, cargando y error, confirmaciones) y solo se muestran a la
+administración, salvo la de términos, que ve todo el mundo.
+
+- **Configuración**: una tarjeta por tema, apiladas y con ancho máximo de formulario: datos del taller, márgenes de «Próximo»,
+  tipos de servicio y términos. Cada tarjeta indica de dónde viene el valor (guardado, servidor o inicial), valida en el campo
+  y confirma con un mensaje al guardar. La tabla de tipos de servicio usa el chip activo o inactivo y pide confirmación para
+  desactivar; nunca ofrece borrar.
+- **Reportes**: una pestaña por reporte. Arriba, los atajos Hoy, Semana y Mes y el rango libre (AAAA-MM-DD) con «Consultar» y
+  «Exportar»; debajo, el total, el desglose en tablas y los estados de la sección 9. Un rango inválido se explica bajo los
+  campos sin consultar.
+- **Bitácora**: tabla de solo lectura (fecha, usuario, acción en español y detalle) con filtros por fecha, usuario y acción, y
+  paginación. No tiene columna de acciones: no se edita ni se borra.
+- **Términos y condiciones**: pantalla completa antes de cualquier módulo, con los términos, el aviso de privacidad y los
+  botones «Aceptar» y «Rechazar» (cierra la sesión). Siempre se puede salir, aun si el texto no carga.
+- **Cierre por inactividad**: tras 30 minutos sin movimiento del puntero ni del teclado se cierra la sesión y la pantalla de
+  inicio explica el motivo. Funciona también sobre la pantalla de términos.
+- **Selectores a todo el ancho**: los desplegables dentro de diálogos usan todo el ancho del campo para que un nombre largo no
+  desborde.

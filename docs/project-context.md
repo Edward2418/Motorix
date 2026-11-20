@@ -413,6 +413,45 @@ Decisiones aclaradas:
 
 ------------------------------------------------------------------------
 
+## 6.13 Configuración, catálogo, reportes, términos y bitácora
+
+**Implementado en el Sprint 7** (rama `007-reportes-configuracion`; especificación en
+`specs/007-reportes-configuracion/`). El sprint se construyó por etapas (FR-032): primero las historias P1
+(configuración, márgenes, términos y protección de la información) y después las P2 (catálogo, ticket con próximo
+servicio, ingresos y exportación). Las P3 (servicios frecuentes, productividad, margen de refacciones y rotación de
+inventario) se registran como trabajo futuro si no se construyen.
+
+-   **Configuración** (solo administración): datos del taller del encabezado del ticket y márgenes de «Próximo». Valor
+    vigente: lo guardado en la tabla `settings` y válido, o el valor de respaldo del servidor (`WORKSHOP_*` y
+    `MAINTENANCE_SOON_*` en `.env`), o el predeterminado (30 días y 1,000 km). No hay caché: cada consulta lee la
+    tabla, así un cambio se ve de inmediato y la lista de Mantenimientos, el panel y los avisos cambian juntos. Un valor
+    guardado inválido se ignora.
+-   **Tipos de servicio**: catálogo con `interval_days` (1 a 3650) e `interval_km` (1 a 500,000), al menos uno. Nunca se
+    borra: se desactiva, y una línea que ya lo usaba lo conserva. Los lee cualquier rol y solo la administración los
+    modifica. Una línea de servicio (`order_services.service_type_id`) puede indicar su tipo; la mano de obra no.
+-   **Propuesta de próximo mantenimiento**: `GET /api/orders/:id/maintenance-suggestion` calcula fecha (hoy más el
+    intervalo) y kilometraje (el del servicio o el actual del vehículo, el mayor, más el intervalo). Es solo una propuesta
+    que la persona corrige al programar el mantenimiento.
+-   **Ticket con próximo servicio**: el ticket nuevo guarda `nextService` (la fecha más cercana y el kilometraje más
+    cercano entre sus tipos) y ya no lo recalcula; sin tipos con intervalo, y en los tickets anteriores, no existe.
+-   **Reportes** (solo administración, solo lectura): ingresos por periodo con pagos `PAGADO` cuyo `paid_at` cae en el
+    rango (máximo 366 días), por método y por día. Se calculan en **centavos enteros**. La exportación a CSV
+    (`format=csv`) se arma desde el mismo resultado que el JSON: BOM UTF-8, comas, encabezados y fila de totales.
+-   **Términos y condiciones**: versiones numeradas (`terms_versions`) y su aceptación por usuario
+    (`terms_acceptances`, única por usuario y versión). El filtro vive en `authenticate`: sin aceptar la versión vigente
+    toda ruta responde 403 `TERMS_NOT_ACCEPTED`, salvo leer y aceptar los términos. Sin versión publicada nadie se bloquea.
+    No hay pantalla de edición: se publican con `npm run terms:publish -- <archivo>`.
+-   **Bitácora** (`audit_log`, solo administración y solo lectura): inicios fallidos y bloqueos, altas, activaciones y
+    cambios de rol, cambios de configuración y de precios de refacciones, y pagos cancelados. Nunca guarda contraseñas,
+    hashes, tokens ni datos de tarjeta. Es inmutable **desde la aplicación** (ninguna ruta ni función edita o borra y una
+    prueba lo vigila); los disparadores de MySQL son un script opcional (`database/scripts/audit-log-protection.sql`)
+    porque el usuario dedicado no tiene el permiso `SUPER`.
+-   **Seguridad**: cierre de sesión tras 30 minutos sin actividad (también en la pantalla de términos), política de
+    contraseñas ya existente, consultas siempre parametrizadas y ninguna respuesta con hash, token ni precios reservados.
+-   **Fuera de alcance**: exportación a Excel o PDF, editar términos desde la aplicación y reportes programados.
+
+------------------------------------------------------------------------
+
 # 7. Funcionalidad fuera del MVP actual
 
 ## Chatbot de WhatsApp
@@ -910,6 +949,8 @@ database/
 | 3 | `parts`, `inventory_movements`, `maintenance` y tabla de refacciones utilizadas por orden |
 | 4 | `payments`, `tickets` |
 | 5 | columnas nuevas: `tickets.content` (contenido guardado al emitir) y `payments.order_total_at_creation` (total de la orden al crear el pago) |
+| 6 | `notification_reads` (lectura de avisos por usuario) y `client_notices` (avisos hechos a clientes) |
+| 7 | `settings`, `service_types`, `terms_versions`, `terms_acceptances`, `audit_log` y la columna `order_services.service_type_id` |
 
 Los nombres y campos definitivos se validan al especificar cada sprint.
 El script de seeds no debe contener contraseñas en texto plano: el
@@ -1482,3 +1523,21 @@ planeación se contradigan.
 
 **Prioridad actual:** entregar un MVP funcional, demostrable y coherente
 antes de incorporar funcionalidades adicionales.
+
+
+------------------------------------------------------------------------
+
+### Decisiones resueltas durante el Sprint 7 (2026-11-19 a 2026-11-20)
+
+El Sprint 7 es el segundo posterior al MVP. Lo que el insumo llamaba `SHOP_*` y `MAINTENANCE_WARN_*` ya existía como
+`WORKSHOP_*` y `MAINTENANCE_SOON_*`, la migración siguiente era la `009` y la política de contraseñas ya estaba hecha.
+
+-   **Por etapas**: P1 obligatorias, después P2 y las P3 solo si alcanza el tiempo.
+-   **Términos con script**: sin pantalla de edición; el texto inicial (versión 1) viaja en el seed `012` y el seed registra
+    su aceptación por los cuatro usuarios sembrados para no interrumpir la demostración.
+-   **Bitácora sin disparadores**: el registro binario de MySQL está activo y el usuario de la aplicación no tiene `SUPER`,
+    así que `CREATE TRIGGER` falla. La inmutabilidad se garantiza desde la aplicación con una prueba que recorre todo el
+    código; los disparadores quedan como script opcional.
+-   **Importes en centavos** en los reportes y **`DELETE`** (no `TRUNCATE`) para reiniciar las tablas pequeñas en pruebas.
+-   **Sin dependencias nuevas**: CSV con una función pura y archivo guardado con `dart:io`.
+-   El detalle de cada decisión y de los hallazgos está en `docs/aseguramiento-calidad-sprint-7.md`.
