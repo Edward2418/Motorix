@@ -67,3 +67,16 @@ export function computeSuggestions({ types, today, serviceMileage, currentMileag
   }
   return suggestions;
 }
+
+/**
+ * Próximo servicio que indica el ticket: la fecha más cercana y el kilometraje más cercano entre las propuestas. Cada
+ * parte es `null` si ningún tipo la tiene; sin propuestas devuelve `null` y el ticket no muestra la línea (FR-008).
+ */
+export function nextServiceFrom(suggestions) {
+  if (suggestions.length === 0) {
+    return null;
+  }
+  const dates = suggestions.map((s) => s.dueDate).filter((date) => date !== null).sort();
+  const mileages = suggestions.map((s) => s.dueMileage).filter((km) => km !== null);
+  return { dueDate: dates[0] ?? null, dueMileage: mileages.length > 0 ? Math.min(...mileages) : null };
+}

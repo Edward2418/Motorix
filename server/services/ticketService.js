@@ -8,7 +8,10 @@ import * as ticketModel from '../models/ticketModel.js';
 import * as vehicleModel from '../models/vehicleModel.js';
 import { AppError } from '../utils/AppError.js';
 import { toCents } from '../utils/money.js';
+import * as serviceTypeModel from '../models/serviceTypeModel.js';
+import { todayLocal } from './maintenanceService.js';
 import { PAYABLE_STATUSES } from './paymentRules.js';
+import { computeSuggestions, nextServiceFrom } from './serviceTypeRules.js';
 import { settingsService } from './settingsService.js';
 import { nextTicketFolio } from './ticketFolio.js';
 
@@ -16,14 +19,25 @@ import { nextTicketFolio } from './ticketFolio.js';
 // No incluye los pagos ni el estado de la orden: esos se leen vigentes cada vez que se consulta el ticket.
 async function buildContent(order, conn) {
   // Los datos del taller son los vigentes en la configuración (Sprint 7); el ticket nuevo los guarda y ya no cambian.
-  const [workshop, client, vehicle, services, labor, parts] = await Promise.all([
+  const [workshop, client, vehicle, services, labor, parts, serviceTypes] = await Promise.all([
     settingsService.getWorkshop(conn),
     clientModel.findById(order.clientId, conn),
     vehicleModel.findById(order.vehicleId, conn),
     orderItemModel.listServices(order.id, conn),
     orderItemModel.listLabor(order.id, conn),
-    orderPartModel.listByOrder(order.id, conn)
+    orderPartModel.listByOrder(order.id, conn),
+    serviceTypeModel.listForOrder(order.id, conn)
   ]);
+  // Próximo servicio (Sprint 7): a partir de los tipos de las líneas de servicio, con el kilometraje de este servicio.
+  // Se guarda con el contenido emitido y ya no cambia; sin tipos con intervalo la línea no existe.
+  const nextService = nextServiceFrom(
+    computeSuggestions({
+      types: serviceTypes,
+      today: todayLocal(),
+      serviceMileage: order.serviceMileage ?? order.entryMileage,
+      currentMileage: 0
+    })
+  );
   const toLine = (line) => ({ description: line.description, quantity: 1, unitPrice: line.amount, amount: line.amount });
   return {
     workshop,
@@ -43,7 +57,8 @@ async function buildContent(order, conn) {
       amount: part.subtotal
     })),
     subtotals: { services: order.servicesTotal, labor: order.laborTotal, parts: order.partsTotal },
-    total: order.total
+    total: order.total,
+    ...(nextService ? { nextService } : {})
   };
 }
 
@@ -54,7 +69,13 @@ async function buildContent(order, conn) {
 async function buildTicket(head) {
   const order = await orderModel.findById(head.orderId);
   const payments = await paymentModel.listByOrder(order.id);
-  const content = head.content ?? (await buildContent(order));
+  // Un ticket anterior al Sprint 5 no trae contenido guardado: se arma con los datos vigentes, pero sin próximo servicio
+  // (esa línea solo existe en los tickets nuevos y nunca se calcula después de emitidos).
+  let content = head.content;
+  if (!content) {
+    const { nextService, ...vigente } = await buildContent(order);
+    content = vigente;
+  }
   // El aviso de pago desfasado es de la orden y de los pagos, no del comprobante: el ticket conserva su forma.
   const { hasOutdatedPending, ...paymentSummary } = order.payment;
   return {
