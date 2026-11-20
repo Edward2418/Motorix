@@ -1,0 +1,31 @@
+Validación del quickstart del Sprint 7 por la API, 2026-11-20 11:48. Comando: node --env-file=../.env.test scripts/validate-sprint7.js
+OK     Escenario 1: se guarda el nombre y el teléfono sin reiniciar y la pantalla los muestra
+OK     Escenario 2: el ticket nuevo trae los datos nuevos del taller y el emitido antes conserva los suyos (Taller Motorix (ejemplo))
+OK     Escenario 3: un nombre vacío y un margen de 0 días dan un mensaje por campo y no guardan nada (maintenance.soonDays, workshop.name)
+OK     Escenario 4: bajar el margen a 1 día y 100 km reduce los «Próximo» en la lista y en los avisos a la vez (lista 2→0, avisos 2→0)
+OK     Escenario 5: sin configuración guardada rigen los valores del servidor o 30 días y 1,000 km, sin fallar (default)
+OK     Escenario 6: un usuario nuevo inicia sesión y el servidor indica termsAccepted false (la pantalla de términos se ve en la interfaz)
+Escenario 7: rechazar los términos cierra la sesión en el cliente; lo cubre terms_screen_test.dart.
+OK     Escenario 9: sin aceptar, una ruta protegida responde 403 TERMS_NOT_ACCEPTED y solo funcionan ver y aceptar
+OK     Escenario 8: aceptar los términos deja el registro (quién, versión y fecha) y al volver a entrar no se piden
+OK     Escenario 11: la lista de aceptaciones muestra usuario, versión y fecha (5 aceptaciones)
+OK     Escenario 12: la bitácora registra cambio de rol, de precio, de configuración y pago cancelado, con quién y cuándo, sin secretos (16 registros)
+OK     Escenario 13: la bitácora se filtra por acción y PUT, PATCH y DELETE responden 404
+OK     Escenario 14: quedan los 5 fallos y el bloqueo en la bitácora y con una cuenta inexistente no se guarda el texto escrito
+OK     Escenario 15: una contraseña débil se rechaza con un mensaje que dice qué falta (Debe tener al menos 8 caracteres. Debe incluir al menos una letra mayúscula. Debe incluir al menos un número.)
+Escenario 16: el cierre a los 30 minutos es del cliente; lo cubre inactivity_guard_test.dart (con tiempo simulado).
+OK     Escenario 17: ninguna respuesta de usuarios, refacciones, órdenes, pagos y tickets lleva hash ni token, y el mecánico no ve precios de compra
+OK     Escenario 18: escribir ' OR 1=1 -- en las búsquedas se trata como texto, sin error ni cambios
+OK     Escenario 19: recepción y mecánico reciben 403 en configuración, bitácora, aceptaciones y reportes (8 llamadas)
+OK     Escenario 20: se crea un tipo y un nombre repetido responde SERVICE_TYPE_DUPLICATE
+OK     Escenario 21: un tipo desactivado no se ofrece ni se acepta en órdenes nuevas, las anteriores lo conservan y no se puede borrar
+OK     Escenario 22: la línea con tipo funciona, la propuesta trae fecha y kilometraje y una línea sin tipo sigue como antes (1 propuesta(s))
+OK     Escenario 23: el ticket con tipo trae «Próximo servicio», el de otra orden sin tipo no, y el emitido no cambia al editar el tipo ({"dueDate":"2027-05-19","dueMileage":36900})
+OK     Escenario 24: el total y los desgloses de ingresos coinciden centavo por centavo con los pagos ($9810 en 5 pagos desde 2026)
+OK     Escenario 25: un rango sin pagos da cero, y el invertido y el de más de 366 días responden REPORT_RANGE_INVALID
+OK     Escenario 26: el CSV tiene BOM, encabezados y el mismo total que la pantalla; sin pagos trae encabezados y total en cero (8 filas)
+OK     Escenario 10: al publicar la versión 2 quien aceptó la 1 vuelve a ver los términos (403 hasta aceptar)
+OK     Escenario 10b: tras aceptar la versión 2 el administrador vuelve a usar el sistema
+Escenarios de la etapa 3 (27 y 28): no se construyeron; quedan registrados como trabajo futuro (FR-032).
+
+Resumen: 25 de 25 comprobaciones por la API aprobadas; 16, el rechazo de los términos (7, parte visual) y abrir el CSV en una hoja de cálculo se verifican con las pruebas del cliente y a mano.

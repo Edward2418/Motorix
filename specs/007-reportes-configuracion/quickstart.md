@@ -90,7 +90,14 @@ Con 2,000 órdenes y 5,000 movimientos, cada reporte debe responder en menos de 
 
 ## 6. Resultados de la validación
 
-*Pendiente: se llena al cerrar la implementación, con el resultado de cada escenario de las etapas construidas, las pruebas y la medición de rendimiento.*
+**Fecha:** 2026-11-20. **Resultado: Aprobado** en las etapas 1 y 2.
+
+- **Escenarios por la API (1 a 26):** 25 de 25 comprobaciones aprobadas con `server/scripts/validate-sprint7.js` sobre los datos de ejemplo reales. Salida en `docs/evidencias/sprint-7/quickstart-api.txt`.
+- **Escenarios de la interfaz:** el 7 (rechazar los términos) lo cubre `terms_screen_test.dart`; el 16 (cierre a los 30 minutos) lo cubre `inactivity_guard_test.dart` con tiempo simulado; las pantallas nuevas tienen sus pruebas de widgets. No se hizo un recorrido manual con la aplicación abierta.
+- **Escenarios 27 y 28 (etapa 3):** no se construyeron; quedan como trabajo futuro.
+- **Pruebas automáticas:** servidor 158 suites y 1,588 pruebas; cliente 358 pruebas, todas aprobadas (`regresion-backend.txt` y `regresion-frontend.txt`).
+- **Rendimiento (SC-003):** con 2,000 órdenes y 5,000 movimientos los reportes tardan de 3 a 5 ms, la exportación a CSV 4 ms, el panel 221 ms y el centro de avisos 21 ms; el filtro de términos cuesta 1 ms por petición (`medicion-reportes.txt`).
+- **Pendiente de revisar a mano:** abrir un CSV exportado en una hoja de cálculo.
 
 ## 7. Limitaciones previstas
 

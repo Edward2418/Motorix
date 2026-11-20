@@ -1,0 +1,25 @@
+Regresión completa final del servidor (T117), 2026-11-20 12:25.
+Por partes (una base compartida, una ejecución a la vez, sin editar archivos durante la corrida).
+
+[unit]
+Test Suites: 36 passed, 36 total
+Tests:       444 passed, 444 total
+Time:        7.069 s
+
+[contract]
+Test Suites: 32 passed, 32 total
+Tests:       177 passed, 177 total
+Time:        267.264 s, estimated 268 s
+
+[integ-a]
+Test Suites: 19 passed, 19 total
+Tests:       195 passed, 195 total
+Time:        274.261 s, estimated 332 s
+
+[integ-b]
+Test Suites: 71 passed, 71 total
+Tests:       772 passed, 772 total
+Time:        1447.786 s
+
+Total: 36 + 32 + 19 + 71 = 158 suites; 444 + 177 + 195 + 772 = 1588 pruebas, todas en verde.
+Línea base del sprint: 123 suites y 1,088 pruebas. Aumento: 35 suites y 500 pruebas nuevas, ninguna anterior pasó de verde a rojo.

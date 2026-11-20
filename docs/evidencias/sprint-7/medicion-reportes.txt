@@ -1,0 +1,11 @@
+Medición de los reportes (T112 y T113), 2026-11-20 11:46. Comando: node --env-file=../.env.test scripts/measure-reports.js
+Datos de carga: 2000 órdenes, 5000 movimientos de inventario, 993 pagos y 500 tickets.
+ingresos de hoy (0 pagos, 0 días): mínimo 1 ms, promedio 3 ms, máximo 8 ms (límite 3000 ms).
+ingresos de la semana (228 pagos, 6 días): mínimo 3 ms, promedio 3 ms, máximo 3 ms (límite 3000 ms).
+ingresos del mes (738 pagos, 19 días): mínimo 3 ms, promedio 3 ms, máximo 4 ms (límite 3000 ms).
+ingresos de 366 días (993 pagos, 25 días): mínimo 3 ms, promedio 4 ms, máximo 5 ms (límite 3000 ms).
+Exportación a CSV de 366 días: mínimo 4 ms, promedio 4 ms, máximo 5 ms (límite 3000 ms).
+Panel de control: mínimo 208 ms, promedio 221 ms, máximo 249 ms (límite 3000 ms).
+Centro de avisos: mínimo 17 ms, promedio 21 ms, máximo 26 ms (límite 2000 ms).
+Filtro de términos de authenticate (50 consultas): mínimo 1 ms, promedio 1 ms, máximo 2 ms.
+OK: los reportes y la exportación cargan en menos de 3 segundos, el centro de avisos en menos de 2, y el filtro de términos no los degrada.

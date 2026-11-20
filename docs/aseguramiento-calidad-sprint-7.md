@@ -1,8 +1,8 @@
 # Aseguramiento de la calidad - Sprint 7: Reportes y configuración
 
-Este documento es el registro de calidad del Sprint 7 de Motorix. Reúne las puertas de calidad, las decisiones, los riesgos, la trazabilidad de los requisitos, los hallazgos, la regresión de los sprints 1 a 6 y el control de calidad final. **Estado al 2026-11-19:** el sprint está en implementación. Las secciones 6, 8, 9 y 10 se completan durante y al cierre de la implementación, etapa por etapa (FR-032).
+Este documento es el registro de calidad del Sprint 7 de Motorix. Reúne las puertas de calidad, las decisiones, los riesgos, la trazabilidad de los requisitos, los hallazgos, la regresión de los sprints 1 a 6 y el control de calidad final. **Estado al 2026-11-20:** las etapas 1 y 2 están construidas, probadas y documentadas; la etapa 3 (historias 9 y 10) no se construyó y queda registrada como trabajo futuro (FR-032, sección 7).
 
-Resultado general: el sprint está en implementación; no tiene resultado final todavía.
+Resultado general: **Aprobado** en las etapas 1 y 2 (historias 1 a 8, 29 de los 32 requisitos funcionales verificados). Los requisitos FR-011 a FR-013 (etapa 3) quedan como trabajo futuro. Detalle en la sección 10.
 
 ## 0. Datos del documento
 
@@ -13,8 +13,8 @@ Resultado general: el sprint está en implementación; no tiene resultado final 
 | Rama | `007-reportes-configuracion` |
 | Responsable | Edward Negrete Bustos, responsable del sprint |
 | Fecha de inicio | 2026-11-19 |
-| Fecha de cierre | Pendiente (la entrega final del proyecto es el 30 de noviembre de 2026) |
-| Estado general | En curso (etapa 1) |
+| Fecha de cierre | 2026-11-20 (la entrega final del proyecto es el 30 de noviembre de 2026) |
+| Estado general | Cerrado: etapas 1 y 2 completas; etapa 3 como trabajo futuro |
 
 ## 1. Objetivo y alcance
 
@@ -40,11 +40,11 @@ Resultado general: el sprint está en implementación; no tiene resultado final 
 
 **Criterios de salida (para cerrar el sprint):**
 
-- [ ] Los 32 requisitos funcionales de las etapas construidas están verificados; los de las etapas no construidas están registrados como trabajo futuro.
-- [ ] Todas las pruebas de los sprints anteriores siguen pasando.
-- [ ] No hay defectos críticos ni altos abiertos (sección 7).
-- [ ] La matriz de calidad final (sección 9) está completa, con evidencia.
-- [ ] Reporte, análisis y matriz no se contradicen.
+- [x] Los requisitos funcionales de las etapas construidas están verificados (sección 6); FR-011 a FR-013, de la etapa 3, están registrados como trabajo futuro (sección 7).
+- [x] Todas las pruebas de los sprints anteriores siguen pasando (sección 8: 158 suites y 1,588 pruebas del servidor, 358 del cliente).
+- [x] No hay defectos críticos ni altos abiertos (sección 7).
+- [x] La matriz de calidad final (sección 9) está completa, con evidencia.
+- [x] Reporte, análisis y matriz no se contradicen.
 
 ## 3. Puertas de calidad
 
@@ -74,18 +74,18 @@ Decisiones por defecto tomadas sin consulta (documentadas en `spec.md`, sección
 
 | ID | Riesgo | Impacto | Mitigación | Prueba que lo cubre | Estado |
 |:--:|---|---|---|---|---|
-| R-01 | Una ruta queda sin exigir la aceptación de términos | Alto: acceso sin aceptar | El filtro vive en `authenticate`, que usan todos los routers | `terms.enforcement` | Abierto |
-| R-02 | El filtro de términos bloquea pruebas existentes que cargan seeds y crean usuarios nuevos | Medio: regresiones falsas | `loginAs` registra la aceptación cuando existe una versión; sin versión nadie se bloquea | Regresión completa | Abierto |
-| R-03 | Los márgenes configurables no llegan a la lista, el panel y los avisos | Medio: cifras que no coinciden | Los tres leen los márgenes por `maintenanceService` | `settings.maintenance` | Abierto |
-| R-04 | La bitácora guarda un secreto sin querer | Alto: fuga de datos | Lista cerrada de campos, rechazo de contraseñas, hashes y tokens, y no guardar el texto de cuentas inexistentes | `audit.log`, `auditService` | Abierto |
-| R-05 | El texto de los términos lleva un `;` y rompe el seed | Medio: seed que no carga | Regla escrita y prueba que carga los seeds completos | `seeds.sprint7` | Abierto |
-| R-06 | El sprint no alcanza en 10 días | Alto: entrega incompleta | Entrega por etapas con regresión al cierre de cada una | Puntos de control de cada etapa | Abierto |
+| R-01 | Una ruta queda sin exigir la aceptación de términos | Alto: acceso sin aceptar | El filtro vive en `authenticate`, que usan todos los routers | `terms.enforcement` | Cerrado: la prueba lee `routes/index.js` y cubre todo router nuevo |
+| R-02 | El filtro de términos bloquea pruebas existentes que cargan seeds y crean usuarios nuevos | Medio: regresiones falsas | `loginAs` registra la aceptación cuando existe una versión; sin versión nadie se bloquea | Regresión completa | Cerrado: `loginAs` acepta la versión vigente y la regresión completa pasa |
+| R-03 | Los márgenes configurables no llegan a la lista, el panel y los avisos | Medio: cifras que no coinciden | Los tres leen los márgenes por `maintenanceService` | `settings.maintenance` | Cerrado: 38 pruebas y regresión de las vistas que heredan los márgenes |
+| R-04 | La bitácora guarda un secreto sin querer | Alto: fuga de datos | Lista cerrada de campos, rechazo de contraseñas, hashes y tokens, y no guardar el texto de cuentas inexistentes | `audit.log`, `auditService` | Cerrado: lista cerrada de campos y prueba de que no hay secretos |
+| R-05 | El texto de los términos lleva un `;` y rompe el seed | Medio: seed que no carga | Regla escrita y prueba que carga los seeds completos | `seeds.sprint7` | Cerrado: el seed 012 carga completo y es idempotente |
+| R-06 | El sprint no alcanza en 10 días | Alto: entrega incompleta | Entrega por etapas con regresión al cierre de cada una | Puntos de control de cada etapa | Parcialmente cerrado: etapas 1 y 2 entregadas con regresión; la etapa 3 no alcanzó y queda como trabajo futuro |
 | R-07 | La inactividad solo la mide el cliente: un token copiado sigue válido hasta sus 8 horas | Medio: ventana de uso indebido | Se acepta y se documenta; el servidor sigue rechazando tokens vencidos | `session.expiry` | Aceptado |
-| R-08 | El texto del principio I de la constitución nombra al director y el alcance se decide de forma individual | Bajo: diferencia entre norma y práctica | Se registra la aprobación del responsable (H-01); se mantiene la propuesta de enmienda | Revisión de H-01 | Abierto |
+| R-08 | El texto del principio I de la constitución nombra al director y el alcance se decide de forma individual | Bajo: diferencia entre norma y práctica | Se registra la aprobación del responsable (H-01); se mantiene la propuesta de enmienda | Revisión de H-01 | Abierto: la enmienda del principio I sigue pendiente |
 
 ## 6. Trazabilidad
 
-*Se llena durante la implementación. Etapa 1 (historias 1 a 4) verificada con el punto de control `docs/evidencias/sprint-7/checkpoint-etapa1-backend.txt` y `checkpoint-etapa1-frontend.txt`.*
+*Etapa 1 verificada con `checkpoint-etapa1-*.txt`, etapa 2 con `checkpoint-etapa2-*.txt` y el cierre con `regresion-backend.txt`, `regresion-frontend.txt` y `quickstart-api.txt`, todos en `docs/evidencias/sprint-7/`.*
 
 | Requisito | Tareas de prueba | Tareas de implementación | Resultado |
 |---|---|---|---|
@@ -94,14 +94,14 @@ Decisiones por defecto tomadas sin consulta (documentadas en `spec.md`, sección
 | FR-005 a FR-007 | T067 a T073 | T074 a T079 | Verificado (etapa 2) |
 | FR-008 | T080, T081 | T082, T083 | Verificado (etapa 2) |
 | FR-009, FR-010 y FR-015 | T084 a T087, T112 | T088 a T091, T113 | Verificado (etapa 2) |
-| FR-011 a FR-013 | T099, T103 a T106 | T101, T107, T108 | Pendiente (etapa 3) |
+| FR-011 a FR-013 | T099, T103 a T106 | T101, T107, T108 | No construido (etapa 3): trabajo futuro, sección 7 |
 | FR-014 | T092 a T094 | T095, T096 | Verificado (etapa 2) |
 | FR-016 | T018, T034, T055, T068, T085 | T021, T047, T061, T074 | Verificado (etapa 2): configuración, catálogo, bitácora, términos y reportes |
 | FR-017 a FR-020 | T051 a T058 | T059 a T065 | Verificado (etapa 1) |
 | FR-021 a FR-023 | T006, T033 a T035 | T012, T042 a T047, T050 | Verificado (etapa 1) |
-| FR-024 a FR-027 | T036 a T041 | T048, T049, T116 | Parcial: falta T116 (documentación de seguridad) |
-| FR-028 | T109 | T110, T111 | Pendiente |
-| FR-029 a FR-032 | todas las pruebas | todas las fases | Pendiente |
+| FR-024 a FR-027 | T036 a T041 | T048, T049, T116 | Verificado (etapa 1; revisión T116 en H-19) |
+| FR-028 | T109 | T110, T111 | Verificado (`seeds.sprint7`, 12 casos) |
+| FR-029 a FR-032 | todas las pruebas | todas las fases | Verificado (regresión completa, rendimiento, documentación y entrega por etapas) |
 
 ## 7. Hallazgos y defectos
 
@@ -119,6 +119,17 @@ Decisiones por defecto tomadas sin consulta (documentadas en `spec.md`, sección
 | H-15 | Cambiar la forma de las líneas de servicio (ahora con serviceTypeId y serviceTypeName) rompió tres pruebas existentes que comparaban la forma exacta: orders-lines, orders-content.contract y, en el cliente, ninguna | Baja | G-05 (T075) | Corregido | Cambio esperado y compatible hacia atrás para los consumidores (solo agrega campos). Se actualizaron las dos pruebas y la mano de obra conserva su forma sin tipo | `server/tests/integration/orders-lines.test.js`, `server/tests/contract/orders-content.contract.test.js` |
 | H-16 | El selector de tipo y el de propuestas desbordaban con nombres largos (hallado por la prueba de la línea con un tipo desactivado) y la tarjeta de error de Configuración desbordaba su altura | Baja | G-03 | Corregido | Los selectores usan todo el ancho del campo y la tarjeta de error tiene altura suficiente | `client/lib/widgets/order_line_dialog.dart`, `maintenance_dialog.dart`, `settings_screen.dart` |
 
+| H-17 | Se esperaba que el seed 012 cambiara los conteos de las pruebas de seeds anteriores (T111) | Informativa | G-08 (T111) | Aceptado | No cambió ninguno: `seeds.test`, `seeds-payments`, `seeds.sprint5` y `seeds.sprint6` pasan sin tocarlas (52 de 52 con la nueva). No se editó ni se debilitó ninguna prueba | `server/tests/integration/seeds*.test.js` |
+| H-18 | Medición de rendimiento con 2,000 órdenes y 5,000 movimientos (SC-003) | Informativa | G-08 (T112, T113) | Aprobada | Ingresos de hoy, semana, mes y 366 días: 3 a 5 ms; exportación a CSV de 366 días: 4 ms; panel de control: 221 ms; centro de avisos: 21 ms; el filtro de términos de `authenticate`: 1 ms por petición. Ninguna consulta superó 3 s, así que no se tocó `reportModel`, `reportService` ni el filtro | `docs/evidencias/sprint-7/medicion-reportes.txt`, `server/tests/integration/reports.performance.test.js` |
+| H-19 | Revisión de todas las consultas de `server/models/` (T116, apoyo a FR-027) | Informativa | G-07 (T116) | Aprobada | Los 23 modelos usan parámetros. Lo interpolado en el SQL son siempre literales del código: condiciones fijas con `?`, nombres de tabla y columna de listas cerradas (`orderItemModel`, `partModel`, `orderModel`) y `email` o `username` elegidos entre dos literales (`userModel`). Ningún texto del usuario se concatena | `server/models/*.js`, `injection.search.test.js` |
+| H-20 | Una regresión se invalidó porque se editó `routes/index.js` mientras corría: una suite cargó el archivo a medio cambiar (`termsRoutes is not defined`) | Baja | Proceso | Corregido | Se detuvo y se repitió completa. Desde entonces ninguna regresión se ejecuta mientras se editan `server/` o `database/` (los documentos sí se pueden editar) | `docs/evidencias/sprint-7/checkpoint-etapa1-backend.txt` |
+| H-21 | La primera versión de `validate-sprint7.js` contaba como aprobado el escenario 7 (rechazar los términos), que es del cliente y no se prueba por la API | Baja | G-03 (T118) | Corregido | Pasó a ser una nota que remite a `terms_screen_test.dart`; el resumen cuenta solo lo que la API verifica (25 de 25) | `server/scripts/validate-sprint7.js` |
+| H-22 | El seed 012 se escribió antes que su prueba, así que no hubo un paso en rojo previo (T109) | Baja | G-03 | Aceptado | La prueba verifica resultados observables (filas, enlaces, aceptaciones, idempotencia y que el archivo cargue completo) y no solo que no falle | `database/seeds/012_sample_sprint7.sql`, `seeds.sprint7.test.js` |
+
+**Trabajo futuro (etapa 3, FR-011 a FR-013 y FR-032).** No se construyeron las historias 9 y 10 (servicios más frecuentes y productividad por mecánico, margen de refacciones y rotación de inventario) ni sus rutas `/reports/services`, `/productivity`, `/margin` y `/rotation`, que `contracts/api.yaml` ya describe. La exportación a CSV (`csvExport.js`) y el módulo de reportes (`reportRules`, `reportValidator`, pestañas de `reports_screen`) están hechos para reutilizarse. Motivo: la etapa 3 era opcional y se priorizó cerrar y documentar las etapas 1 y 2 antes de la entrega del 30 de noviembre. Las tareas T098 a T108 siguen sin marcar a propósito.
+
+**Otros pendientes sin impacto en el código:** la enmienda al principio I de la constitución (H-01, R-08), el recorrido visual con la aplicación abierta y capturas (el cliente se verifica con pruebas de widgets), abrir el CSV exportado en una hoja de cálculo de verdad y publicar la rama.
+
 **Pruebas inestables heredadas (no se modifican en este sprint):** H-10 (`orderParts.prices.concurrency`, roza su límite de 20 s) y H-14 (`payments.paidOrder`, sensible a la carga del equipo), ambas del Sprint 6. Si fallan en la regresión se repiten solas y se registra el resultado.
 
 ## 8. Línea base de regresión
@@ -127,13 +138,35 @@ Se ejecuta la suite completa **antes** de tocar el código y de nuevo **al cierr
 
 | Suite | Comando | Antes del sprint | Después de la etapa 1 | Después de la etapa 2 | Evidencia |
 |---|---|---|---|---|---|
-| Backend | `npm test` en `server/` (por partes, con el resolvedor alterno) | 123 suites y 1,088 pruebas (regresión del Sprint 6; el código no cambió y las unitarias se repitieron: 27 suites y 287 pruebas) | Pendiente | Pendiente | `docs/evidencias/sprint-7/linea-base-backend.txt` |
-| Frontend | `flutter analyze` y `flutter test` en `client/` | `flutter analyze` sin problemas y 250 pruebas aprobadas | Pendiente | Pendiente | `docs/evidencias/sprint-7/linea-base-frontend.txt` |
+| Backend | `npm test` en `server/` (por partes, con el resolvedor alterno) | 123 suites y 1,088 pruebas (regresión del Sprint 6; el código no cambió y las unitarias se repitieron: 27 suites y 287 pruebas) | 145 suites y 1,387 pruebas | 156 suites y 1,570 pruebas | `linea-base-backend.txt`, `checkpoint-etapa1-backend.txt`, `checkpoint-etapa2-backend.txt` |
+| Frontend | `flutter analyze` y `flutter test` en `client/` | `flutter analyze` sin problemas y 250 pruebas aprobadas | 301 pruebas | 358 pruebas | `linea-base-frontend.txt`, `checkpoint-etapa1-frontend.txt`, `checkpoint-etapa2-frontend.txt` |
+
+**Regresión final (T117):** servidor 158 suites y 1,588 pruebas (500 nuevas sobre la línea base) y cliente 358 pruebas (108 nuevas), todas en verde, con `flutter analyze` sin problemas. Evidencia: `regresion-backend.txt` y `regresion-frontend.txt`. Los cambios declarados que obligaron a ajustar pruebas existentes están en H-15 (forma de las líneas de servicio) y en el contrato de inicio de sesión (`auth.contract` ahora incluye `termsAccepted`, cambio esperado de la etapa 1); ninguna prueba se borró ni se debilitó.
 
 ## 9. Control de calidad final
 
-*Pendiente: se llena al cierre con cinco requisitos funcionales del sprint elegidos entre los que más pueden fallar (aceptación de términos exigida en el servidor, bitácora sin secretos, márgenes que llegan a todas las vistas, ingresos que coinciden con los pagos y no exposición de datos), en el formato de la bitácora de calidad del proyecto.*
+Cinco requisitos elegidos entre los que más pueden fallar, más el de la interfaz, en el formato de la bitácora de calidad del proyecto.
+
+| ID | Requisito | Criterio de aceptación verificable | Prueba ejecutada | Resultado | Evidencia |
+|---|---|---|---|---|---|
+| S7-01 | FR-020 y SC-005: la aceptación de términos se exige en el servidor | Con una versión publicada y sin aceptarla, todas las rutas protegidas responden 403 `TERMS_NOT_ACCEPTED` salvo ver y aceptar; sin versión nadie se bloquea | `terms.enforcement` (lee `routes/index.js`, cubre todo router y rutas concretas con los tres roles), `terms.acceptance`, `terms.contract` | Aprobado | Escenarios 9 y 10 de `quickstart-api.txt` |
+| S7-02 | FR-021 a FR-023 y SC-006: la bitácora no guarda secretos y no se edita | Cada acción sensible deja un registro con quién y cuándo; ninguna respuesta ni registro lleva contraseñas, hashes, tokens ni tarjetas; no hay ruta ni código que edite o borre | `audit.log` (13), `audit.query`, `audit-log.contract` y `auditImmutability` (recorre todo el código) | Aprobado | Escenarios 12 a 14 de `quickstart-api.txt` |
+| S7-03 | FR-003 y SC-010: los márgenes llegan a todas las vistas | Cambiar el margen cambia a la vez la lista de Mantenimientos, el panel y los avisos, sin cambiar su código | `settings.maintenance` (26), `maintenanceThresholds` (6) y regresión de 52 suites | Aprobado | Escenario 4 de `quickstart-api.txt` (lista 2→0, avisos 2→0) |
+| S7-04 | FR-009, FR-010 y FR-014, SC-002 y SC-004: ingresos que coinciden con los pagos | El total y los desgloses coinciden centavo por centavo con los pagos; el CSV trae las mismas filas y el mismo total | `reports.income`, `reports.export`, `reportRules`, `csvExport` y `reports.contract` | Aprobado | Escenarios 24 a 26 de `quickstart-api.txt` |
+| S7-05 | FR-026 y FR-027, SC-008: no exposición de datos e inyección | Ninguna respuesta lleva hash ni token ni precios reservados al rol; el texto de ataque en las búsquedas se trata como texto; ningún modelo concatena texto del usuario | `exposure`, `injection.search`, `passwords.policy`, `session.expiry` y la revisión H-19 | Aprobado | Escenarios 15, 17 y 18 de `quickstart-api.txt` |
+| S7-06 | Interfaz Flutter: Configuración, Bitácora, Términos, Reportes y cierre por inactividad | Cada pantalla muestra sus estados de carga, vacío y error; el menú respeta el rol; la sesión se cierra a los 30 minutos con tiempo simulado | `settings_screen`, `audit_screen`, `terms_screen`, `settings_terms`, `service_types_section`, `service_type_line`, `ticket_next_service`, `reports_screen`, `report_export`, `file_report_saver` e `inactivity_guard` (108 pruebas nuevas) y regresión completa del cliente (358) | Aprobado | `regresion-frontend.txt`; sin recorrido manual con la aplicación abierta |
+
+Los requisitos de catálogo, propuesta y ticket (FR-005 a FR-008) tienen pruebas propias (`serviceTypes`, `orders.serviceTypeLine`, `orders.maintenanceSuggestion`, `tickets.nextService`) y están aprobados en la sección 6.
 
 ## 10. Cierre
 
-*Pendiente: se llena al cerrar el sprint.*
+**Resultado: Aprobado** en las etapas 1 y 2.
+
+- **Qué está verificado:**
+  - **Servidor:** configuración del taller y márgenes, aceptación de términos exigida en `authenticate`, bitácora inmutable desde la aplicación, protección (contraseñas, inyección, exposición, vigencia de sesión), catálogo de tipos de servicio, propuesta de mantenimiento, próximo servicio en el ticket, reporte de ingresos y su exportación a CSV, migraciones 009 y 010 y seed 012. Evidencia: 158 suites y 1,588 pruebas, 25 de 25 comprobaciones del quickstart por la API y rendimiento con amplio margen (reportes de 3 a 5 ms, límite 3,000 ms).
+  - **Cliente:** Configuración (taller, márgenes, tipos de servicio y términos), Bitácora, pantalla de términos, Reportes con exportación, tipo de servicio en las líneas, propuesta en el diálogo de mantenimiento, próximo servicio en el ticket y cierre por inactividad. Evidencia: `flutter analyze` sin problemas y `flutter test` con 358 pruebas aprobadas, 108 de ellas nuevas.
+- **No construido:** la etapa 3 (historias 9 y 10, FR-011 a FR-013) queda como trabajo futuro (sección 7), como permite FR-032.
+- **Observaciones menores:** no se hizo un recorrido manual con la aplicación abierta ni se guardaron capturas, y el CSV exportado no se abrió en una hoja de cálculo real; el cliente se verifica con pruebas de widgets. La escritura en la carpeta de Descargas se probó con una carpeta temporal.
+- **Cómo se llegó aquí:** las pruebas del cliente de varias historias se escribieron junto con el código y no se ejecutaron en rojo primero (H-08, H-22). Al ejecutarlas, varias fallaron por defectos de las propias pruebas (aritmética de importes, tiempos simulados que vencían una petición retenida, íconos fuera de pantalla y selectores que desbordaban) y se corrigieron; ninguno reveló un defecto del código del sprint salvo los desbordes de H-16.
+- **Hallazgos:** 17 (H-01 a H-09 y H-15 a H-22), ninguno crítico ni alto. Dos pruebas inestables heredadas del Sprint 6 (H-10 y H-14) no se modificaron: `orderParts.prices.concurrency` rozó su límite una vez bajo carga y pasó sola.
+- **Pendientes sin impacto en el código:** la enmienda al principio I de la constitución (R-08), las historias de la etapa 3, el recorrido visual con capturas y publicar la rama.

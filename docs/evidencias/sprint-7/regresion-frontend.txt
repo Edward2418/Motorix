@@ -1,0 +1,3 @@
+Regresión completa final del cliente (T117), 2026-11-20 12:25.
+flutter analyze: No issues found.
+flutter test: 358 pruebas, todas en verde (línea base: 250; 108 nuevas del sprint).
