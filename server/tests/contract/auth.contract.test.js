@@ -25,7 +25,9 @@ describe('contrato de /api/auth', () => {
     expect(res.body.data).toEqual({
       token: expect.any(String),
       expiresIn: expect.any(Number),
-      user: userShape
+      user: userShape,
+      // Sprint 7: indica si hay términos pendientes de aceptar (true cuando no hay ninguna versión publicada).
+      termsAccepted: true
     });
     expect(JSON.stringify(res.body)).not.toMatch(/password/i);
   });

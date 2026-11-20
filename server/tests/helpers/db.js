@@ -60,7 +60,7 @@ export async function createUser({
     'INSERT INTO users (username, name, email, password_hash, role, active) VALUES (?, ?, ?, ?, ?, ?)',
     [user, name ?? `Usuario ${user}`, email ?? `${user}@motorix.test`, passwordHash, role, active ? 1 : 0]
   );
-  return { id: result.insertId, username: user, email: email ?? `${user}@motorix.test`, role, password };
+  return { id: result.insertId, username: user, name: name ?? `Usuario ${user}`, email: email ?? `${user}@motorix.test`, role, password };
 }
 
 export async function createClient({ name = 'Cliente de prueba', phone = '5551234567', email = null, active = true } = {}) {
