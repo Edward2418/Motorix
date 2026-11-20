@@ -1,0 +1,291 @@
+openapi: 3.0.3
+info:
+  title: API de Motorix - Sprint 6 (notificaciones internas)
+  version: 1.5.0
+  description: >
+    Amplía el contrato del Sprint 5 (ver ../../005-precios-refacciones-cobro/contracts/api.yaml) con el centro de
+    notificaciones y la lista de clientes por avisar. Todas las rutas cuelgan de /api y requieren un token JWT (Bearer).
+    Respuestas y errores usan los formatos de siempre ({ data } y { error }). Los avisos NO se guardan: se calculan al
+    consultar con los mismos cálculos del panel de control, la lista de mantenimientos y las alertas de stock. Cada rol
+    recibe únicamente los avisos que le corresponden y esa regla se valida en el servidor. No existe ninguna operación
+    DELETE en este sprint. No se agregan campos a respuestas anteriores.
+servers:
+  - url: http://localhost:3000/api
+security:
+  - bearerAuth: []
+tags:
+  - name: Avisos
+  - name: Clientes por avisar
+
+paths:
+  /notifications:
+    get:
+      tags: [Avisos]
+      summary: Avisos del usuario autenticado, agrupados por tipo (ADMIN, RECEPTIONIST, MECHANIC)
+      description: >
+        Calcula al consultar los avisos que corresponden al rol. ADMIN recibe todos los tipos; RECEPTIONIST recibe
+        mantenimientos, citas del día y órdenes detenidas; MECHANIC recibe solo órdenes detenidas de sus órdenes
+        asignadas. El stock nunca se entrega a RECEPTIONIST ni a MECHANIC. Cada grupo trae el total exacto y hasta 10
+        elementos. Elimina las lecturas del usuario cuyos avisos ya no aplican.
+      responses:
+        '200':
+          description: Avisos del usuario
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/NotificationCenter' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+
+  /notifications/count:
+    get:
+      tags: [Avisos]
+      summary: Total de avisos no leídos del usuario (ADMIN, RECEPTIONIST, MECHANIC)
+      description: Consulta ligera para el contador del encabezado. Usa las mismas reglas que GET /notifications.
+      responses:
+        '200':
+          description: Total de avisos no leídos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      unread: { type: integer, minimum: 0 }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+
+  /notifications/read:
+    post:
+      tags: [Avisos]
+      summary: Marca un aviso como leído para el usuario autenticado
+      description: >
+        Guarda la lectura con la gravedad actual del aviso. Si el aviso empeora después (por ejemplo, de Próximo a
+        Vencido), vuelve a aparecer como no leído. Marcar dos veces el mismo aviso no duplica la lectura.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [key]
+              properties:
+                key:
+                  type: string
+                  maxLength: 60
+                  pattern: '^(MAINT|APPT|STOCK|ORDER):[0-9]+$'
+                  example: 'STOCK:3'
+      responses:
+        '200':
+          description: Aviso marcado como leído
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      key: { type: string }
+                      read: { type: boolean }
+                      unread: { type: integer, minimum: 0, description: Total de avisos no leídos tras marcar }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '404':
+          description: >
+            El aviso no existe o no corresponde al rol del usuario. Código NOTIFICATION_NOT_FOUND. Un mecánico recibe
+            este código para cualquier aviso que no sea de sus órdenes.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '400': { $ref: '#/components/responses/Validacion' }
+
+  /client-notices:
+    get:
+      tags: [Clientes por avisar]
+      summary: Clientes por avisar (ADMIN, RECEPTIONIST)
+      description: >
+        Lista los hechos vigentes que todavía no se avisaron al cliente: orden terminada sin entregar, cita de mañana
+        pendiente o confirmada, y mantenimiento próximo o vencido. Un hecho ya avisado no aparece. El mecánico recibe 403.
+      responses:
+        '200':
+          description: Clientes por avisar
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/PendingClientNotice' }
+                  meta:
+                    type: object
+                    properties:
+                      total: { type: integer, minimum: 0 }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+
+    post:
+      tags: [Clientes por avisar]
+      summary: Registra que se avisó a un cliente (ADMIN, RECEPTIONIST)
+      description: >
+        Guarda quién avisó y cuándo, saca al cliente de la lista y no vuelve a mostrarlo por el mismo hecho. Un hecho
+        nuevo (otra orden, otra cita u otro mantenimiento) vuelve a aparecer. La nota es opcional.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason, factKey]
+              properties:
+                reason: { $ref: '#/components/schemas/NoticeReason' }
+                factKey:
+                  type: string
+                  maxLength: 60
+                  pattern: '^(ORDER|APPT|MAINT):[0-9]+$'
+                  example: 'ORDER:41'
+                note: { type: string, maxLength: 255, nullable: true, example: 'No contestó' }
+      responses:
+        '201':
+          description: Aviso registrado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/ClientNotice' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '409':
+          description: >
+            Ese hecho ya se avisó (código NOTICE_ALREADY_REGISTERED) o ya no está vigente, por ejemplo la orden ya se
+            entregó o la cita se canceló (código NOTICE_NOT_APPLICABLE). No se guarda nada.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '400': { $ref: '#/components/responses/Validacion' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    NoAutenticado:
+      description: Falta el token o no es válido
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    SinPermiso:
+      description: El rol no permite la acción
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Validacion:
+      description: Datos inválidos. Código VALIDATION_ERROR con el detalle por campo, como en el resto de la API
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: { type: string }
+            message: { type: string }
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field: { type: string }
+                  message: { type: string }
+
+    NotificationType:
+      type: string
+      enum:
+        - MAINTENANCE_SOON
+        - MAINTENANCE_OVERDUE
+        - APPOINTMENT_TODAY
+        - STOCK_LOW
+        - STOCK_OUT
+        - ORDER_STALE
+
+    NotificationTarget:
+      type: object
+      description: Pantalla que abre el aviso.
+      properties:
+        module:
+          type: string
+          enum: [orders, appointments, maintenance, inventory]
+        id: { type: integer, minimum: 1 }
+
+    Notification:
+      type: object
+      properties:
+        key: { type: string, example: 'MAINT:12', description: 'TIPO:id del objeto concreto' }
+        type: { $ref: '#/components/schemas/NotificationType' }
+        severity:
+          type: integer
+          enum: [1, 2]
+          description: 1 normal (próximo, bajo, cita del día, orden detenida) o 2 grave (vencido, agotado)
+        title: { type: string, example: 'Cambio de aceite vencido' }
+        detail: { type: string, example: 'Toyota Corolla ABC-123, vencido hace 4 días' }
+        read: { type: boolean }
+        target: { $ref: '#/components/schemas/NotificationTarget' }
+
+    NotificationGroup:
+      type: object
+      properties:
+        type: { $ref: '#/components/schemas/NotificationType' }
+        label: { type: string, example: 'Mantenimientos vencidos' }
+        total: { type: integer, minimum: 0, description: Total exacto de avisos de este tipo }
+        unread: { type: integer, minimum: 0 }
+        items:
+          type: array
+          maxItems: 10
+          items: { $ref: '#/components/schemas/Notification' }
+
+    NotificationCenter:
+      type: object
+      properties:
+        unread: { type: integer, minimum: 0, description: Total de avisos no leídos del usuario }
+        groups:
+          type: array
+          description: Solo los grupos que el rol puede ver; un grupo sin avisos se omite.
+          items: { $ref: '#/components/schemas/NotificationGroup' }
+
+    NoticeReason:
+      type: string
+      enum: [ORDEN_TERMINADA, CITA_MANANA, MANTENIMIENTO_PROXIMO, MANTENIMIENTO_VENCIDO]
+
+    PendingClientNotice:
+      type: object
+      properties:
+        reason: { $ref: '#/components/schemas/NoticeReason' }
+        factKey: { type: string, example: 'ORDER:41' }
+        clientId: { type: integer }
+        clientName: { type: string }
+        phone: { type: string, description: 'Sin teléfono si llegara vacío' }
+        vehicleLabel: { type: string, example: 'Toyota Corolla ABC-123' }
+        detail: { type: string, example: 'Orden OS-2026-0010 terminada sin entregar' }
+        date: { type: string, format: date-time, nullable: true, description: Fecha de la cita, del vencimiento o de término }
+
+    ClientNotice:
+      type: object
+      properties:
+        id: { type: integer }
+        reason: { $ref: '#/components/schemas/NoticeReason' }
+        factKey: { type: string }
+        clientId: { type: integer }
+        note: { type: string, nullable: true }
+        notifiedBy: { type: integer }
+        notifiedByName: { type: string }
+        notifiedAt: { type: string, format: date-time }
