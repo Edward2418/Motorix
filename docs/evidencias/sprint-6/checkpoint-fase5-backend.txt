@@ -1,0 +1,12 @@
+Punto de control de la Fase 5 (historia 2): regresión completa del backend.
+Método: resolvedor alterno de H-07 (node --require).
+Resultado: 115 suites, 1012 pruebas, 0 fallos. Tiempo: 1339 s.
+
+(node:12208) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+Test Suites: 115 passed, 115 total
+Tests:       1012 passed, 1012 total
+Snapshots:   0 total
+Time:        1339.135 s, estimated 1440 s
+Ran all test suites.

@@ -12,13 +12,18 @@ database/
 │                 004 inventario, mantenimientos y kilometraje del servicio;
 │                 005 pagos, tickets y su contador de folios;
 │                 006 contenido guardado del ticket (`tickets.content`) y 007 total de la orden al crear
-│                 el pago (`payments.order_total_at_creation`), una sola sentencia cada una
+│                 el pago (`payments.order_total_at_creation`), una sola sentencia cada una;
+│                 008 notificaciones: lecturas por usuario (`notification_reads`) y avisos a clientes
+│                 (`client_notices`), repetible (`CREATE TABLE IF NOT EXISTS`)
 ├── seeds/        Datos de ejemplo idempotentes: 001 usuarios, 002 clientes, 003 vehículos, 004 citas,
 │                 005 órdenes de servicio (crea también al segundo mecánico, `mecanico2`),
 │                 006 refacciones, movimientos y su uso en las órdenes, 007 mantenimientos,
 │                 008 pagos de ejemplo (los cuatro métodos y estados), 009 tickets de ejemplo,
 │                 010 Sprint 5: OS-2026-0009 (terminada con refacciones, sin pagos ni ticket, para cobrarla) y
-│                 OS-2026-0010 (terminada, con el ticket TK-2026-0003 que ya guarda su contenido)
+│                 OS-2026-0010 (terminada, con el ticket TK-2026-0003 que ya guarda su contenido),
+│                 011 Sprint 6: OS-2026-0011 (en diagnóstico hace 5 días, asignada a `mecanico`, para el aviso
+│                 de orden detenida) y un aviso ya hecho a un cliente (OS-2026-0008); con los seeds 004, 006,
+│                 007 y 008 el centro muestra los seis tipos de aviso
 ├── scripts/      Creación de las bases y del usuario de la aplicación
 ├── data/         (opcional, ignorada por Git) archivos físicos de MySQL
 └── README.md

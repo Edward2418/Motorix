@@ -1,0 +1,20 @@
+
+> motorix-server@1.0.0 test
+> node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand
+
+● Validation Error:
+
+  Module ./tests/helpers/globalSetup.js in the globalSetup option was not found.
+         <rootDir> is: C:\Users\Edward\Documents\Proyectos_Claude\Motorix\server
+
+  Configuration Documentation:
+  https://jestjs.io/docs/configuration
+
+FIN servidor: 1
+
+--- Diagnóstico (2026-11-18) ---
+Jest no pudo resolver ningún archivo (ni package.json): su resolvedor nativo no carga.
+$ node -e "require('@unrs/resolver-binding-win32-x64-msvc')"
+ERR_DLOPEN_FAILED error: 4551 ...\node_modules\@unrs\resolver-binding-win32-x64-msvc\resolver.win32-x64-msvc.node
+(El error 4551 de Windows indica que una directiva de control de aplicaciones bloqueó el archivo.)
+bcrypt, mysql2 y express sí cargan con normalidad.

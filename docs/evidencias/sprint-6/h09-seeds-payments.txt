@@ -1,0 +1,9 @@
+Confirmación de H-09 (2026-11-19 00:32): seeds-payments.test.js ejecutada sola pasada la 00:30.
+
+(node:10592) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+Test Suites: 1 passed, 1 total
+Tests:       7 passed, 7 total
+Snapshots:   0 total
+Time:        7.246 s, estimated 8 s
+Ran all test suites matching tests/integration/seeds-payments.test.js.

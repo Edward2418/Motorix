@@ -1,0 +1,14 @@
+Línea base del servidor, 2026-11-18 (rama 006-notificaciones-internas, sin código nuevo).
+Método: Jest se ejecutó con un reemplazo en JavaScript puro del resolvedor nativo bloqueado por la política del equipo (error 4551):
+  node --experimental-vm-modules --require <unrs-shim.cjs> node_modules/jest/bin/jest.js --runInBand
+El proyecto no se modificó; las pruebas y su configuración son las del repositorio.
+
+(node:15924) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+Test Suites: 104 passed, 104 total
+Tests:       878 passed, 878 total
+Snapshots:   0 total
+Time:        1274.815 s
+Ran all test suites.
+FIN servidor: 0

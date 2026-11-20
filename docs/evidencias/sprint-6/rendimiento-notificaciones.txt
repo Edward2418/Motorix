@@ -1,0 +1,9 @@
+Medición de rendimiento del centro de notificaciones (SC-005), 2026-11-19 14:55.
+Comando: node --env-file=../.env.test scripts/measure-notifications.js (base motorix_test)
+
+Datos de carga: 2000 órdenes (240 abiertas), 5000 movimientos, 400 mantenimientos y 150 citas de hoy.
+Avisos del administrador: MAINTENANCE_OVERDUE 140, MAINTENANCE_SOON 206, APPOINTMENT_TODAY 150, ORDER_STALE 228.
+Centro de notificaciones (5 consultas): mínimo 30 ms, promedio 39 ms, máximo 67 ms (límite 2000 ms).
+Contador de no leídos (5 consultas): mínimo 21 ms, promedio 23 ms, máximo 27 ms.
+Panel de control (5 consultas): mínimo 223 ms, promedio 234 ms, máximo 251 ms (límite 3000 ms).
+OK: el centro carga en menos de 2 segundos y el panel sigue por debajo de 3.

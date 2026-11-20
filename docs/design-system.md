@@ -261,6 +261,7 @@ Vehículos
 Citas
 Órdenes de servicio
 Mantenimientos
+Clientes por avisar
 Inventario
 Pagos
 Tickets
@@ -278,6 +279,16 @@ Cerrar sesión
 ### Header
 
 Nombre de sección, buscador cuando sea útil, notificaciones, usuario actual y rol.
+
+**Campana de notificaciones (Sprint 6).** Va en el encabezado, antes del usuario.
+
+- Ícono de campana con una insignia en `danger` con el total de avisos sin leer; con 0 no se muestra insignia y a partir de 100 dice «99+».
+- Al tocarla abre un panel flotante (alineado arriba a la derecha, ancho `notificationPanelWidth`, alto máximo `notificationPanelMaxHeight`) con los avisos agrupados por tipo: «Título del grupo (total)», sus avisos y, si no caben, «y N más». El orden va de lo más urgente a lo menos (vencidos y agotadas primero).
+- Cada aviso lleva un punto de color (`danger` si es grave: vencido o agotado; `warning` en los demás) y, en los mantenimientos, el texto «Vencido» o «Próximo»: el estado nunca depende solo del color. Un aviso leído se atenúa y muestra una palomita.
+- Tocar un aviso lo marca como leído y abre el módulo correspondiente; si fallara el marcado, igual se abre el módulo.
+- Estados: carga (indicador discreto), vacío («No tienes avisos pendientes.») y error en español con «Reintentar». Un fallo del contador no interrumpe nada.
+
+**Clientes por avisar (Sprint 6).** Tabla densa dentro de una tarjeta, como las demás (§8.2), con motivo, cliente, teléfono, vehículo, detalle, fecha y la acción «Marcar como avisado», que abre un diálogo con una nota opcional (máximo 255 caracteres) y confirma con un mensaje breve. Estados de carga, vacío («No hay clientes por avisar.») y error con «Reintentar» (§8.4).
 
 ---
 

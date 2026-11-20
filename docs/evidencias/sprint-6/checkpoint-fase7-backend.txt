@@ -1,0 +1,37 @@
+Punto de control de las Fases 6 y 7 (historias 4 y 5): regresión completa del backend, por partes.
+Método: resolvedor alterno de H-07 (node --require). Se corrió por partes porque la corrida completa se detuvo
+por falta de memoria del equipo.
+
+Parte                         Suites        Pruebas        Resultado
+Unitarias                     27/27         284/284        pasan
+Contrato                      26/26         129/129        pasan
+Integración, primera mitad    31/32         284/285        falla orderParts.prices.concurrency (H-10)
+Integración, segunda mitad    31/32         335/337        falla vehicles-history (2 hooks con tiempo agotado)
+
+Repeticiones de los fallos:
+- vehicles-history, sola: 11/11 pasan (26 s). La corrida en bloque tardó 1,359 s: bloqueo del equipo, no de la lógica.
+- orderParts.prices.concurrency, sola: falla con el límite de 20 s (22 s); con --testTimeout=60000 pasa (20.25 s). H-10.
+
+Total: 116 de 118 suites en la primera pasada; las 2 restantes pasan al repetirse (vehicles-history sola) o con límite ampliado (H-10).
+Salida completa de cada parte: ver las secciones siguientes.
+
+===== parte-unit =====
+Test Suites: 27 passed, 27 total
+Tests:       284 passed, 284 total
+Time:        5.706 s, estimated 7 s
+===== parte-contract =====
+Test Suites: 26 passed, 26 total
+Tests:       129 passed, 129 total
+Time:        274.583 s
+===== parte-int1 =====
+FAIL tests/integration/orderParts.prices.concurrency.test.js (21.022 s)
+FAIL tests/integration/orderParts.prices.concurrency.test.js (21.022 s)
+Test Suites: 1 failed, 31 passed, 32 total
+Tests:       1 failed, 284 passed, 285 total
+Time:        696.203 s
+===== parte-int2 =====
+FAIL tests/integration/vehicles-history.test.js (1359.777 s)
+FAIL tests/integration/vehicles-history.test.js (1359.777 s)
+Test Suites: 1 failed, 31 passed, 32 total
+Tests:       2 failed, 335 passed, 337 total
+Time:        2119.601 s

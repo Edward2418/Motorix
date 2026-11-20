@@ -1,0 +1,50 @@
+Punto de control de la Fase 3 / historia 1 (2026-11-18): suite completa del servidor con las rutas de avisos, el proveedor de stock y la corrección de dashboard-live (H-08).
+Método: resolvedor alterno de H-07 (node --require).
+
+(node:16784) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+FAIL tests/integration/seeds-payments.test.js (7.115 s)
+  ● seeds de pagos y tickets › el panel devuelve cifras distintas de cero con los datos de ejemplo
+
+    expect(received).toBeGreaterThan(expected)
+
+    Expected: > 0
+    Received:   0
+
+    [0m [90m 83 |[39m     expect(panel[33m.[39mattention[33m.[39mpendingBalance[33m.[39mtotal)[33m.[39mtoBeGreaterThan([35m0[39m)[33m;[39m
+     [90m 84 |[39m     [36mconst[39m hoy [33m=[39m [36mawait[39m getDashboard([32m'today'[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 85 |[39m     expect(hoy[33m.[39mindicators[33m.[39mcollected)[33m.[39mtoBeGreaterThan([35m0[39m)[33m;[39m
+     [90m    |[39m                                      [31m[1m^[22m[39m
+     [90m 86 |[39m   })[33m;[39m
+     [90m 87 |[39m })[33m;[39m
+     [90m 88 |[39m[0m
+
+      at Object.<anonymous> (tests/integration/seeds-payments.test.js:85:38)
+
+
+Summary of all failing tests
+FAIL tests/integration/seeds-payments.test.js (7.115 s)
+  ● seeds de pagos y tickets › el panel devuelve cifras distintas de cero con los datos de ejemplo
+
+    expect(received).toBeGreaterThan(expected)
+
+    Expected: > 0
+    Received:   0
+
+    [0m [90m 83 |[39m     expect(panel[33m.[39mattention[33m.[39mpendingBalance[33m.[39mtotal)[33m.[39mtoBeGreaterThan([35m0[39m)[33m;[39m
+     [90m 84 |[39m     [36mconst[39m hoy [33m=[39m [36mawait[39m getDashboard([32m'today'[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 85 |[39m     expect(hoy[33m.[39mindicators[33m.[39mcollected)[33m.[39mtoBeGreaterThan([35m0[39m)[33m;[39m
+     [90m    |[39m                                      [31m[1m^[22m[39m
+     [90m 86 |[39m   })[33m;[39m
+     [90m 87 |[39m })[33m;[39m
+     [90m 88 |[39m[0m
+
+      at Object.<anonymous> (tests/integration/seeds-payments.test.js:85:38)
+
+
+Test Suites: 1 failed, 109 passed, 110 total
+Tests:       1 failed, 970 passed, 971 total
+Snapshots:   0 total
+Time:        1337.145 s
+Ran all test suites.
+FIN servidor: 1

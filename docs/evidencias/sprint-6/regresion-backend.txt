@@ -1,0 +1,37 @@
+Regresión completa del backend del Sprint 6 (T068), por partes y en secuencia para no agotar la memoria.
+Método: resolvedor alterno de H-07 (node --require). Inicio: 2026-11-19 14:56
+
+===== unit =====
+Test Suites: 27 passed, 27 total
+Tests:       287 passed, 287 total
+Time:        5.896 s, estimated 7 s
+
+===== contract =====
+Test Suites: 27 passed, 27 total
+Tests:       144 passed, 144 total
+Time:        243.101 s, estimated 302 s
+
+===== integracion-1 =====
+Test Suites: 34 passed, 34 total
+Tests:       292 passed, 292 total
+Time:        581.599 s, estimated 622 s
+
+===== integracion-2 =====
+FAIL tests/integration/payments.paidOrder.test.js (38.708 s)
+  ● cobrar y agregar una refacción al mismo tiempo › las dos operaciones se ejecutan una tras otra y la segunda se evalúa con el resultado de la primera
+FAIL tests/integration/payments.paidOrder.test.js (38.708 s)
+  ● cobrar y agregar una refacción al mismo tiempo › las dos operaciones se ejecutan una tras otra y la segunda se evalúa con el resultado de la primera
+Test Suites: 1 failed, 34 passed, 35 total
+Tests:       1 failed, 364 passed, 365 total
+Time:        1059.211 s
+
+Fin: 2026-11-19 15:28
+
+===== Repetición del único fallo =====
+payments.paidOrder.test.js, sola, dos veces: 6/6 pruebas pasan (36 s y 35 s). El fallo de la corrida en bloque fue de tiempo
+bajo carga (la prueba de concurrencia tarda unos 35 s) y no de lógica. Hallazgo H-14.
+
+===== Resumen =====
+Suites: 123 (27 unitarias + 27 de contrato + 34 + 35 de integración). Pruebas: 1,088 (287 + 144 + 292 + 365).
+1,087 pasan en la corrida en bloque; la restante pasa al repetirse sola. H-10 (orderParts.prices.concurrency) pasó en esta corrida.
+Cliente (Flutter): no ejecutado por H-07.

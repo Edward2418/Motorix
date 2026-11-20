@@ -1,0 +1,62 @@
+Punto de control de la Fase 4 / historia 6 (2026-11-19 00:32): suite completa del servidor con marcar leído, reaparición y limpieza.
+Método: resolvedor alterno de H-07 (node --require).
+
+(node:15868) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+FAIL tests/integration/orderParts.prices.concurrency.test.js (20.668 s)
+  ● instantánea del precio con cambios simultáneos › si el precio cambia al mismo tiempo que el alta, la línea toma el precio anterior o el nuevo, nunca otro valor
+
+    thrown: "Exceeded timeout of 20000 ms for a test.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      at _getError (node_modules/jest-circus/build/jestAdapterInit.js:1985:12)
+          at Array.map (<anonymous>)
+
+    Cause:
+        thrown: "Exceeded timeout of 20000 ms for a test.
+        Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+        [0m [90m  8 |[39m
+         [90m  9 |[39m describe([32m'instantánea del precio con cambios simultáneos'[39m[33m,[39m () [33m=>[39m {
+        [31m[1m>[22m[39m[90m 10 |[39m   test([32m'si el precio cambia al mismo tiempo que el alta, la línea toma el precio anterior o el nuevo, nunca otro valor'[39m[33m,[39m [36masync[39m () [33m=>[39m {
+         [90m    |[39m   [31m[1m^[22m[39m
+         [90m 11 |[39m     [36mconst[39m vistos [33m=[39m [36mnew[39m [33mSet[39m()[33m;[39m
+         [90m 12 |[39m     [36mfor[39m ([36mlet[39m intento [33m=[39m [35m1[39m[33m;[39m intento [33m<=[39m [35m8[39m[33m;[39m intento [33m+=[39m [35m1[39m) {
+         [90m 13 |[39m       [36mawait[39m resetTables()[33m;[39m[0m
+
+          at tests/integration/orderParts.prices.concurrency.test.js:10:3
+          at tests/integration/orderParts.prices.concurrency.test.js:9:1
+
+
+Summary of all failing tests
+FAIL tests/integration/orderParts.prices.concurrency.test.js (20.668 s)
+  ● instantánea del precio con cambios simultáneos › si el precio cambia al mismo tiempo que el alta, la línea toma el precio anterior o el nuevo, nunca otro valor
+
+    thrown: "Exceeded timeout of 20000 ms for a test.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      at _getError (node_modules/jest-circus/build/jestAdapterInit.js:1985:12)
+          at Array.map (<anonymous>)
+
+    Cause:
+        thrown: "Exceeded timeout of 20000 ms for a test.
+        Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+        [0m [90m  8 |[39m
+         [90m  9 |[39m describe([32m'instantánea del precio con cambios simultáneos'[39m[33m,[39m () [33m=>[39m {
+        [31m[1m>[22m[39m[90m 10 |[39m   test([32m'si el precio cambia al mismo tiempo que el alta, la línea toma el precio anterior o el nuevo, nunca otro valor'[39m[33m,[39m [36masync[39m () [33m=>[39m {
+         [90m    |[39m   [31m[1m^[22m[39m
+         [90m 11 |[39m     [36mconst[39m vistos [33m=[39m [36mnew[39m [33mSet[39m()[33m;[39m
+         [90m 12 |[39m     [36mfor[39m ([36mlet[39m intento [33m=[39m [35m1[39m[33m;[39m intento [33m<=[39m [35m8[39m[33m;[39m intento [33m+=[39m [35m1[39m) {
+         [90m 13 |[39m       [36mawait[39m resetTables()[33m;[39m[0m
+
+          at tests/integration/orderParts.prices.concurrency.test.js:10:3
+          at tests/integration/orderParts.prices.concurrency.test.js:9:1
+
+
+Test Suites: 1 failed, 111 passed, 112 total
+Tests:       1 failed, 989 passed, 990 total
+Snapshots:   0 total
+Time:        1423.498 s
+Ran all test suites.
+FIN servidor: 1

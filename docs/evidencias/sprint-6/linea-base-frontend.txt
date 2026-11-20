@@ -1,0 +1,5 @@
+LÃ­nea base del cliente, 2026-11-18. No se pudo ejecutar: Windows bloquea dart.exe por una directiva de Device Guard de la organizaciÃ³n.
+
+$ flutter --version
+'C:\Users\Edward\Flutter SDK\flutter\bin\cache\dart-sdk\bin\dart.exe' ha sido bloqueado por la directiva de Device Guard de su organizaci¢n.
+Ponte en contacto con el personal de soporte t‚cnico para obtener m s informaci¢n.

@@ -4,7 +4,7 @@ Sistema de Gestión para Taller Mecánico. Proyecto académico cuyo MVP se const
 El alcance completo está en [`docs/project-context.md`](docs/project-context.md) y las reglas del
 proyecto en la [constitución](.specify/memory/constitution.md).
 
-**Estado actual: Sprint 4** — suma los **pagos** de las órdenes (efectivo, tarjeta con terminal externa, transferencia y Mercado Pago en modo de pruebas), el **ticket de servicio** imprimible y el **panel de control** de la administración. Antes, el **Sprint 3** sumó el **historial de servicios por vehículo**, los **mantenimientos programados** (con estado Normal, Próximo o Vencido) y el **inventario de refacciones** con movimientos, alertas de stock bajo y su uso en las órdenes. Sobre el Sprint 2 (citas y órdenes de servicio) y el Sprint 1 (inicio de sesión con JWT, usuarios y roles, clientes y vehículos) agrega **citas** y **órdenes de servicio**: la recepción registra citas y crea órdenes, el mecánico documenta diagnóstico, servicios y recomendaciones, y el estado avanza por un flujo controlado hasta la entrega.
+**Estado actual: Sprint 6** — suma las **notificaciones internas**: una campana en el encabezado con los avisos de cada rol (mantenimientos próximos y vencidos, citas del día, stock bajo o agotado y órdenes detenidas), calculados con los datos reales y con lectura por usuario, y la pantalla **Clientes por avisar**, donde recepción registra a quién avisó y cuándo. El **Sprint 5** agregó los precios de las refacciones en las órdenes y el cobro completo con su ticket. El **Sprint 4** sumó los **pagos** de las órdenes (efectivo, tarjeta con terminal externa, transferencia y Mercado Pago en modo de pruebas), el **ticket de servicio** imprimible y el **panel de control** de la administración. Antes, el **Sprint 3** sumó el **historial de servicios por vehículo**, los **mantenimientos programados** (con estado Normal, Próximo o Vencido) y el **inventario de refacciones** con movimientos, alertas de stock bajo y su uso en las órdenes. Sobre el Sprint 2 (citas y órdenes de servicio) y el Sprint 1 (inicio de sesión con JWT, usuarios y roles, clientes y vehículos) agrega **citas** y **órdenes de servicio**: la recepción registra citas y crea órdenes, el mecánico documenta diagnóstico, servicios y recomendaciones, y el estado avanza por un flujo controlado hasta la entrega.
 
 ## Estructura
 
@@ -87,6 +87,8 @@ consecutivos la cuenta se bloquea 15 minutos.
 | Pagos: cancelar uno ya cobrado (con motivo) | Sí | No | No |
 | Ticket de servicio: generar, consultar e imprimir | Sí | Sí | No |
 | Panel de control | Sí | No | No |
+| Avisos (campana): consultar y marcar como leídos | Todos los tipos | Mantenimientos, citas y órdenes detenidas (sin stock) | Solo órdenes detenidas de sus órdenes |
+| Clientes por avisar: consultar y registrar el aviso | Sí | Sí | No |
 
 Los permisos se validan siempre en el backend; ocultar un botón en la interfaz no es seguridad.
 Nada se elimina de forma definitiva: los registros se **desactivan** y se pueden reactivar, y las

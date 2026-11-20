@@ -1,0 +1,21 @@
+Recorrido del quickstart del Sprint 6 por la API real (T069), 2026-11-19 22:26.
+Comando: node --env-file=../.env.test scripts/validate-sprint6.js (base motorix_test con los seeds 001 a 011)
+
+OK     Escenario 1: el administrador ve el contador y hay avisos de los seis tipos (unread 10)
+OK     Escenario 2: los avisos vienen agrupados por tipo (APPOINTMENT_TODAY, MAINTENANCE_OVERDUE, MAINTENANCE_SOON, ORDER_STALE, STOCK_LOW, STOCK_OUT)
+OK     Escenario 3: los totales coinciden con el panel, Mantenimientos e Inventario (vencidos 2, próximos 2, stock 4)
+OK     Escenario 4: el aviso de stock apunta a Inventario (la parte visual queda pendiente de Flutter)
+OK     Escenario 5: marcar como leído baja el contador en uno y se conserva al volver a entrar (10 → 9)
+OK     Escenario 6: para otra persona el mismo aviso sigue sin leer
+OK     Escenario 7: un mantenimiento leído que pasa a vencido vuelve a aparecer sin leer
+OK     Escenario 8: al reponer el aviso desaparece y, si vuelve a bajar, aparece como no leído
+OK     Escenario 9: la recepción ve mantenimientos, citas y órdenes detenidas, y no stock (APPOINTMENT_TODAY, MAINTENANCE_OVERDUE, MAINTENANCE_SOON, ORDER_STALE)
+OK     Escenario 10: la orden detenida del seed aparece y desaparece al avanzar de estado (OS-2026-0011, avance 200)
+OK     Escenario 11: cada mecánico ve solo avisos de órdenes suyas y ningún otro tipo (mecanico 1 aviso(s), mecanico2 0)
+OK     Escenario 12: el mecánico recibe 403 en clientes por avisar y 404 al marcar un aviso de stock
+OK     Escenario 13: la lista trae los cuatro motivos con teléfono, vehículo y motivo (CITA_MANANA, MANTENIMIENTO_PROXIMO, MANTENIMIENTO_VENCIDO, ORDEN_TERMINADA)
+OK     Escenario 14: se registra quién y cuándo, sale de la lista y no se repite (409) (ORDER:16 por Recepción Motorix)
+OK     Escenario 15: una orden nueva del mismo cliente vuelve a aparecer por el hecho nuevo
+Escenario 16: pendiente. Requiere ver la interfaz (estados de carga, vacío y error); lo cubren las pruebas de Flutter escritas, aún sin ejecutar (H-07).
+
+Resumen: 15 de 15 escenarios por la API aprobados; 16 y la parte visual del 4 pendientes.

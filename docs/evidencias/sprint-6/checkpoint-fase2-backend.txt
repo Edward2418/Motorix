@@ -1,0 +1,82 @@
+Punto de control de la Fase 2 (2026-11-18): suite completa del servidor con la migración 008, los errores nuevos, las reglas, el modelo y el motor de avisos.
+Método: resolvedor alterno de H-07 (node --require).
+
+(node:10928) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+FAIL tests/integration/dashboard-live.test.js (6.153 s)
+  ● el panel se calcula al consultar › no existen tablas de estadísticas ni de copias de datos del panel
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 0
+    + Received  + 2
+
+    @@ -1,12 +1,14 @@
+      Array [
+        "appointments",
+    +   "client_notices",
+        "clients",
+        "folio_counters",
+        "inventory_movements",
+        "login_attempts",
+        "maintenance",
+    +   "notification_reads",
+        "order_labor",
+        "order_parts",
+        "order_services",
+        "order_status_history",
+        "parts",
+
+    [0m [90m 45 |[39m   test([32m'no existen tablas de estadísticas ni de copias de datos del panel'[39m[33m,[39m [36masync[39m () [33m=>[39m {
+     [90m 46 |[39m     [36mconst[39m [tablas] [33m=[39m [36mawait[39m pool[33m.[39mquery([32m'SELECT table_name AS nombre FROM information_schema.tables WHERE table_schema = DATABASE()'[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 47 |[39m     expect(tablas[33m.[39mmap((t) [33m=>[39m t[33m.[39mnombre[33m.[39mtoLowerCase())[33m.[39msort())[33m.[39mtoEqual([
+     [90m    |[39m                                                              [31m[1m^[22m[39m
+     [90m 48 |[39m       [32m'appointments'[39m[33m,[39m
+     [90m 49 |[39m       [32m'clients'[39m[33m,[39m
+     [90m 50 |[39m       [32m'folio_counters'[39m[33m,[39m[0m
+
+      at Object.<anonymous> (tests/integration/dashboard-live.test.js:47:62)
+
+
+Summary of all failing tests
+FAIL tests/integration/dashboard-live.test.js (6.153 s)
+  ● el panel se calcula al consultar › no existen tablas de estadísticas ni de copias de datos del panel
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 0
+    + Received  + 2
+
+    @@ -1,12 +1,14 @@
+      Array [
+        "appointments",
+    +   "client_notices",
+        "clients",
+        "folio_counters",
+        "inventory_movements",
+        "login_attempts",
+        "maintenance",
+    +   "notification_reads",
+        "order_labor",
+        "order_parts",
+        "order_services",
+        "order_status_history",
+        "parts",
+
+    [0m [90m 45 |[39m   test([32m'no existen tablas de estadísticas ni de copias de datos del panel'[39m[33m,[39m [36masync[39m () [33m=>[39m {
+     [90m 46 |[39m     [36mconst[39m [tablas] [33m=[39m [36mawait[39m pool[33m.[39mquery([32m'SELECT table_name AS nombre FROM information_schema.tables WHERE table_schema = DATABASE()'[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 47 |[39m     expect(tablas[33m.[39mmap((t) [33m=>[39m t[33m.[39mnombre[33m.[39mtoLowerCase())[33m.[39msort())[33m.[39mtoEqual([
+     [90m    |[39m                                                              [31m[1m^[22m[39m
+     [90m 48 |[39m       [32m'appointments'[39m[33m,[39m
+     [90m 49 |[39m       [32m'clients'[39m[33m,[39m
+     [90m 50 |[39m       [32m'folio_counters'[39m[33m,[39m[0m
+
+      at Object.<anonymous> (tests/integration/dashboard-live.test.js:47:62)
+
+
+Test Suites: 1 failed, 107 passed, 108 total
+Tests:       1 failed, 954 passed, 955 total
+Snapshots:   0 total
+Time:        1312.878 s
+Ran all test suites.
+FIN servidor: 1

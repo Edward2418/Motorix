@@ -380,6 +380,37 @@ Debe contemplar avisos relacionados con: - Mantenimientos próximos. -
 Mantenimientos vencidos. - Citas. - Stock bajo. - Órdenes que requieran
 atención.
 
+**Implementado en el Sprint 6.** Un centro de notificaciones (la campana del
+encabezado) y una pantalla de **Clientes por avisar**.
+
+Decisiones aclaradas:
+
+-   **Los avisos no se guardan**: se calculan al consultar con los datos de
+    cada módulo (los mismos cálculos del panel, del listado de
+    mantenimientos y de las alertas de inventario, así que las cifras
+    coinciden). Solo se guarda qué avisos leyó cada usuario
+    (`notification_reads`) y los avisos hechos a clientes (`client_notices`).
+-   **Seis tipos**: mantenimiento próximo, mantenimiento vencido, cita del
+    día (pendiente o confirmada), stock bajo, stock agotado y orden detenida
+    (más de 3 días sin cambio de estado, valor fijo). Cada aviso se identifica
+    por su tipo y objeto (`MAINT:12`, `APPT:7`, `STOCK:3`, `ORDER:41`).
+-   **Lectura por usuario**: un aviso leído vuelve a aparecer como no leído si
+    empeora (de Próximo a Vencido, de stock bajo a agotado).
+-   **Contador**: se actualiza al iniciar sesión, al cambiar de módulo y al
+    abrir el panel; no hay consulta periódica. El panel muestra hasta 10
+    avisos por tipo, y los totales siempre son exactos.
+-   **Por rol**: la administración ve todos; la recepción, mantenimientos,
+    citas y órdenes detenidas (nunca stock); el mecánico, solo las órdenes
+    detenidas de sus órdenes asignadas. El servidor lo valida: un aviso que el
+    rol no ve no se puede consultar ni marcar como leído (404).
+-   **Clientes por avisar** (administración y recepción): orden terminada sin
+    entregar, cita de mañana y mantenimiento próximo o vencido, con el
+    teléfono del cliente. Marcar a uno como avisado guarda quién y cuándo, con
+    una nota opcional; cada hecho se avisa una sola vez y un hecho nuevo
+    (otra orden, otra cita) vuelve a aparecer.
+-   **Fuera de alcance**: envío real de mensajes (WhatsApp, correo, SMS),
+    avisos configurables y notificaciones en tiempo real.
+
 ------------------------------------------------------------------------
 
 # 7. Funcionalidad fuera del MVP actual
