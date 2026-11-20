@@ -1,0 +1,7 @@
+Historia 2 (márgenes de Próximo): regresión de las suites que heredan los márgenes (T030), 2026-11-20 01:06.
+Suites: mantenimiento, panel de control, avisos, clientes por avisar, contrato de mantenimiento, panel y avisos, y todas las unitarias.
+dashboardService.js y notificationService.js no se modificaron: heredan los márgenes por maintenanceService.
+
+Test Suites: 52 passed, 52 total
+Tests:       532 passed, 532 total
+Time:        293.035 s, estimated 364 s
