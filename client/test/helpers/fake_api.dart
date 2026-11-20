@@ -21,10 +21,12 @@ ApiClient fakeApi(FakeHandler handler, {List<http.Request>? log, Future<void>? F
     log?.add(request);
     await hold?.call(request);
     final response = handler(request);
-    return http.Response(
-      response.body == null ? '' : jsonEncode(response.body),
+    // Un texto se responde tal cual (por ejemplo, un CSV); cualquier otro cuerpo, como JSON.
+    final texto = response.body is String;
+    return http.Response.bytes(
+      response.body == null ? const [] : utf8.encode(texto ? response.body as String : jsonEncode(response.body)),
       response.status,
-      headers: {'content-type': 'application/json; charset=utf-8'},
+      headers: {'content-type': texto ? 'text/csv; charset=utf-8' : 'application/json; charset=utf-8'},
     );
   });
   return ApiClient(httpClient: client, baseUrl: 'http://prueba/api');
