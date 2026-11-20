@@ -216,13 +216,13 @@ description: "Lista de tareas del Sprint 7: reportes y configuración"
 
 ### Pruebas de la historia 6 (se escriben primero)
 
-- [ ] T080 [P] [US6] Escribir `server/tests/integration/tickets.nextService.test.js` (debe fallar): el ticket de una orden con un tipo con intervalo trae `nextService` con la fecha más cercana y el kilometraje más cercano entre sus tipos (`serviceMileage` más el intervalo y hoy más el intervalo); sin tipos con intervalo `nextService` no existe; editar después el intervalo del tipo no cambia un ticket ya emitido; un ticket anterior al sprint se consulta sin errores y sin `nextService`; `emitted.compat` y `tickets.v2` siguen pasando
-- [ ] T081 [P] [US6] Escribir `client/test/ticket_next_service_test.dart` (debe fallar): la pantalla del ticket muestra «Próximo servicio» con la fecha y el kilometraje cuando `nextService` viene en el ticket y no muestra la línea cuando no viene
+- [X] T080 [P] [US6] Escribir `server/tests/integration/tickets.nextService.test.js` (debe fallar): el ticket de una orden con un tipo con intervalo trae `nextService` con la fecha más cercana y el kilometraje más cercano entre sus tipos (`serviceMileage` más el intervalo y hoy más el intervalo); sin tipos con intervalo `nextService` no existe; editar después el intervalo del tipo no cambia un ticket ya emitido; un ticket anterior al sprint se consulta sin errores y sin `nextService`; `emitted.compat` y `tickets.v2` siguen pasando
+- [X] T081 [P] [US6] Escribir `client/test/ticket_next_service_test.dart` (debe fallar): la pantalla del ticket muestra «Próximo servicio» con la fecha y el kilometraje cuando `nextService` viene en el ticket y no muestra la línea cuando no viene
 
 ### Implementación de la historia 6
 
-- [ ] T082 [US6] Cambiar `server/services/ticketService.js` (`buildContent`) para calcular `nextService` con la función pura de `serviceTypeRules.js` a partir de los tipos ligados a las líneas de servicio de la orden y guardarlo en el contenido emitido; confirmar con `npm test -- tests/integration/tickets.nextService.test.js tests/integration/tickets.v2.test.js tests/integration/emitted.compat.test.js`
-- [ ] T083 [US6] Cambiar `client/lib/models/ticket.dart` y `client/lib/screens/ticket_screen.dart` (y el ticket impreso de `client/lib/services/ticket_printer.dart`) para mostrar la línea «Próximo servicio» solo cuando existe; confirmar con `flutter test test/ticket_next_service_test.dart` y las pruebas de ticket existentes
+- [X] T082 [US6] Cambiar `server/services/ticketService.js` (`buildContent`) para calcular `nextService` con la función pura de `serviceTypeRules.js` a partir de los tipos ligados a las líneas de servicio de la orden y guardarlo en el contenido emitido; confirmar con `npm test -- tests/integration/tickets.nextService.test.js tests/integration/tickets.v2.test.js tests/integration/emitted.compat.test.js`
+- [X] T083 [US6] Cambiar `client/lib/models/ticket.dart` y `client/lib/screens/ticket_screen.dart` (y el ticket impreso de `client/lib/services/ticket_printer.dart`) para mostrar la línea «Próximo servicio» solo cuando existe; confirmar con `flutter test test/ticket_next_service_test.dart` y las pruebas de ticket existentes
 
 **Punto de control**: `quickstart.md` escenario 23.
 

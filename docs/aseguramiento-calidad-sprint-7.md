@@ -92,7 +92,7 @@ Decisiones por defecto tomadas sin consulta (documentadas en `spec.md`, sección
 | FR-001 y FR-002 | T017, T018, T023 | T019 a T022, T024, T025 | Verificado (etapa 1) |
 | FR-003 y FR-004 | T005, T026, T027, T031 | T028 a T030, T032 | Verificado (etapa 1) |
 | FR-005 a FR-007 | T067 a T073 | T074 a T079 | Verificado (historia 5) |
-| FR-008 | T080, T081 | T082, T083 | Pendiente |
+| FR-008 | T080, T081 | T082, T083 | Verificado (historia 6) |
 | FR-009, FR-010 y FR-015 | T084 a T087, T112 | T088 a T091, T113 | Pendiente |
 | FR-011 a FR-013 | T099, T103 a T106 | T101, T107, T108 | Pendiente (etapa 3) |
 | FR-014 | T092 a T094 | T095, T096 | Pendiente |

@@ -1,0 +1,3 @@
+Historia 6 (ticket con próximo servicio), 2026-11-20 02:41.
+Servidor: tickets.nextService, tickets.v2, tickets, emitted.compat, contrato de tickets y reglas unitarias: 36 de 36 + unitarias (70 pruebas en la corrida de verificación, 1 corregida: el ticket anterior al sprint no debe traer nextService).
+Cliente: flutter analyze sin problemas; flutter test 336 de 336.
