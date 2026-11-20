@@ -9,6 +9,7 @@ import '../screens/dashboard_screen.dart';
 import '../screens/inventory_screen.dart';
 import '../screens/maintenance_screen.dart';
 import '../screens/orders_screen.dart';
+import '../screens/settings_screen.dart';
 import '../screens/users_screen.dart';
 import '../screens/vehicles_screen.dart';
 import '../widgets/section_navigator.dart';
@@ -93,6 +94,12 @@ final List<NavDestination> allDestinations = [
     roles: {UserRole.admin},
     builder: (_) => const SectionNavigator(root: _usersRoot),
   ),
+  NavDestination(
+    label: 'Configuración',
+    icon: LucideIcons.settings,
+    roles: {UserRole.admin},
+    builder: (_) => const SectionNavigator(root: _settingsRoot),
+  ),
 ];
 
 List<NavDestination> destinationsFor(UserRole role) =>
@@ -115,3 +122,5 @@ Widget _inventoryRoot(BuildContext context) => const InventoryScreen();
 Widget _maintenanceRoot(BuildContext context) => const MaintenanceScreen();
 
 Widget _clientNoticesRoot(BuildContext context) => const ClientNoticesScreen();
+
+Widget _settingsRoot(BuildContext context) => const SettingsScreen();

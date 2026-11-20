@@ -11,6 +11,7 @@ import 'providers/maintenance_provider.dart';
 import 'providers/navigation_provider.dart';
 import 'providers/notifications_provider.dart';
 import 'providers/payments_provider.dart';
+import 'providers/settings_provider.dart';
 import 'providers/ticket_provider.dart';
 import 'services/ticket_printer.dart';
 import 'providers/orders_provider.dart';
@@ -54,6 +55,7 @@ class MotorixApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => DashboardProvider(api)),
         ChangeNotifierProvider(create: (_) => NotificationsProvider(api)),
         ChangeNotifierProvider(create: (_) => ClientNoticesProvider(api)),
+        ChangeNotifierProvider(create: (_) => SettingsProvider(api)),
         // La impresión es una dependencia reemplazable: las pruebas usan una impresora falsa.
         Provider<TicketPrinter>.value(value: const PdfTicketPrinter()),
       ],
