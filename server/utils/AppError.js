@@ -132,6 +132,26 @@ export class AppError extends Error {
     return new AppError(409, 'NOTICE_NOT_APPLICABLE', 'Ese hecho ya no está vigente.');
   }
 
+  // Reportes y configuración (Sprint 7)
+  // El usuario no ha aceptado la versión vigente de los términos (403): solo puede verlos, aceptarlos o cerrar sesión.
+  static termsNotAccepted() {
+    return new AppError(403, 'TERMS_NOT_ACCEPTED', 'Debes aceptar los términos y condiciones vigentes para continuar.');
+  }
+
+  // Se intentó aceptar una versión que ya no es la vigente (409), por ejemplo porque se publicó una más nueva.
+  static termsVersionOutdated() {
+    return new AppError(409, 'TERMS_VERSION_OUTDATED', 'Esa versión de los términos ya no es la vigente. Vuelve a abrirlos para leer la nueva.');
+  }
+
+  static serviceTypeDuplicate() {
+    return new AppError(409, 'SERVICE_TYPE_DUPLICATE', 'Ya existe un tipo de servicio con ese nombre.');
+  }
+
+  // Rango de fechas inválido en un reporte: invertido, de más de 366 días o con una fecha mal escrita.
+  static reportRangeInvalid(message = 'El rango de fechas del reporte no es válido.') {
+    return new AppError(400, 'REPORT_RANGE_INVALID', message);
+  }
+
   // Servicio externo (Mercado Pago) o base de datos caídos: 503 con mensaje propio, sin detalles internos.
   static serviceUnavailable(message = 'El servicio no está disponible por el momento. Inténtalo de nuevo en unos minutos.') {
     return new AppError(503, 'SERVICE_UNAVAILABLE', message);
