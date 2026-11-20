@@ -1,4 +1,4 @@
-import { computeSuggestions, validateServiceTypeInput } from '../../services/serviceTypeRules.js';
+import { computeSuggestions, nextServiceFrom, validateServiceTypeInput } from '../../services/serviceTypeRules.js';
 
 const campos = (resultado) => resultado.errors.map((e) => e.field).sort();
 
@@ -104,5 +104,29 @@ describe('propuesta del próximo mantenimiento', () => {
     const otro = { id: 2, name: 'Alineación', intervalDays: 365, intervalKm: null };
     const resultado = computeSuggestions({ ...base, types: [aceite, otro, aceite] });
     expect(resultado.map((s) => s.serviceTypeId)).toEqual([1, 2]);
+  });
+});
+
+describe('próximo servicio del ticket', () => {
+  const propuesta = (dueDate, dueMileage) => ({ serviceTypeId: 1, serviceTypeName: 'X', description: 'X', dueDate, dueMileage });
+
+  test('toma la fecha más cercana y el kilometraje más cercano entre las propuestas', () => {
+    expect(nextServiceFrom([propuesta('2027-05-19', 47000), propuesta('2027-02-01', 62000), propuesta('2028-01-01', 52000)])).toEqual({
+      dueDate: '2027-02-01',
+      dueMileage: 47000
+    });
+  });
+
+  test('una parte queda nula si ninguna propuesta la tiene', () => {
+    expect(nextServiceFrom([propuesta(null, 18000), propuesta(null, 20000)])).toEqual({ dueDate: null, dueMileage: 18000 });
+    expect(nextServiceFrom([propuesta('2027-01-15', null)])).toEqual({ dueDate: '2027-01-15', dueMileage: null });
+  });
+
+  test('con una propuesta con fecha y otra sin ella, usa la que sí la tiene', () => {
+    expect(nextServiceFrom([propuesta(null, 18000), propuesta('2027-03-03', 25000)])).toEqual({ dueDate: '2027-03-03', dueMileage: 18000 });
+  });
+
+  test('sin propuestas devuelve null para que el ticket no muestre la línea', () => {
+    expect(nextServiceFrom([])).toBeNull();
   });
 });
