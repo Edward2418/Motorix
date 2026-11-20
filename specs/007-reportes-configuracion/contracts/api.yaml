@@ -1,0 +1,746 @@
+openapi: 3.0.3
+info:
+  title: API de Motorix - Sprint 7 (reportes y configuración)
+  version: 1.6.0
+  description: >
+    Amplía el contrato del Sprint 6 (ver ../../006-notificaciones-internas/contracts/api.yaml) con la configuración del
+    taller, el catálogo de tipos de servicio, los términos y condiciones, la bitácora y los reportes. Todas las rutas
+    cuelgan de /api y requieren un token JWT (Bearer). Respuestas y errores usan los formatos de siempre ({ data } y
+    { error }). Los importes se calculan en centavos enteros y se devuelven en pesos con dos decimales. IMPORTANTE:
+    mientras exista una versión de los términos publicada, un usuario que no la aceptó recibe 403 con el código
+    TERMS_NOT_ACCEPTED en TODAS las rutas, salvo GET /terms/current y POST /terms/accept. No existe ninguna operación
+    DELETE en este sprint y la bitácora no se puede editar ni borrar.
+servers:
+  - url: http://localhost:3000/api
+security:
+  - bearerAuth: []
+tags:
+  - name: Configuración
+  - name: Tipos de servicio
+  - name: Términos
+  - name: Bitácora
+  - name: Reportes
+  - name: Sesión
+
+paths:
+  /auth/login:
+    post:
+      tags: [Sesión]
+      summary: Inicio de sesión (cambia solo la respuesta)
+      security: []
+      description: >
+        Igual que en los sprints anteriores. La respuesta agrega termsAccepted: false indica que el usuario debe
+        aceptar la versión vigente de los términos antes de usar el sistema; sin versión publicada vale true. Un
+        inicio fallido o un bloqueo (quinto fallo) se registran en la bitácora; si la cuenta no existe no se guarda el
+        texto escrito.
+      responses:
+        '200':
+          description: Sesión iniciada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      token: { type: string }
+                      expiresIn: { type: integer }
+                      user: { type: object }
+                      termsAccepted: { type: boolean }
+
+  /settings:
+    get:
+      tags: [Configuración]
+      summary: Configuración vigente del taller (solo ADMIN)
+      description: >
+        Devuelve los datos del taller y los márgenes de «Próximo» ya resueltos (valor guardado, o el de la
+        configuración del servidor, o el predeterminado) e indica de dónde viene cada uno.
+      responses:
+        '200':
+          description: Configuración vigente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Settings' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+    put:
+      tags: [Configuración]
+      summary: Edita la configuración (solo ADMIN)
+      description: >
+        Acepta uno o varios grupos. Valida longitudes y límites (margen en días de 1 a 365 y en kilómetros de 100 a
+        50,000). No guarda nada si algún dato es inválido. Cada cambio queda en la bitácora (SETTINGS_CHANGED). Los
+        tickets nuevos usan los datos nuevos; los ya emitidos con contenido guardado no cambian; la lista de
+        Mantenimientos, el panel y los avisos usan los márgenes nuevos.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                workshop:
+                  type: object
+                  properties:
+                    name: { type: string, minLength: 1, maxLength: 100 }
+                    address: { type: string, minLength: 1, maxLength: 200 }
+                    phone: { type: string, minLength: 1, maxLength: 30 }
+                maintenance:
+                  type: object
+                  properties:
+                    soonDays: { type: integer, minimum: 1, maximum: 365 }
+                    soonKm: { type: integer, minimum: 100, maximum: 50000 }
+      responses:
+        '200':
+          description: Configuración guardada y vigente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Settings' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+
+  /service-types:
+    get:
+      tags: [Tipos de servicio]
+      summary: Catálogo de tipos de servicio (cualquier rol autenticado)
+      parameters:
+        - name: active
+          in: query
+          required: false
+          description: 'true: solo activos (para elegir en una orden)'
+          schema: { type: boolean }
+      responses:
+        '200':
+          description: Tipos de servicio
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ServiceType' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+    post:
+      tags: [Tipos de servicio]
+      summary: Crea un tipo de servicio (solo ADMIN)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ServiceTypeInput' }
+      responses:
+        '201':
+          description: Tipo creado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/ServiceType' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '409':
+          description: Ya existe un tipo con ese nombre (SERVICE_TYPE_DUPLICATE)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /service-types/{id}:
+    put:
+      tags: [Tipos de servicio]
+      summary: Edita un tipo de servicio (solo ADMIN)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ServiceTypeInput' }
+      responses:
+        '200':
+          description: Tipo actualizado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/ServiceType' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { description: El tipo no existe }
+        '409':
+          description: Ya existe otro tipo con ese nombre (SERVICE_TYPE_DUPLICATE)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /service-types/{id}/status:
+    patch:
+      tags: [Tipos de servicio]
+      summary: Activa o desactiva un tipo de servicio (solo ADMIN); nunca se borra
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [active]
+              properties:
+                active: { type: boolean }
+      responses:
+        '200':
+          description: Estado actualizado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/ServiceType' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { description: El tipo no existe }
+
+  /orders/{id}/maintenance-suggestion:
+    get:
+      tags: [Tipos de servicio]
+      summary: Propuesta de próximo mantenimiento de una orden (ADMIN, RECEPTIONIST y el mecánico de la orden)
+      description: >
+        Para cada tipo de servicio con intervalo ligado a las líneas de servicio de la orden, calcula la fecha (hoy +
+        intervalo en días) y el kilometraje (kilometraje del servicio + intervalo en km). Sin tipos con intervalo
+        devuelve una lista vacía. La persona puede corregir la propuesta al registrar el mantenimiento.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200':
+          description: Propuestas
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/MaintenanceSuggestion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { description: La orden no existe }
+
+  /terms/current:
+    get:
+      tags: [Términos]
+      summary: Versión vigente de los términos y del aviso de privacidad (cualquier usuario autenticado)
+      description: >
+        Responde aunque el usuario no haya aceptado la versión vigente. Sin ninguna versión publicada devuelve data
+        con null.
+      responses:
+        '200':
+          description: Versión vigente y si el usuario ya la aceptó
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    nullable: true
+                    allOf:
+                      - { $ref: '#/components/schemas/TermsVersion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+
+  /terms/accept:
+    post:
+      tags: [Términos]
+      summary: Acepta la versión vigente (cualquier usuario autenticado)
+      description: >
+        Guarda usuario, versión y fecha. Aceptar dos veces la misma versión responde igual y no duplica el registro.
+        Si version no es la vigente responde 409 TERMS_VERSION_OUTDATED (por ejemplo, se publicó una más nueva).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [version]
+              properties:
+                version: { type: integer, minimum: 1 }
+      responses:
+        '200':
+          description: Aceptación registrada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/TermsAcceptance' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '409':
+          description: La versión indicada ya no es la vigente (TERMS_VERSION_OUTDATED)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /terms/acceptances:
+    get:
+      tags: [Términos]
+      summary: Aceptaciones de los términos (solo ADMIN)
+      parameters:
+        - { name: version, in: query, required: false, schema: { type: integer } }
+        - { name: userId, in: query, required: false, schema: { type: integer } }
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PageSize' }
+      responses:
+        '200':
+          description: Aceptaciones, de la más reciente a la más antigua
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/TermsAcceptanceRow' }
+                  meta: { $ref: '#/components/schemas/PageMeta' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+
+  /audit-log:
+    get:
+      tags: [Bitácora]
+      summary: Bitácora de acciones sensibles (solo ADMIN)
+      description: >
+        Solo lectura, de la más reciente a la más antigua, con filtros por fecha, usuario y acción. No existe ninguna
+        ruta para editar ni borrar, y una prueba automática garantiza que el código de la aplicación nunca la modifica. Nunca incluye contraseñas, hashes, tokens ni
+        datos de tarjeta.
+      parameters:
+        - { name: from, in: query, required: false, schema: { type: string, format: date } }
+        - { name: to, in: query, required: false, schema: { type: string, format: date } }
+        - { name: userId, in: query, required: false, schema: { type: integer } }
+        - { name: action, in: query, required: false, schema: { $ref: '#/components/schemas/AuditAction' } }
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PageSize' }
+      responses:
+        '200':
+          description: Registros de la bitácora
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/AuditEntry' }
+                  meta: { $ref: '#/components/schemas/PageMeta' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+
+  /reports/income:
+    get:
+      tags: [Reportes]
+      summary: Ingresos por periodo (solo ADMIN)
+      description: >
+        Suma de pagos PAGADO con paid_at dentro del rango, en total, por método de pago y por día. Los importes
+        coinciden con los pagos que los originan. Con format=csv devuelve el mismo contenido como archivo.
+      parameters:
+        - $ref: '#/components/parameters/From'
+        - $ref: '#/components/parameters/To'
+        - $ref: '#/components/parameters/Format'
+      responses:
+        '200':
+          description: Reporte de ingresos (JSON o CSV)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/IncomeReport' }
+            text/csv:
+              schema: { type: string }
+        '400': { $ref: '#/components/responses/RangoInvalido' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+
+  /reports/services:
+    get:
+      tags: [Reportes]
+      summary: Servicios más frecuentes (solo ADMIN)
+      parameters:
+        - $ref: '#/components/parameters/From'
+        - $ref: '#/components/parameters/To'
+        - $ref: '#/components/parameters/Format'
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PageSize' }
+      responses:
+        '200':
+          description: Servicios de las órdenes terminadas en el rango, del más al menos frecuente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ServiceFrequencyRow' }
+                  meta: { $ref: '#/components/schemas/PageMeta' }
+            text/csv:
+              schema: { type: string }
+        '400': { $ref: '#/components/responses/RangoInvalido' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+
+  /reports/productivity:
+    get:
+      tags: [Reportes]
+      summary: Productividad por mecánico (solo ADMIN)
+      description: Órdenes terminadas en el rango (cada una cuenta una vez) e importe de mano de obra por mecánico.
+      parameters:
+        - $ref: '#/components/parameters/From'
+        - $ref: '#/components/parameters/To'
+        - $ref: '#/components/parameters/Format'
+      responses:
+        '200':
+          description: Productividad por mecánico
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ProductivityRow' }
+            text/csv:
+              schema: { type: string }
+        '400': { $ref: '#/components/responses/RangoInvalido' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+
+  /reports/parts-margin:
+    get:
+      tags: [Reportes]
+      summary: Costo, precio y margen de las refacciones usadas (solo ADMIN)
+      description: >
+        Usa el precio de venta de la línea y el precio de compra vigente de la refacción. Una refacción sin precio de
+        compra se marca withoutCost y no entra en el margen total. El precio de compra solo lo ve ADMIN (la ruta es
+        exclusiva de ADMIN).
+      parameters:
+        - $ref: '#/components/parameters/From'
+        - $ref: '#/components/parameters/To'
+        - $ref: '#/components/parameters/Format'
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PageSize' }
+      responses:
+        '200':
+          description: Margen por refacción y totales
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/PartsMarginReport' }
+                  meta: { $ref: '#/components/schemas/PageMeta' }
+            text/csv:
+              schema: { type: string }
+        '400': { $ref: '#/components/responses/RangoInvalido' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+
+  /reports/inventory-turnover:
+    get:
+      tags: [Reportes]
+      summary: Rotación de inventario (solo ADMIN)
+      description: Salidas del periodo sobre la existencia promedio, por refacción.
+      parameters:
+        - $ref: '#/components/parameters/From'
+        - $ref: '#/components/parameters/To'
+        - $ref: '#/components/parameters/Format'
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/PageSize' }
+      responses:
+        '200':
+          description: Rotación por refacción
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/TurnoverRow' }
+                  meta: { $ref: '#/components/schemas/PageMeta' }
+            text/csv:
+              schema: { type: string }
+        '400': { $ref: '#/components/responses/RangoInvalido' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    From:
+      name: from
+      in: query
+      required: true
+      description: Primer día del rango (AAAA-MM-DD, hora local del taller)
+      schema: { type: string, format: date }
+    To:
+      name: to
+      in: query
+      required: true
+      description: Último día del rango, incluido (AAAA-MM-DD). El rango no puede pasar de 366 días
+      schema: { type: string, format: date }
+    Format:
+      name: format
+      in: query
+      required: false
+      description: json (predeterminado) o csv. El CSV lleva el mismo contenido que la respuesta JSON, sin paginar
+      schema: { type: string, enum: [json, csv], default: json }
+    Page:
+      name: page
+      in: query
+      required: false
+      schema: { type: integer, minimum: 1, default: 1 }
+    PageSize:
+      name: pageSize
+      in: query
+      required: false
+      schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+
+  responses:
+    NoAutenticado:
+      description: Falta el token o no es válido
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    SinPermiso:
+      description: >
+        El rol no permite la acción (FORBIDDEN) o el usuario no ha aceptado la versión vigente de los términos
+        (TERMS_NOT_ACCEPTED)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Validacion:
+      description: Datos inválidos. Código VALIDATION_ERROR con el detalle por campo, como en el resto de la API
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    RangoInvalido:
+      description: Rango inválido, invertido o de más de 366 días (REPORT_RANGE_INVALID), o fechas mal escritas (VALIDATION_ERROR)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: { type: string }
+            message: { type: string }
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field: { type: string }
+                  message: { type: string }
+
+    PageMeta:
+      type: object
+      properties:
+        page: { type: integer }
+        pageSize: { type: integer }
+        total: { type: integer, minimum: 0 }
+
+    SettingSource:
+      type: string
+      enum: [saved, environment, default]
+      description: De dónde viene el valor vigente
+
+    Settings:
+      type: object
+      properties:
+        workshop:
+          type: object
+          properties:
+            name: { type: string }
+            address: { type: string }
+            phone: { type: string }
+            source: { $ref: '#/components/schemas/SettingSource' }
+        maintenance:
+          type: object
+          properties:
+            soonDays: { type: integer }
+            soonKm: { type: integer }
+            source: { $ref: '#/components/schemas/SettingSource' }
+        updatedAt: { type: string, format: date-time, nullable: true }
+        updatedByName: { type: string, nullable: true }
+
+    ServiceTypeInput:
+      type: object
+      required: [name]
+      description: Al menos uno de los dos intervalos es obligatorio
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80, example: 'Cambio de aceite' }
+        intervalDays: { type: integer, minimum: 1, maximum: 3650, nullable: true, example: 180 }
+        intervalKm: { type: integer, minimum: 1, maximum: 500000, nullable: true, example: 5000 }
+
+    ServiceType:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        intervalDays: { type: integer, nullable: true }
+        intervalKm: { type: integer, nullable: true }
+        active: { type: boolean }
+
+    MaintenanceSuggestion:
+      type: object
+      properties:
+        serviceTypeId: { type: integer }
+        serviceTypeName: { type: string }
+        description: { type: string, example: 'Cambio de aceite' }
+        dueDate: { type: string, format: date, nullable: true }
+        dueMileage: { type: integer, nullable: true }
+
+    TermsVersion:
+      type: object
+      properties:
+        version: { type: integer }
+        termsText: { type: string }
+        privacyText: { type: string }
+        publishedAt: { type: string, format: date-time }
+        accepted: { type: boolean, description: Si el usuario autenticado ya aceptó esta versión }
+
+    TermsAcceptance:
+      type: object
+      properties:
+        version: { type: integer }
+        acceptedAt: { type: string, format: date-time }
+
+    TermsAcceptanceRow:
+      type: object
+      properties:
+        userId: { type: integer }
+        userName: { type: string }
+        username: { type: string }
+        version: { type: integer }
+        acceptedAt: { type: string, format: date-time }
+
+    AuditAction:
+      type: string
+      enum:
+        - LOGIN_FAILED
+        - ACCOUNT_LOCKED
+        - USER_CREATED
+        - USER_ACTIVATED
+        - USER_DEACTIVATED
+        - USER_ROLE_CHANGED
+        - SETTINGS_CHANGED
+        - PART_PRICE_CHANGED
+        - PAYMENT_CANCELLED
+
+    AuditEntry:
+      type: object
+      properties:
+        id: { type: integer }
+        userId: { type: integer, nullable: true }
+        actor: { type: string, nullable: true }
+        action: { $ref: '#/components/schemas/AuditAction' }
+        entity: { type: string, nullable: true }
+        entityId: { type: integer, nullable: true }
+        detail: { type: string, nullable: true, example: 'precio de venta: 180.00 → 250.00' }
+        createdAt: { type: string, format: date-time }
+
+    IncomeReport:
+      type: object
+      properties:
+        from: { type: string, format: date }
+        to: { type: string, format: date }
+        total: { type: number, example: 12850.5 }
+        paymentsCount: { type: integer }
+        byMethod:
+          type: array
+          items:
+            type: object
+            properties:
+              method: { type: string, enum: [EFECTIVO, TARJETA, TRANSFERENCIA, MERCADO_PAGO] }
+              total: { type: number }
+              count: { type: integer }
+        byDay:
+          type: array
+          items:
+            type: object
+            properties:
+              date: { type: string, format: date }
+              total: { type: number }
+
+    ServiceFrequencyRow:
+      type: object
+      properties:
+        name: { type: string }
+        serviceTypeId: { type: integer, nullable: true }
+        count: { type: integer }
+        total: { type: number }
+
+    ProductivityRow:
+      type: object
+      properties:
+        mechanicId: { type: integer }
+        mechanicName: { type: string }
+        finishedOrders: { type: integer }
+        laborTotal: { type: number }
+
+    PartsMarginReport:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              partId: { type: integer }
+              code: { type: string }
+              name: { type: string }
+              quantity: { type: integer }
+              salePrice: { type: number, description: Precio de venta de la línea }
+              purchasePrice: { type: number, nullable: true, description: Precio de compra vigente de la refacción }
+              marginPerUnit: { type: number, nullable: true }
+              marginTotal: { type: number, nullable: true }
+              withoutCost: { type: boolean }
+        totals:
+          type: object
+          properties:
+            salesTotal: { type: number }
+            costTotal: { type: number }
+            marginTotal: { type: number, description: Solo de las refacciones con costo }
+            withoutCostCount: { type: integer }
+
+    TurnoverRow:
+      type: object
+      properties:
+        partId: { type: integer }
+        code: { type: string }
+        name: { type: string }
+        unitsOut: { type: integer }
+        averageStock: { type: number }
+        turnover: { type: number, nullable: true, description: Nulo cuando la existencia promedio es 0 }
