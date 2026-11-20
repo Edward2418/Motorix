@@ -16,12 +16,14 @@ Borrador para revisión: las decisiones de la sección 9 no están resueltas.
 
 Verificado en el código antes de redactar este sprint:
 
-- **Configuración:** no existe módulo ni tabla de configuración. Los datos del taller del ticket (`SHOP_NAME`, `SHOP_ADDRESS`, `SHOP_PHONE`) y los márgenes de "Próximo" del mantenimiento (`MAINTENANCE_WARN_DAYS`, `MAINTENANCE_WARN_KM`) viven en `.env` y cambiarlos exige acceso al servidor y reiniciarlo.
+- **Configuración:** no existe módulo ni tabla de configuración. Los datos del taller del ticket (`WORKSHOP_NAME`, `WORKSHOP_ADDRESS`, `WORKSHOP_PHONE`) y los márgenes de "Próximo" del mantenimiento (`MAINTENANCE_SOON_DAYS`, `MAINTENANCE_SOON_KM`) viven en `.env` y cambiarlos exige acceso al servidor y reiniciarlo.
 - **Intervalos de mantenimiento:** la regla de negocio 12 pide intervalos configurables, pero hoy el próximo mantenimiento se captura a mano en cada orden; no hay catálogo de tipos de servicio con intervalo.
 - **Reportes:** no existe un módulo de reportes ni exportación. El dashboard solo muestra ingresos pagados por mes y por método, y órdenes por estado.
 - **Costeo:** el Sprint 5 dejó fuera el costo, el margen y la utilidad, aunque ya guarda el precio de compra y de venta de las refacciones y el precio de venta en cada línea de orden.
 
 - **Términos y seguridad:** no hay pantalla de términos y condiciones ni de aviso de privacidad, no hay bitácora de acciones sensibles ni política de contraseñas, y la sesión solo expira por la vigencia del token (8 horas). Sí existen bcrypt, JWT, `helmet`, el bloqueo temporal por intentos fallidos y la validación de permisos en backend.
+
+Correcciones del 2026-11-19 tras contrastar con el código: los nombres de las variables son `WORKSHOP_*` y `MAINTENANCE_SOON_*`, la migración es la `009`, el ticket ya guarda su contenido emitido desde el Sprint 5 y la política de contraseñas ya existe (8 caracteres con mayúscula, minúscula y número).
 
 Este sprint cubre esas cuatro deudas. Es el más amplio de los posteriores al MVP; si el tiempo no alcanza, se puede dividir en dos entregas: primero configuración, términos y seguridad, y después reportes.
 
@@ -77,7 +79,7 @@ Flujo de términos y seguridad:
 | `terms_acceptances` | crear tabla con el usuario, la versión aceptada y la fecha de aceptación |
 | `audit_log` | crear bitácora de acciones sensibles: usuario, acción, entidad afectada, fecha (sin guardar contraseñas ni datos de pago) |
 | `users` | consultar; la política de contraseñas se aplica al crear o cambiar la contraseña |
-| migración `007_...sql` y seeds del sprint | crear |
+| migración `009_...sql` y seeds del sprint (desde la `012`) | crear |
 
 ## 6. Reglas de negocio aplicables
 
@@ -134,7 +136,7 @@ Flujo de términos y seguridad:
 
 - Formato de exportación: ¿CSV, Excel o PDF? ¿Con qué librería, si no es CSV?
 - Prioridad si el sprint se divide: ¿configuración y catálogo primero, reportes después?
-- Si los datos del taller deben guardarse además en cada ticket emitido (instantánea) para que un cambio posterior no altere los tickets.
+- ~~Si los datos del taller deben guardarse además en cada ticket emitido (instantánea)~~: ya resuelto por el Sprint 5, el ticket nuevo guarda su contenido emitido (`tickets.content`, incluido el taller). Solo los tickets anteriores al Sprint 5, sin contenido guardado, se arman con datos vigentes.
 - Si el tipo de servicio se enlaza a las líneas de `order_services` (que hoy son texto libre) y qué pasa con las líneas existentes sin tipo.
 - Cómo se calcula el margen cuando una refacción no tiene precio de compra (líneas anteriores al Sprint 5 con precio 0).
 - Periodos disponibles en los reportes (día, semana, mes, rango libre) y huso horario de corte.
@@ -163,4 +165,4 @@ Flujo de términos y seguridad:
 - Los seeds del sprint DEBEN incluir datos de ejemplo suficientes para que la aplicación muestre información al arrancar. La base no puede quedar vacía tras la instalación.
 - Los seeds DEBEN ser idempotentes: si se corren de nuevo, no duplican registros.
 - Los importes se calculan en centavos enteros y se guardan como `DECIMAL(10,2)`, igual que en los Sprints 4 y 5.
-- Las migraciones son aditivas y numeradas; no modifican las migraciones anteriores. Si el Sprint 6 usa la `006`, este usa la `007`.
+- Las migraciones son aditivas y numeradas; no modifican las migraciones anteriores. Los Sprints 5 y 6 usaron la `006` a la `008`, así que este usa la `009`; los seeds nuevos parten de la `012`.
