@@ -80,7 +80,8 @@ void main() {
       expect(find.widgetWithText(TextFormField, 'Taller Motorix (ejemplo)'), findsOneWidget);
       expect(find.widgetWithText(TextFormField, 'Av. Principal 123, Ciudad de México'), findsOneWidget);
       expect(find.widgetWithText(TextFormField, '55 0000 0000'), findsOneWidget);
-      expect(find.textContaining('valores iniciales del servidor'), findsOneWidget);
+      // Hay una tarjeta por grupo (datos del taller y márgenes), cada una con su origen.
+      expect(find.textContaining('valores iniciales del servidor'), findsNWidgets(2));
     });
 
     testWidgets('editar y guardar envía los datos, confirma con un mensaje y pasa a «guardado desde la aplicación»', (tester) async {
@@ -186,6 +187,80 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Datos del taller'), findsOneWidget);
+    });
+  });
+
+  group('márgenes de Próximo', () {
+    testWidgets('muestra los márgenes vigentes y avisa que aún vienen de los valores iniciales del servidor', (tester) async {
+      await abrirConfiguracion(tester, handler: servidor(configuracion(dias: 30, km: 1000)));
+
+      expect(find.text('Márgenes de «Próximo»'), findsOneWidget);
+      expect(find.widgetWithText(TextFormField, '30'), findsOneWidget);
+      expect(find.widgetWithText(TextFormField, '1000'), findsOneWidget);
+      expect(find.textContaining('valores iniciales del servidor'), findsNWidgets(2));
+    });
+
+    testWidgets('guardar envía los márgenes, confirma con un mensaje y pasa a «guardado desde la aplicación»', (tester) async {
+      final guardado = configuracion(dias: 15, km: 2000, origenMargenes: 'saved', actualizadoPor: 'Administrador Motorix');
+      final log = await abrirConfiguracion(
+        tester,
+        handler: servidor(configuracion(), alGuardar: (_) => respuesta(guardado)),
+      );
+
+      await tester.enterText(find.widgetWithText(TextFormField, '30'), '15');
+      await tester.enterText(find.widgetWithText(TextFormField, '1000'), '2000');
+      await tester.tap(find.text('Guardar márgenes'));
+      await tester.pumpAndSettle();
+
+      final envios = log.where((r) => r.method == 'PUT' && r.url.path.endsWith('/settings')).toList();
+      expect(envios, hasLength(1));
+      expect(envios.single.body, contains('"maintenance"'));
+      expect(envios.single.body, contains('"soonDays":15'));
+      expect(envios.single.body, contains('"soonKm":2000'));
+      expect(find.text('Márgenes guardados.'), findsOneWidget);
+      expect(find.textContaining('Guardado desde la aplicación'), findsOneWidget);
+    });
+
+    testWidgets('valores fuera de límites muestran el error en el campo y no envían nada', (tester) async {
+      final log = await abrirConfiguracion(tester, handler: servidor(configuracion()));
+
+      await tester.enterText(find.widgetWithText(TextFormField, '30'), '0');
+      await tester.enterText(find.widgetWithText(TextFormField, '1000'), '99');
+      await tester.tap(find.text('Guardar márgenes'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('El margen en días debe ser un número entero entre 1 y 365.'), findsOneWidget);
+      expect(find.text('El margen en kilómetros debe ser un número entero entre 100 y 50,000.'), findsOneWidget);
+      expect(log.where((r) => r.method == 'PUT'), isEmpty);
+    });
+
+    testWidgets('texto que no es un número entero se rechaza en el campo', (tester) async {
+      final log = await abrirConfiguracion(tester, handler: servidor(configuracion()));
+
+      await tester.enterText(find.widgetWithText(TextFormField, '30'), 'abc');
+      await tester.tap(find.text('Guardar márgenes'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('El margen en días debe ser un número entero entre 1 y 365.'), findsOneWidget);
+      expect(log.where((r) => r.method == 'PUT'), isEmpty);
+    });
+
+    testWidgets('si el servidor rechaza un margen muestra su mensaje bajo el campo', (tester) async {
+      await abrirConfiguracion(
+        tester,
+        handler: servidor(
+          configuracion(),
+          alGuardar: (_) => apiError(400, 'VALIDATION_ERROR', 'Hay datos inválidos. Revisa los campos indicados.', details: [
+            {'field': 'maintenance.soonKm', 'message': 'El margen en kilómetros debe ser un número entero entre 100 y 50,000.'},
+          ]),
+        ),
+      );
+
+      await tester.enterText(find.widgetWithText(TextFormField, '30'), '20');
+      await tester.tap(find.text('Guardar márgenes'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('El margen en kilómetros debe ser un número entero entre 100 y 50,000.'), findsOneWidget);
     });
   });
 

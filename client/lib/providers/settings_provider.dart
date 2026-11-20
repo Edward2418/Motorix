@@ -36,6 +36,15 @@ class SettingsProvider extends ChangeNotifier {
     }
   }
 
+  /// Guarda los márgenes de «Próximo» del mantenimiento. Lanza [ApiException] si el servidor rechaza alguno.
+  Future<void> saveMaintenance({required int soonDays, required int soonKm}) async {
+    final response = await _api.put('/settings', body: {
+      'maintenance': {'soonDays': soonDays, 'soonKm': soonKm},
+    });
+    _settings = AppSettings.fromJson(response['data'] as Map<String, dynamic>);
+    notifyListeners();
+  }
+
   /// Guarda los datos del taller. Lanza [ApiException] si el servidor rechaza algún dato (no se guarda ninguno).
   Future<void> saveWorkshop({required String name, required String address, required String phone}) async {
     final response = await _api.put('/settings', body: {

@@ -48,6 +48,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _WorkshopCard(settings: settings),
+                const SizedBox(height: AppSpacing.lg),
+                _MaintenanceCard(settings: settings),
               ],
             ),
           ),
@@ -192,6 +194,132 @@ class _WorkshopCardState extends State<_WorkshopCard> {
                   child: _saving
                       ? const SizedBox(width: AppSizes.spinnerSmall, height: AppSizes.spinnerSmall, child: CircularProgressIndicator(strokeWidth: 2))
                       : const Text('Guardar cambios'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Márgenes de «Próximo»: cuántos días o kilómetros antes se marca un mantenimiento como «Próximo». Los usan la lista
+/// de Mantenimientos, el panel de control y los avisos.
+class _MaintenanceCard extends StatefulWidget {
+  const _MaintenanceCard({required this.settings});
+
+  final AppSettings settings;
+
+  @override
+  State<_MaintenanceCard> createState() => _MaintenanceCardState();
+}
+
+class _MaintenanceCardState extends State<_MaintenanceCard> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _days = TextEditingController(text: '${widget.settings.maintenance.soonDays}');
+  late final TextEditingController _km = TextEditingController(text: '${widget.settings.maintenance.soonKm}');
+
+  bool _saving = false;
+  String? _generalError;
+  Map<String, String> _serverErrors = const {};
+
+  @override
+  void dispose() {
+    _days.dispose();
+    _km.dispose();
+    super.dispose();
+  }
+
+  String? _validate(String? value, {required String label, required int min, required int max}) {
+    final number = int.tryParse((value ?? '').trim());
+    if (number == null || number < min || number > max) {
+      return '$label debe ser un número entero entre ${formatQuantity(min)} y ${formatQuantity(max)}.';
+    }
+    return null;
+  }
+
+  Future<void> _save() async {
+    setState(() {
+      _generalError = null;
+      _serverErrors = const {};
+    });
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+    setState(() => _saving = true);
+    final provider = context.read<SettingsProvider>();
+    try {
+      await provider.saveMaintenance(soonDays: int.parse(_days.text.trim()), soonKm: int.parse(_km.text.trim()));
+      if (!mounted) {
+        return;
+      }
+      final saved = provider.settings!.maintenance;
+      _days.text = '${saved.soonDays}';
+      _km.text = '${saved.soonKm}';
+      setState(() => _saving = false);
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Márgenes guardados.')));
+    } on ApiException catch (e) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _saving = false;
+        _serverErrors = e.fieldErrors;
+        _generalError = e.fieldErrors.isEmpty ? e.message : null;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final settings = widget.settings;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text('Márgenes de «Próximo»', style: theme.textTheme.titleMedium),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                'Un mantenimiento se marca «Próximo» cuando faltan estos días o kilómetros, o menos. Los usan la lista de Mantenimientos, el panel de control y los avisos.',
+                style: theme.textTheme.bodySmall,
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                sourceText(settings.maintenance.source, updatedByName: settings.updatedByName, updatedAt: settings.updatedAt),
+                style: theme.textTheme.bodySmall,
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              TextFormField(
+                controller: _days,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(labelText: 'Días de anticipación', errorText: _serverErrors['maintenance.soonDays']),
+                validator: (value) => _validate(value, label: 'El margen en días', min: 1, max: 365),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              TextFormField(
+                controller: _km,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(labelText: 'Kilómetros de anticipación', errorText: _serverErrors['maintenance.soonKm']),
+                validator: (value) => _validate(value, label: 'El margen en kilómetros', min: 100, max: 50000),
+              ),
+              if (_generalError != null) ...[
+                const SizedBox(height: AppSpacing.md),
+                Text(_generalError!, style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.danger)),
+              ],
+              const SizedBox(height: AppSpacing.lg),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: FilledButton(
+                  onPressed: _saving ? null : _save,
+                  child: _saving
+                      ? const SizedBox(width: AppSizes.spinnerSmall, height: AppSizes.spinnerSmall, child: CircularProgressIndicator(strokeWidth: 2))
+                      : const Text('Guardar márgenes'),
                 ),
               ),
             ],
