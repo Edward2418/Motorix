@@ -1,0 +1,20 @@
+Línea base del servidor antes del Sprint 7 (T002), 2026-11-19.
+
+Código sin cambios desde la regresión completa del Sprint 6: la comparación `git diff a19f46a HEAD` sobre server/, client/,
+database/migrations y database/seeds está vacía (solo cambiaron documentos y un script SQL opcional que no se ejecuta).
+Por eso la línea base es la regresión completa del Sprint 6, que se repite en parte aquí para confirmar el entorno.
+
+Regresión completa (docs/evidencias/sprint-6/regresion-backend.txt, por partes):
+  Unitarias            27 suites   287 pruebas
+  Contrato             27 suites   144 pruebas
+  Integración (1)      34 suites   292 pruebas
+  Integración (2)      35 suites   365 pruebas
+  Total               123 suites  1,088 pruebas; 1,087 pasan en la corrida completa y 1 (payments.paidOrder, H-14)
+                       pasa al repetirse sola. H-10 (orderParts.prices.concurrency) pasó en esa corrida.
+
+Pruebas inestables heredadas, que no se modifican en este sprint: H-10 y H-14 (ver docs/aseguramiento-calidad-sprint-6.md).
+
+Repetición del 2026-11-19 (unitarias, para confirmar el entorno):
+Test Suites: 27 passed, 27 total
+Tests:       287 passed, 287 total
+Time:        5.287 s, estimated 6 s
