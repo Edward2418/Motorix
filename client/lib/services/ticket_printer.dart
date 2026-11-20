@@ -74,6 +74,7 @@ class PdfTicketPrinter implements TicketPrinter {
           _pair('Cobrado', formatMoney(ticket.paymentSummary.collected)),
           _pair('Saldo por cobrar', formatMoney(ticket.paymentSummary.balance)),
           _pair('Estado de pago', ticket.paymentSummary.status.label),
+          if (ticket.nextService != null) _pair('Próximo servicio', ticket.nextService!.text),
           pw.SizedBox(height: 12),
           pw.Center(child: pw.Text('Gracias por su preferencia.')),
         ],

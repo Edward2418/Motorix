@@ -209,6 +209,11 @@ class _TicketCard extends StatelessWidget {
                 child: StatusBadge.orderPayment(ticket.paymentSummary.status),
               ),
             ),
+            // Solo el ticket nuevo de una orden con un tipo de servicio con intervalo lo trae.
+            if (ticket.nextService != null) ...[
+              const Divider(height: AppSpacing.xxl),
+              _Pair('Próximo servicio', ticket.nextService!.text),
+            ],
           ],
         ),
       ),

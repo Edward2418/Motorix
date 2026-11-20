@@ -1,3 +1,4 @@
+import '../utils/formatters.dart';
 import 'payment.dart';
 
 /// Línea de un ticket: servicio, mano de obra o refacción.
@@ -32,6 +33,28 @@ class Workshop {
       );
 }
 
+/// Próximo servicio que indica un ticket nuevo: fecha, kilometraje o ambos. Un ticket emitido no lo cambia.
+class NextService {
+  const NextService({required this.dueDate, required this.dueMileage});
+
+  /// Texto para el ticket, por ejemplo «19 may 2027 · 47,000 km»; solo las partes que existen.
+  String get text => [
+        if (dueDate != null) formatDate(dueDate!),
+        if (dueMileage != null) formatMileage(dueMileage!),
+      ].join(' · ');
+
+  factory NextService.fromJson(Map<String, dynamic> json) {
+    final date = json['dueDate'] as String?;
+    return NextService(
+      dueDate: date == null ? null : DateTime.parse(date),
+      dueMileage: json['dueMileage'] as int?,
+    );
+  }
+
+  final DateTime? dueDate;
+  final int? dueMileage;
+}
+
 /// Comprobante de una orden. Un ticket emitido desde el Sprint 5 trae el contenido que se guardó al emitirlo; el de antes
 /// del sprint se arma con los datos vigentes. En ambos casos los pagos y su estado son vigentes.
 class Ticket {
@@ -59,6 +82,7 @@ class Ticket {
     required this.total,
     required this.payments,
     required this.paymentSummary,
+    this.nextService,
   });
 
   final int id;
@@ -84,6 +108,9 @@ class Ticket {
   final double total;
   final List<Payment> payments;
   final PaymentSummary paymentSummary;
+
+  /// Solo los tickets nuevos de órdenes con un tipo de servicio con intervalo lo traen.
+  final NextService? nextService;
 
   factory Ticket.fromJson(Map<String, dynamic> json) {
     List<TicketLine> lines(String key) => [
@@ -121,6 +148,7 @@ class Ticket {
           Payment.fromJson(item as Map<String, dynamic>),
       ],
       paymentSummary: PaymentSummary.fromJson(json['paymentSummary'] as Map<String, dynamic>),
+      nextService: json['nextService'] is Map<String, dynamic> ? NextService.fromJson(json['nextService'] as Map<String, dynamic>) : null,
     );
   }
 }
