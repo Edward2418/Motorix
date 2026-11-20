@@ -14,16 +14,16 @@ export async function get(req, res) {
 }
 
 export async function create(req, res) {
-  sendData(res, await userService.createUser(validateUserCreate(req.body)), 201);
+  sendData(res, await userService.createUser(validateUserCreate(req.body), req.user), 201);
 }
 
 export async function update(req, res) {
   const id = userId(req);
-  sendData(res, await userService.updateUser(id, validateUserUpdate(req.body)));
+  sendData(res, await userService.updateUser(id, validateUserUpdate(req.body), req.user));
 }
 
 export async function setStatus(req, res) {
   const id = userId(req);
   const active = validateStatusBody(req.body);
-  sendData(res, await userService.setUserStatus(id, active, req.user.id));
+  sendData(res, await userService.setUserStatus(id, active, req.user));
 }

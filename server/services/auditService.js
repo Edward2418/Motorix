@@ -28,7 +28,7 @@ const SECRET_PATTERNS = [
   /\b(?:\d[ -]?){13,19}\b/
 ];
 
-const looksLikeSecret = (text) => SECRET_PATTERNS.some((pattern) => pattern.test(text));
+export const looksLikeSecret = (text) => SECRET_PATTERNS.some((pattern) => pattern.test(text));
 
 /** `model` se inyecta para poder probar el servicio sin base de datos. */
 export function createAuditService({ model = auditModel } = {}) {

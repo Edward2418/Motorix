@@ -1,6 +1,23 @@
 import { withTransaction } from '../config/db.js';
 import * as settingModel from '../models/settingModel.js';
 import { DEFAULT_SETTINGS, SETTING_KEYS, resolveSetting } from './settingsRules.js';
+import { auditService, looksLikeSecret } from './auditService.js';
+
+// Nombre legible de cada dato para el detalle de la bitácora.
+const AUDIT_LABELS = Object.freeze({
+  workshop_name: 'nombre del taller',
+  workshop_address: 'dirección del taller',
+  workshop_phone: 'teléfono del taller',
+  maintenance_soon_days: 'margen en días',
+  maintenance_soon_km: 'margen en kilómetros'
+});
+
+// «dato: anterior → nuevo». Si el texto pareciera un secreto (por ejemplo un teléfono largo que se confunde con un
+// número de tarjeta), solo se anota que el dato cambió: la bitácora nunca guarda ese tipo de valores.
+function describeChange(key, previous, next) {
+  const detail = `${AUDIT_LABELS[key]}: ${previous} → ${next}`;
+  return looksLikeSecret(detail) ? `${AUDIT_LABELS[key]}: modificado` : detail;
+}
 
 // Configuración del taller (Sprint 7): datos del taller y márgenes de «Próximo» del mantenimiento. Cada lectura consulta
 // la tabla (cinco filas como máximo) sin caché, así un cambio se ve de inmediato y no hay estado obsoleto entre procesos.
@@ -30,7 +47,7 @@ function groupSource(values, keys) {
  * `model` y `env` se inyectan para poder probar el servicio con datos falsos. `env` es el objeto de variables de entorno
  * (se lee en cada consulta, no al arrancar).
  */
-export function createSettingsService({ model = settingModel, env = process.env } = {}) {
+export function createSettingsService({ model = settingModel, env = process.env, audit = auditService } = {}) {
   const envValue = (key) => {
     const raw = env[ENV_NAMES[key]];
     return typeof raw === 'string' && raw.trim() !== '' ? raw.trim() : undefined;
@@ -91,7 +108,20 @@ export function createSettingsService({ model = settingModel, env = process.env 
    * configuración vigente. Dos guardados simultáneos se serializan: gana el último y nunca se mezclan sus campos.
    */
   async function update(entries, actor) {
-    await withTransaction((conn) => model.saveMany(entries, actor.id, conn));
+    await withTransaction(async (conn) => {
+      const { values: before } = await resolveAll(conn);
+      await model.saveMany(entries, actor.id, conn);
+      // Un registro por cada dato que cambió de verdad (guardar el mismo valor no deja rastro), en la misma transacción.
+      for (const { key, value } of entries) {
+        const previous = before[key].value;
+        if (String(previous) !== String(value)) {
+          await audit.record(
+            { userId: actor.id, actor: actor.username, action: 'SETTINGS_CHANGED', entity: 'SETTING', detail: describeChange(key, previous, value) },
+            conn
+          );
+        }
+      }
+    });
     return getView();
   }
 

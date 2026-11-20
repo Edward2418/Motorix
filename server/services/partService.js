@@ -3,6 +3,13 @@ import * as inventoryMovementModel from '../models/inventoryMovementModel.js';
 import * as partModel from '../models/partModel.js';
 import { AppError } from '../utils/AppError.js';
 import { assertPriceConfirmed } from './partPriceRules.js';
+import { auditService } from './auditService.js';
+
+// Precios que se registran en la bitácora cuando cambian: campo editado, columna actual y nombre para el detalle.
+const AUDITED_PRICES = [
+  ['purchasePrice', 'purchase_price', 'precio de compra'],
+  ['salePrice', 'sale_price', 'precio de venta']
+];
 
 // Catálogo de refacciones. El mecánico solo consulta refacciones activas y nunca recibe el precio de compra.
 
@@ -79,7 +86,26 @@ export async function updatePart(id, input, actor) {
     confirmed: confirmBelowCost
   });
   try {
-    await partModel.update(id, fields);
+    // La edición y su registro en la bitácora van en una sola transacción: si una falla, no queda la otra.
+    await withTransaction(async (conn) => {
+      await partModel.update(id, fields, conn);
+      for (const [field, column, label] of AUDITED_PRICES) {
+        const previous = Number(current[column]);
+        if (fields[field] !== undefined && Number(fields[field]) !== previous) {
+          await auditService.record(
+            {
+              userId: actor.id,
+              actor: actor.username,
+              action: 'PART_PRICE_CHANGED',
+              entity: 'PART',
+              entityId: id,
+              detail: `${label}: ${previous.toFixed(2)} → ${Number(fields[field]).toFixed(2)}`
+            },
+            conn
+          );
+        }
+      }
+    });
   } catch (error) {
     throw isDuplicateCode(error) ? AppError.duplicatePartCode() : error;
   }

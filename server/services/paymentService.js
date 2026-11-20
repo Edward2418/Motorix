@@ -8,6 +8,7 @@ import { getPaymentGateway } from './gateways/paymentGateway.js';
 import { resolveStatus } from './gateways/mercadoPagoStatus.js';
 import { toCents } from '../utils/money.js';
 import { canRegister } from './paymentRules.js';
+import { auditService } from './auditService.js';
 
 // Un pago de Mercado Pago pendiente está desfasado si el total vigente de la orden es distinto del que tenía al crearse
 // el pago. Se calcula al consultar (no se almacena). Los pagos anteriores al Sprint 5 no tienen ese dato y nunca se
@@ -181,6 +182,18 @@ export async function cancelPayment(paymentId, { reason }, actor) {
     if (!applied) {
       throw AppError.paymentNotCancellable('El pago cambió de estado mientras se cancelaba. Revisa su estado actual.');
     }
+    // Sin el motivo ni datos de pago: solo qué se canceló, quién y su estado anterior.
+    await auditService.record(
+      {
+        userId: actor.id,
+        actor: actor.username,
+        action: 'PAYMENT_CANCELLED',
+        entity: 'PAYMENT',
+        entityId: paymentId,
+        detail: `estado anterior: ${current.status}`
+      },
+      conn
+    );
   });
   const summary = await summaryOf(found.order_id);
   return { payment: present(await paymentModel.findById(paymentId), summary.total), summary };
