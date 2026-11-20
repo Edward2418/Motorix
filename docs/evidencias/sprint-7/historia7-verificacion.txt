@@ -1,0 +1,4 @@
+Historia 7 (ingresos por periodo), 2026-11-20 10:53.
+Servidor: reportRules (unitarias), reports.income (integración) y reports.contract: 47 de 47. Rutas nuevas cubiertas por terms.enforcement automáticamente; exposure, dashboardPeriods, dashboard-live y auditImmutability: 36 de 36.
+Cliente: flutter analyze sin problemas; flutter test 349 de 349 (13 nuevas de reports_screen).
+Correcciones durante la historia: dos expectativas de aritmética mal calculadas en mis pruebas (el código era correcto) y TextField por TextFormField en la pantalla.
