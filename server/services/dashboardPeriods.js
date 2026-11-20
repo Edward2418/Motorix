@@ -3,8 +3,8 @@
 
 export const PERIOD_KEYS = Object.freeze(['today', 'week', 'month']);
 
-const startOfDay = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0);
-const endOfDay = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
+export const startOfDay = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0);
+export const endOfDay = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
 
 /**
  * today: el día de hoy. week: hoy y los seis días anteriores. month: del día 1 del mes en curso hasta el fin de hoy.
