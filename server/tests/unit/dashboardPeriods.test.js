@@ -1,4 +1,4 @@
-import { resolvePeriod, upcomingRange, PERIOD_KEYS } from '../../services/dashboardPeriods.js';
+import { resolvePeriod, upcomingRange, tomorrowRange, PERIOD_KEYS } from '../../services/dashboardPeriods.js';
 
 // Fecha local fija para no depender del reloj de la máquina.
 const ahora = new Date(2026, 9, 13, 15, 30, 45); // 13 de octubre de 2026, 15:30:45
@@ -56,5 +56,24 @@ describe('upcomingRange', () => {
   test('cruza el fin de mes', () => {
     const { to } = upcomingRange(new Date(2026, 9, 28, 9, 0, 0));
     expect(fecha(to)).toEqual([2026, 11, 4, 23, 59, 59, 999]);
+  });
+});
+
+describe('tomorrowRange', () => {
+  test('va del inicio al fin del día siguiente', () => {
+    const { from, to } = tomorrowRange(ahora);
+    expect(fecha(from)).toEqual([2026, 10, 14, 0, 0, 0, 0]);
+    expect(fecha(to)).toEqual([2026, 10, 14, 23, 59, 59, 999]);
+  });
+
+  test('cruza el fin de mes y de año', () => {
+    const { from, to } = tomorrowRange(new Date(2026, 11, 31, 22, 0, 0));
+    expect(fecha(from)).toEqual([2027, 1, 1, 0, 0, 0, 0]);
+    expect(fecha(to)).toEqual([2027, 1, 1, 23, 59, 59, 999]);
+  });
+
+  test('a las 23:59 de hoy el rango sigue siendo el de mañana, no el de hoy', () => {
+    const { from } = tomorrowRange(new Date(2026, 9, 13, 23, 59, 59));
+    expect(fecha(from)).toEqual([2026, 10, 14, 0, 0, 0, 0]);
   });
 });

@@ -44,13 +44,17 @@ describe('el panel se calcula al consultar', () => {
 
   test('no existen tablas de estadísticas ni de copias de datos del panel', async () => {
     const [tablas] = await pool.query('SELECT table_name AS nombre FROM information_schema.tables WHERE table_schema = DATABASE()');
+    // Sprint 6: client_notices (avisos hechos a clientes) y notification_reads (lecturas de avisos) son tablas de
+    // negocio, no estadísticas ni copias del panel; los avisos en sí se calculan al consultar y no se guardan.
     expect(tablas.map((t) => t.nombre.toLowerCase()).sort()).toEqual([
       'appointments',
+      'client_notices',
       'clients',
       'folio_counters',
       'inventory_movements',
       'login_attempts',
       'maintenance',
+      'notification_reads',
       'order_labor',
       'order_parts',
       'order_services',

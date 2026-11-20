@@ -10,6 +10,10 @@ export const TEST_PASSWORD = 'Prueba2026!';
 // Vacía las tablas en un orden que respeta las llaves foráneas.
 export async function resetTables() {
   await pool.query('SET FOREIGN_KEY_CHECKS = 0');
+  // Las tablas del Sprint 6 son pequeñas: se vacían con DELETE (≈2 ms) y no con TRUNCATE (≈70 ms por reset), porque hay
+  // pruebas que reinician la base muchas veces dentro de un mismo caso y ya están cerca de su límite de 20 s.
+  await pool.query('DELETE FROM notification_reads');
+  await pool.query('DELETE FROM client_notices');
   const tables = [
     'login_attempts',
     'payments',
@@ -131,6 +135,31 @@ export async function createOrder({
     creator
   ]);
   return { id: result.insertId, folio, clientId, vehicleId, mechanicId, status };
+}
+
+// Fija la antigüedad del último cambio de estado de una orden (y su creación) para probar las órdenes detenidas.
+export async function setOrderLastChange({ orderId, daysAgo }) {
+  const fecha = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
+  await pool.query('UPDATE service_orders SET created_at = ? WHERE id = ?', [fecha, orderId]);
+  await pool.query('UPDATE order_status_history SET changed_at = ? WHERE order_id = ?', [fecha, orderId]);
+}
+
+// Registra la lectura de un aviso por un usuario con la gravedad dada (1 normal, 2 grave).
+export async function createNotificationRead({ userId, key, severity = 1 }) {
+  await pool.query('INSERT INTO notification_reads (user_id, notification_key, severity) VALUES (?, ?, ?)', [
+    userId,
+    key,
+    severity
+  ]);
+}
+
+// Registra que se avisó a un cliente por un hecho (por ejemplo ORDER:41).
+export async function createClientNotice({ clientId, reason = 'ORDEN_TERMINADA', factKey, note = null, notifiedBy }) {
+  const [result] = await pool.query(
+    'INSERT INTO client_notices (client_id, reason, fact_key, note, notified_by) VALUES (?, ?, ?, ?, ?)',
+    [clientId, reason, factKey, note, notifiedBy]
+  );
+  return { id: result.insertId, clientId, reason, factKey };
 }
 
 // Crea una refacción con su movimiento de ENTRADA «Stock inicial» (si el stock es mayor que cero).
