@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../models/report_income.dart';
 import '../services/api_client.dart';
+import '../services/report_saver.dart';
 
 /// Atajos de periodo de los reportes: hoy, los últimos siete días (hoy y los seis anteriores) y el mes en curso.
 enum ReportShortcut {
@@ -97,6 +98,28 @@ class ReportsProvider extends ChangeNotifier {
       _income = null;
     } finally {
       _loading = false;
+      notifyListeners();
+    }
+  }
+
+  bool _exporting = false;
+
+  /// Hay una exportación en curso (el botón se deshabilita para no exportar dos veces).
+  bool get exporting => _exporting;
+
+  /// Exporta a CSV el reporte de ingresos del rango que se está viendo y lo guarda con [saver]. Devuelve la ruta del
+  /// archivo. Lanza [ApiException] si el servidor lo rechaza o [ReportSaveException] si no se puede escribir.
+  Future<String> exportIncome(ReportSaver saver) async {
+    if (_exporting) {
+      throw StateError('Ya hay una exportación en curso.');
+    }
+    _exporting = true;
+    notifyListeners();
+    try {
+      final bytes = await _api.download('/reports/income', query: {'from': _from, 'to': _to, 'format': 'csv'});
+      return await saver.save(fileName: 'ingresos-$_from-a-$_to.csv', bytes: bytes);
+    } finally {
+      _exporting = false;
       notifyListeners();
     }
   }

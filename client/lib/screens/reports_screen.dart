@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 
 import '../models/report_income.dart';
 import '../providers/reports_provider.dart';
+import '../services/api_client.dart';
+import '../services/report_saver.dart';
 import '../utils/app_tokens.dart';
 import '../utils/formatters.dart';
 import '../widgets/section_navigator.dart';
@@ -81,6 +83,26 @@ class _IncomeTabState extends State<_IncomeTab> {
     }
   }
 
+  // Guarda en Descargas el CSV del rango que se está viendo y confirma con el nombre del archivo, o dice qué falló.
+  Future<void> _export() async {
+    final reports = context.read<ReportsProvider>();
+    final saver = context.read<ReportSaver>();
+    try {
+      final path = await reports.exportIncome(saver);
+      if (mounted) {
+        showFeedback(context, 'Reporte guardado en Descargas: ${path.split(RegExp(r'[\\/]')).last}.');
+      }
+    } on ApiException catch (e) {
+      if (mounted) {
+        showFeedback(context, 'No se pudo exportar el reporte. ${e.message}', error: true);
+      }
+    } on ReportSaveException catch (e) {
+      if (mounted) {
+        showFeedback(context, 'No se pudo guardar el reporte. ${e.message}', error: true);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final reports = context.watch<ReportsProvider>();
@@ -107,6 +129,10 @@ class _IncomeTabState extends State<_IncomeTab> {
             SizedBox(width: 190, child: TextFormField(controller: _from, decoration: const InputDecoration(labelText: 'Desde (AAAA-MM-DD)'))),
             SizedBox(width: 190, child: TextFormField(controller: _to, decoration: const InputDecoration(labelText: 'Hasta (AAAA-MM-DD)'))),
             FilledButton(onPressed: reports.loading ? null : _query, child: const Text('Consultar')),
+            OutlinedButton(
+              onPressed: reports.loading || reports.exporting || reports.income == null ? null : _export,
+              child: const Text('Exportar'),
+            ),
           ],
         ),
         if (_rangeError != null) ...[

@@ -53,15 +53,52 @@ class ApiClient {
 
   Future<dynamic> delete(String path, {Object? body}) => _send('DELETE', path, body: body);
 
+  /// Descarga un archivo (por ejemplo, un reporte en CSV) y devuelve sus bytes tal como llegan, con su marca BOM. Los
+  /// errores del servidor llegan como JSON y se traducen igual que en las demás llamadas.
+  Future<List<int>> download(String path, {Map<String, String?> query = const {}}) async {
+    final response = await _sendRaw('GET', path, query: query, accept: '*/*');
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return response.bodyBytes;
+    }
+    dynamic decoded;
+    try {
+      decoded = jsonDecode(utf8.decode(response.bodyBytes));
+    } catch (_) {
+      throw ApiException('El servidor devolvió una respuesta inesperada.', statusCode: response.statusCode);
+    }
+    throw _exceptionFor(response, decoded);
+  }
+
   Future<dynamic> _send(String method, String path,
       {Map<String, String?> query = const {}, Object? body}) async {
+    final response = await _sendRaw(method, path, query: query, body: body);
+
+    if (response.statusCode == 204 || response.body.isEmpty) {
+      return null;
+    }
+
+    dynamic decoded;
+    try {
+      decoded = jsonDecode(utf8.decode(response.bodyBytes));
+    } catch (_) {
+      throw ApiException('El servidor devolvió una respuesta inesperada.', statusCode: response.statusCode);
+    }
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return decoded;
+    }
+    throw _exceptionFor(response, decoded);
+  }
+
+  Future<http.Response> _sendRaw(String method, String path,
+      {Map<String, String?> query = const {}, Object? body, String accept = 'application/json'}) async {
     final params = {
       for (final entry in query.entries)
         if (entry.value != null && entry.value!.isNotEmpty) entry.key: entry.value!,
     };
     final uri = Uri.parse('$baseUrl$path').replace(queryParameters: params.isEmpty ? null : params);
     final headers = <String, String>{
-      'Accept': 'application/json',
+      'Accept': accept,
       if (body != null) 'Content-Type': 'application/json',
       if (_token != null) 'Authorization': 'Bearer $_token',
     };
@@ -80,22 +117,11 @@ class ApiClient {
     } catch (_) {
       throw ApiException('No se pudo conectar con el servidor. Verifica que esté en ejecución.');
     }
+    return response;
+  }
 
-    if (response.statusCode == 204 || response.body.isEmpty) {
-      return null;
-    }
-
-    dynamic decoded;
-    try {
-      decoded = jsonDecode(utf8.decode(response.bodyBytes));
-    } catch (_) {
-      throw ApiException('El servidor devolvió una respuesta inesperada.', statusCode: response.statusCode);
-    }
-
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return decoded;
-    }
-
+  // Traduce una respuesta de error a un [ApiException] y avisa si la sesión o los términos lo exigen.
+  ApiException _exceptionFor(http.Response response, dynamic decoded) {
     final error = decoded is Map<String, dynamic> ? decoded['error'] : null;
     final message = error is Map && error['message'] is String
         ? error['message'] as String
@@ -120,6 +146,6 @@ class ApiClient {
     if (exception.isTermsRequired && _token != null) {
       onTermsRequired?.call();
     }
-    throw exception;
+    return exception;
   }
 }
