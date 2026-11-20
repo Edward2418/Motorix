@@ -260,15 +260,15 @@ description: "Lista de tareas del Sprint 7: reportes y configuración"
 
 ### Pruebas de la historia 8 (se escriben primero)
 
-- [ ] T092 [P] [US8] Escribir `server/tests/unit/csvExport.test.js` (debe fallar): marca BOM UTF-8 al inicio, separador coma, comillas dobles escapadas por duplicación, campos con comas, comillas o saltos de línea entre comillas, importes con punto y dos decimales, una fila de encabezados y una fila final de totales, y un reporte sin filas produce los encabezados y el total en cero
-- [ ] T093 [P] [US8] Escribir `server/tests/integration/reports.export.test.js` (debe fallar): `GET /api/reports/income?format=csv` responde `text/csv; charset=utf-8` con `Content-Disposition: attachment`, y al leer el CSV sus filas y su total son idénticos a los de la respuesta JSON del mismo rango (incluido un rango sin pagos); `format` distinto de `json` o `csv` responde 400; recepción y mecánico reciben 403
-- [ ] T094 [P] [US8] Escribir `client/test/report_export_test.dart` (debe fallar): el botón «Exportar» pide el CSV al servidor, lo guarda con un guardador de archivos reemplazable (`ReportSaver`, falso en la prueba) en la carpeta de Descargas y muestra el nombre del archivo en un mensaje; un error del servidor o de escritura muestra un mensaje claro
+- [X] T092 [P] [US8] Escribir `server/tests/unit/csvExport.test.js` (debe fallar): marca BOM UTF-8 al inicio, separador coma, comillas dobles escapadas por duplicación, campos con comas, comillas o saltos de línea entre comillas, importes con punto y dos decimales, una fila de encabezados y una fila final de totales, y un reporte sin filas produce los encabezados y el total en cero
+- [X] T093 [P] [US8] Escribir `server/tests/integration/reports.export.test.js` (debe fallar): `GET /api/reports/income?format=csv` responde `text/csv; charset=utf-8` con `Content-Disposition: attachment`, y al leer el CSV sus filas y su total son idénticos a los de la respuesta JSON del mismo rango (incluido un rango sin pagos); `format` distinto de `json` o `csv` responde 400; recepción y mecánico reciben 403
+- [X] T094 [P] [US8] Escribir `client/test/report_export_test.dart` (debe fallar): el botón «Exportar» pide el CSV al servidor, lo guarda con un guardador de archivos reemplazable (`ReportSaver`, falso en la prueba) en la carpeta de Descargas y muestra el nombre del archivo en un mensaje; un error del servidor o de escritura muestra un mensaje claro
 
 ### Implementación de la historia 8
 
-- [ ] T095 [US8] Crear `server/services/csvExport.js` (puro, según la prueba) y hacer que el controlador de reportes responda `format=csv` armando el CSV **desde el mismo resultado** que el JSON; confirmar con `npm test -- tests/unit/csvExport.test.js tests/integration/reports.export.test.js`
-- [ ] T096 [US8] Crear `client/lib/services/report_saver.dart` (interfaz y versión con `dart:io` que escribe en la carpeta de Descargas del usuario) y agregar el botón «Exportar» a `client/lib/screens/reports_screen.dart` con su proveedor; confirmar con `flutter test test/report_export_test.dart`
-- [ ] T097 [US8] Punto de control de la etapa 2: regresión completa del servidor por partes y del cliente, y guardar el resultado en `docs/evidencias/sprint-7/checkpoint-etapa2-backend.txt` y `checkpoint-etapa2-frontend.txt`; actualizar la trazabilidad de las historias 5 a 8
+- [X] T095 [US8] Crear `server/services/csvExport.js` (puro, según la prueba) y hacer que el controlador de reportes responda `format=csv` armando el CSV **desde el mismo resultado** que el JSON; confirmar con `npm test -- tests/unit/csvExport.test.js tests/integration/reports.export.test.js`
+- [X] T096 [US8] Crear `client/lib/services/report_saver.dart` (interfaz y versión con `dart:io` que escribe en la carpeta de Descargas del usuario) y agregar el botón «Exportar» a `client/lib/screens/reports_screen.dart` con su proveedor; confirmar con `flutter test test/report_export_test.dart`
+- [X] T097 [US8] Punto de control de la etapa 2: regresión completa del servidor por partes y del cliente, y guardar el resultado en `docs/evidencias/sprint-7/checkpoint-etapa2-backend.txt` y `checkpoint-etapa2-frontend.txt`; actualizar la trazabilidad de las historias 5 a 8
 
 **Punto de control (etapa 2 completa)**: `quickstart.md` escenarios 20 a 26.
 

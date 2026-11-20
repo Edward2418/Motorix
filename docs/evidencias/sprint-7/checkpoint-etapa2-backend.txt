@@ -1,0 +1,24 @@
+Punto de control de la etapa 2 (historias 5 a 8), servidor, 2026-11-20 11:43.
+Regresión completa por partes (una base compartida, una ejecución a la vez, sin editar archivos durante la corrida).
+
+[unit]
+Test Suites: 36 passed, 36 total
+Tests:       444 passed, 444 total
+Time:        7.265 s, estimated 9 s
+
+[contract]
+Test Suites: 32 passed, 32 total
+Tests:       177 passed, 177 total
+Time:        268.393 s, estimated 306 s
+
+[integ-a]
+Test Suites: 19 passed, 19 total
+Tests:       195 passed, 195 total
+Time:        331.526 s, estimated 367 s
+
+[integ-b]
+Test Suites: 69 passed, 69 total
+Tests:       754 passed, 754 total
+Time:        1399.366 s
+
+Total: 36 + 32 + 19 + 69 = 156 suites; 444 + 177 + 195 + 754 = 1570 pruebas, todas en verde.
