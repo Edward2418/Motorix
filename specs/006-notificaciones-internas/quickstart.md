@@ -71,7 +71,7 @@ Recorrido del 2026-11-19 con `server/scripts/validate-sprint6.js` contra el serv
 | 1 | Aprobado | Contador igual al total del centro (10 sin leer) y avisos de los seis tipos |
 | 2 | Aprobado | Seis grupos, cada uno con su total y sus avisos |
 | 3 | Aprobado | Vencidos 2, próximos 2 y stock 4: iguales en el centro, el panel, Mantenimientos y las alertas de Inventario |
-| 4 | Parcial | El aviso apunta a Inventario (aprobado); la insignia y el aviso de inicio son parte visual y quedan pendientes de Flutter |
+| 4 | Aprobado (sin recorrido manual) | El aviso apunta a Inventario y la prueba de widgets `stock_alert_compat_test` comprueba que el aviso de Inventario sigue igual junto a la campana; no existe una «insignia» (H-11) |
 | 5 | Aprobado | Marcar como leído baja el contador de 10 a 9 y se conserva al iniciar sesión de nuevo |
 | 6 | Aprobado | Para la recepción el mismo aviso sigue sin leer |
 | 7 | Aprobado | Un mantenimiento leído que pasa a vencido reaparece sin leer con gravedad 2 |
@@ -83,9 +83,9 @@ Recorrido del 2026-11-19 con `server/scripts/validate-sprint6.js` contra el serv
 | 13 | Aprobado | Los cuatro motivos, con teléfono y vehículo |
 | 14 | Aprobado | Se registra quién y cuándo (con nota), sale de la lista y repetirlo responde 409 |
 | 15 | Aprobado | Una orden nueva del mismo cliente vuelve a aparecer |
-| 16 | Pendiente | Estados de carga, vacío y error en pantalla: requiere Flutter (H-07); lo cubren las pruebas de la interfaz, escritas y sin ejecutar |
+| 16 | Aprobado (sin recorrido manual) | Las pruebas de widgets comprueban los estados de carga, vacío y error con «Reintentar» en la campana y en Clientes por avisar |
 
-Pruebas automáticas del servidor: 123 suites y 1,088 pruebas (`docs/evidencias/sprint-6/regresion-backend.txt`); 1,087 pasan en la corrida completa y una prueba de un sprint anterior se repite sola (H-14). Rendimiento: centro 67 ms, contador 27 ms y panel 251 ms como máximo con 2,000 órdenes (`docs/evidencias/sprint-6/rendimiento-notificaciones.txt`). Las pruebas de `client/` no se pudieron ejecutar (H-07).
+Pruebas automáticas del servidor: 123 suites y 1,088 pruebas (`docs/evidencias/sprint-6/regresion-backend.txt`); 1,087 pasan en la corrida completa y una prueba de un sprint anterior se repite sola (H-14). Rendimiento: centro 67 ms, contador 27 ms y panel 251 ms como máximo con 2,000 órdenes (`docs/evidencias/sprint-6/rendimiento-notificaciones.txt`). Pruebas del cliente: `flutter analyze` sin problemas y `flutter test` con 250 pruebas aprobadas (215 anteriores + 35 nuevas), ver `docs/evidencias/sprint-6/regresion-frontend.txt`. No se hizo un recorrido manual con la aplicación abierta ni capturas: lo verificado de la interfaz son sus pruebas de widgets.
 
 ## 7. Limitaciones previstas
 

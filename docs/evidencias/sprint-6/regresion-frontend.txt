@@ -1,0 +1,16 @@
+Regresión completa del cliente del Sprint 6 (T068), 2026-11-19 22:56.
+Comandos: flutter analyze y flutter test en client/ (Flutter 3.47.2).
+Resultado: flutter analyze: Analyzing client...                                              No issues found! (ran in 11.6s) 
+Resultado: flutter test: 250 pruebas, todas aprobadas, 0 fallidas (215 de la regresión final del Sprint 5 + 35 nuevas del Sprint 6).
+Nota: el 2026-11-19 el bloqueo de Application Control (H-07) ya no impedía ejecutar Flutter, y se ejecutó sin ninguna evasión.
+
+===== Pruebas nuevas del Sprint 6 (4 archivos): 35 aprobadas =====
+notification_model_test, notification_bell_test, stock_alert_compat_test, client_notices_screen_test
+
+===== Salida de flutter test (últimas líneas) =====
+01:35 +245: C:/Users/Edward/Documents/Proyectos_Claude/Motorix/client/test/vehicles_screen_test.dart: el formulario exige propietario, marca, modelo, año y placa
+01:35 +246: C:/Users/Edward/Documents/Proyectos_Claude/Motorix/client/test/vehicle_history_screen_test.dart: un error del servidor se muestra con la opción de reintentar
+01:35 +247: C:/Users/Edward/Documents/Proyectos_Claude/Motorix/client/test/vehicle_history_screen_test.dart: el rol ADMIN puede abrir el historial desde la lista de vehículos
+01:36 +248: C:/Users/Edward/Documents/Proyectos_Claude/Motorix/client/test/vehicle_history_screen_test.dart: el rol RECEPTIONIST puede abrir el historial desde la lista de vehículos
+01:37 +249: C:/Users/Edward/Documents/Proyectos_Claude/Motorix/client/test/vehicle_history_screen_test.dart: el rol MECHANIC puede abrir el historial desde la lista de vehículos
+01:38 +250: All tests passed!
