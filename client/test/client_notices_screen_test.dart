@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -51,6 +53,7 @@ Future<List<http.Request>> abrirAvisos(
   required String role,
   required FakeHandler handler,
   bool abrirPantalla = true,
+  Future<void>? Function(http.Request request)? hold,
 }) async {
   tester.view.physicalSize = const Size(2000, 900);
   tester.view.devicePixelRatio = 1;
@@ -64,7 +67,7 @@ Future<List<http.Request>> abrirAvisos(
       return contador();
     }
     return handler(request);
-  }, log: log);
+  }, log: log, hold: hold);
   await tester.pumpWidget(MotorixApp(api: api, useGoogleFonts: false));
   await tester.pumpAndSettle();
   await tester.enterText(find.widgetWithText(TextFormField, 'Usuario o correo electrónico'), 'usuario');
@@ -173,6 +176,10 @@ void main() {
         if (request.method == 'POST') {
           return apiError(409, 'NOTICE_ALREADY_REGISTERED', 'Ese hecho ya se avisó al cliente.');
         }
+        // Solo cuentan las consultas de esta pantalla (la pantalla de inicio hace las suyas).
+        if (!request.url.path.endsWith('/client-notices')) {
+          return listaVacia();
+        }
         consultas++;
         return consultas == 1 ? paginaAvisos([pendiente('ORDEN_TERMINADA', 'ORDER:10', 'Ana Pérez')]) : paginaAvisos([]);
       },
@@ -194,10 +201,21 @@ void main() {
   });
 
   testWidgets('mientras consulta muestra un indicador de carga', (tester) async {
-    await abrirAvisos(tester, role: 'RECEPTIONIST', handler: conAvisos([]), abrirPantalla: false);
+    // La lista espera a que se libere la compuerta, para ver el estado de carga.
+    final compuerta = Completer<void>();
+    await abrirAvisos(
+      tester,
+      role: 'RECEPTIONIST',
+      handler: conAvisos([]),
+      abrirPantalla: false,
+      hold: (request) => request.url.path.endsWith('/client-notices') ? compuerta.future : null,
+    );
     await tester.tap(find.text('Clientes por avisar').first);
+    // La pantalla pide la lista en un callback posterior al primer cuadro: el indicador aparece en el segundo.
+    await tester.pump();
     await tester.pump();
     expect(find.byType(CircularProgressIndicator), findsWidgets);
+    compuerta.complete();
     await tester.pumpAndSettle();
     expect(find.byType(CircularProgressIndicator), findsNothing);
   });
@@ -208,6 +226,10 @@ void main() {
       tester,
       role: 'RECEPTIONIST',
       handler: (request) {
+        // Solo cuentan las consultas de esta pantalla (la pantalla de inicio hace las suyas).
+        if (!request.url.path.endsWith('/client-notices')) {
+          return listaVacia();
+        }
         intentos++;
         return intentos == 1
             ? apiError(500, 'INTERNAL_ERROR', 'Ocurrió un error inesperado.')

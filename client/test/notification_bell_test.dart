@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -56,12 +58,13 @@ FakeResponse responder(http.Request request, {int contador = 3, Map<String, dyna
 Future<({NotificationsProvider provider, NavigationProvider navegacion, List<http.Request> log})> abrirCampana(
   WidgetTester tester, {
   required FakeHandler handler,
+  Future<void>? Function(http.Request request)? hold,
 }) async {
   tester.view.physicalSize = const Size(1500, 2200);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   final log = <http.Request>[];
-  final api = fakeApi(handler, log: log);
+  final api = fakeApi(handler, log: log, hold: hold);
   final provider = NotificationsProvider(api);
   final navegacion = NavigationProvider();
   await tester.pumpWidget(
@@ -112,10 +115,17 @@ void main() {
   });
 
   testWidgets('mientras consulta muestra un indicador de carga', (tester) async {
-    await abrirCampana(tester, handler: (request) => responder(request));
+    // El detalle (no el contador) espera a que se libere la compuerta, para ver el estado de carga.
+    final compuerta = Completer<void>();
+    await abrirCampana(
+      tester,
+      handler: (request) => responder(request),
+      hold: (request) => request.url.path.endsWith('/notifications') ? compuerta.future : null,
+    );
     await tester.tap(find.byIcon(LucideIcons.bell));
     await tester.pump();
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    compuerta.complete();
     await tester.pumpAndSettle();
     expect(find.byType(CircularProgressIndicator), findsNothing);
   });

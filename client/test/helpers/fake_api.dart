@@ -14,10 +14,12 @@ class FakeResponse {
 
 typedef FakeHandler = FakeResponse Function(http.Request request);
 
-/// Crea un [ApiClient] que responde con [handler] en lugar de usar la red.
-ApiClient fakeApi(FakeHandler handler, {List<http.Request>? log}) {
+/// Crea un [ApiClient] que responde con [handler] en lugar de usar la red. Con [hold] la respuesta espera a que el
+/// futuro que devuelve termine (sirve para probar los estados de carga, que de otro modo duran un instante).
+ApiClient fakeApi(FakeHandler handler, {List<http.Request>? log, Future<void>? Function(http.Request request)? hold}) {
   final client = MockClient((request) async {
     log?.add(request);
+    await hold?.call(request);
     final response = handler(request);
     return http.Response(
       response.body == null ? '' : jsonEncode(response.body),
