@@ -25,16 +25,28 @@ enum OrderStatus {
 
 /// Servicio realizado o línea de mano de obra de una orden.
 class OrderLine {
-  const OrderLine({required this.id, required this.description, required this.amount});
+  const OrderLine({
+    required this.id,
+    required this.description,
+    required this.amount,
+    this.serviceTypeId,
+    this.serviceTypeName,
+  });
 
   final int id;
   final String description;
   final double amount;
 
+  /// Tipo de servicio del catálogo ligado a la línea (solo los servicios; la mano de obra no lleva tipo).
+  final int? serviceTypeId;
+  final String? serviceTypeName;
+
   factory OrderLine.fromJson(Map<String, dynamic> json) => OrderLine(
         id: json['id'] as int,
         description: json['description'] as String,
         amount: (json['amount'] as num).toDouble(),
+        serviceTypeId: json['serviceTypeId'] as int?,
+        serviceTypeName: json['serviceTypeName'] as String?,
       );
 }
 

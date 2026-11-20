@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../models/client.dart';
 import '../models/service_order.dart';
+import '../models/service_type.dart';
 import '../models/vehicle.dart';
 import '../services/api_client.dart';
 
@@ -198,22 +199,64 @@ class OrdersProvider extends ChangeNotifier {
   }
 
   /// Agrega un servicio o una línea de mano de obra y devuelve la orden con el total recalculado.
-  Future<ServiceOrder> addLine(LineKind kind, int orderId, {required String description, required double amount}) async {
-    final response = await _api.post('/orders/$orderId/${kind.path}', body: {'description': description, 'amount': amount});
+  /// En un servicio, [serviceTypeId] liga la línea a un tipo del catálogo; sin él no se envía nada.
+  Future<ServiceOrder> addLine(LineKind kind, int orderId,
+      {required String description, required double amount, int? serviceTypeId}) async {
+    final response = await _api.post('/orders/$orderId/${kind.path}', body: {
+      'description': description,
+      'amount': amount,
+      'serviceTypeId': ?serviceTypeId,
+    });
     final order = ServiceOrder.fromJson(response['data'] as Map<String, dynamic>);
     notifyListeners();
     return order;
   }
 
+  /// Con [includeServiceType] (solo servicios) se envía también el tipo: `null` lo quita. Sin él, el servidor conserva
+  /// el tipo que la línea ya tenía.
   Future<ServiceOrder> updateLine(LineKind kind, int orderId, int lineId,
-      {required String description, required double amount}) async {
+      {required String description, required double amount, int? serviceTypeId, bool includeServiceType = false}) async {
     final response = await _api.put(
       '/orders/$orderId/${kind.path}/$lineId',
-      body: {'description': description, 'amount': amount},
+      body: {
+        'description': description,
+        'amount': amount,
+        if (includeServiceType) 'serviceTypeId': serviceTypeId,
+      },
     );
     final order = ServiceOrder.fromJson(response['data'] as Map<String, dynamic>);
     notifyListeners();
     return order;
+  }
+
+  /// Tipos de servicio activos para elegir en una línea. Si el catálogo no responde devuelve una lista vacía: el
+  /// servicio se puede registrar igual, sin tipo.
+  Future<List<ServiceType>> activeServiceTypes() async {
+    try {
+      final response = await _api.get('/service-types', query: {'active': 'true'});
+      final data = response['data'];
+      if (data is! List) {
+        return const [];
+      }
+      return [for (final item in data) ServiceType.fromJson(item as Map<String, dynamic>)];
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  /// Propuestas de próximo mantenimiento de la orden a partir de sus tipos de servicio. Ante cualquier fallo devuelve una
+  /// lista vacía: programar el mantenimiento a mano sigue funcionando.
+  Future<List<MaintenanceSuggestion>> maintenanceSuggestions(int orderId) async {
+    try {
+      final response = await _api.get('/orders/$orderId/maintenance-suggestion');
+      final data = response['data'];
+      if (data is! List) {
+        return const [];
+      }
+      return [for (final item in data) MaintenanceSuggestion.fromJson(item as Map<String, dynamic>)];
+    } catch (_) {
+      return const [];
+    }
   }
 
   /// Quita la línea; la orden nunca se elimina.

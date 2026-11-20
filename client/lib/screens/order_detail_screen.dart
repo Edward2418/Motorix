@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../models/maintenance.dart';
 import '../models/service_order.dart';
+import '../models/service_type.dart';
 import '../models/user.dart';
 import '../providers/appointments_provider.dart';
 import '../providers/auth_provider.dart';
@@ -213,31 +214,54 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     );
   }
 
+  // Solo los servicios llevan tipo: se piden los tipos activos del catálogo (si no responde, se agrega sin tipo).
+  Future<List<ServiceType>?> _serviceTypesFor(LineKind kind) async {
+    if (kind != LineKind.services) {
+      return null;
+    }
+    return context.read<OrdersProvider>().activeServiceTypes();
+  }
+
   Future<void> _addLine(LineKind kind) async {
+    final types = await _serviceTypesFor(kind);
+    if (!mounted) {
+      return;
+    }
     final input = await showOrderLineDialog(
       context,
       title: kind == LineKind.services ? 'Agregar servicio' : 'Agregar mano de obra',
+      serviceTypes: types,
     );
     if (input == null || !mounted) {
       return;
     }
     await _run(
-      (orders) => orders.addLine(kind, _order!.id, description: input.description, amount: input.amount),
+      (orders) => orders.addLine(kind, _order!.id,
+          description: input.description, amount: input.amount, serviceTypeId: input.serviceTypeId),
       'Se agregó el ${kind.label}.',
     );
   }
 
   Future<void> _editLine(LineKind kind, OrderLine line) async {
+    final types = await _serviceTypesFor(kind);
+    if (!mounted) {
+      return;
+    }
     final input = await showOrderLineDialog(
       context,
       title: kind == LineKind.services ? 'Editar servicio' : 'Editar mano de obra',
       initial: line,
+      serviceTypes: types,
     );
     if (input == null || !mounted) {
       return;
     }
     await _run(
-      (orders) => orders.updateLine(kind, _order!.id, line.id, description: input.description, amount: input.amount),
+      (orders) => orders.updateLine(kind, _order!.id, line.id,
+          description: input.description,
+          amount: input.amount,
+          serviceTypeId: input.serviceTypeId,
+          includeServiceType: kind == LineKind.services && types != null && (types.isNotEmpty || line.serviceTypeId != null)),
       'Se actualizó el ${kind.label}.',
     );
   }
@@ -255,8 +279,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   Future<void> _scheduleMaintenance() async {
     final order = _order!;
+    // Propuesta a partir de los tipos de servicio de la orden; si no hay o falla, el diálogo se abre vacío.
+    final suggestions = await context.read<OrdersProvider>().maintenanceSuggestions(order.id);
+    if (!mounted) {
+      return;
+    }
     final saved = await showMaintenanceDialog(
       context,
+      suggestions: suggestions,
       referenceMileage: order.serviceMileage ?? order.entryMileage,
       onSubmit: (input) async {
         await context.read<MaintenanceProvider>().create(order.id, input);
@@ -757,7 +787,19 @@ class _LinesSection extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.sm),
                     child: Row(
                       children: [
-                        Expanded(child: Text(line.description, style: theme.textTheme.bodyLarge)),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(line.description, style: theme.textTheme.bodyLarge),
+                              if (line.serviceTypeName != null)
+                                Text(
+                                  'Tipo: ${line.serviceTypeName}',
+                                  style: theme.textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+                                ),
+                            ],
+                          ),
+                        ),
                         Text(formatMoney(line.amount), style: theme.textTheme.bodyLarge),
                         if (canEdit) ...[
                           IconButton(

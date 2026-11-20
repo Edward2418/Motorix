@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../models/service_type.dart';
 import '../providers/maintenance_provider.dart';
 import '../services/api_client.dart';
 import '../utils/app_tokens.dart';
@@ -11,23 +12,27 @@ const int _maxMileage = 4294967295;
 /// Programa el próximo mantenimiento. [onSubmit] llama a la API; si el servidor rechaza los datos, los errores
 /// se muestran en los campos sin cerrar el diálogo. Devuelve `true` si se guardó.
 /// [referenceMileage] es solo una referencia visible (el kilometraje conocido del vehículo en la orden).
+/// [suggestions] son las propuestas a partir de los tipos de servicio de la orden: la primera se precarga (descripción,
+/// fecha y kilometraje) y la persona puede corregirla; con varias se ofrece elegir cuál usar.
 Future<bool> showMaintenanceDialog(
   BuildContext context, {
   required Future<void> Function(MaintenanceInput input) onSubmit,
   int? referenceMileage,
+  List<MaintenanceSuggestion> suggestions = const [],
 }) async {
   final saved = await showDialog<bool>(
     context: context,
-    builder: (_) => _MaintenanceDialog(onSubmit: onSubmit, referenceMileage: referenceMileage),
+    builder: (_) => _MaintenanceDialog(onSubmit: onSubmit, referenceMileage: referenceMileage, suggestions: suggestions),
   );
   return saved ?? false;
 }
 
 class _MaintenanceDialog extends StatefulWidget {
-  const _MaintenanceDialog({required this.onSubmit, this.referenceMileage});
+  const _MaintenanceDialog({required this.onSubmit, this.referenceMileage, this.suggestions = const []});
 
   final Future<void> Function(MaintenanceInput input) onSubmit;
   final int? referenceMileage;
+  final List<MaintenanceSuggestion> suggestions;
 
   @override
   State<_MaintenanceDialog> createState() => _MaintenanceDialogState();
@@ -44,6 +49,25 @@ class _MaintenanceDialogState extends State<_MaintenanceDialog> {
   String? _targetError;
   String? _generalError;
   Map<String, String> _serverErrors = const {};
+  int _suggestion = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.suggestions.isNotEmpty) {
+      _applySuggestion(0);
+    }
+  }
+
+  // Precarga los campos con la propuesta elegida; la persona puede corregirlos antes de guardar.
+  void _applySuggestion(int index) {
+    final suggestion = widget.suggestions[index];
+    _suggestion = index;
+    _description.text = suggestion.description;
+    _mileage.text = suggestion.dueMileage == null ? '' : '${suggestion.dueMileage}';
+    _dueDate = suggestion.dueDate;
+    _targetError = null;
+  }
 
   @override
   void dispose() {
@@ -129,6 +153,25 @@ class _MaintenanceDialogState extends State<_MaintenanceDialog> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (widget.suggestions.length == 1) ...[
+                  Text(
+                    'Propuesta a partir del tipo de servicio «${widget.suggestions.first.serviceTypeName}». Puedes corregirla.',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                ] else if (widget.suggestions.length > 1) ...[
+                  DropdownButtonFormField<int>(
+                    isExpanded: true,
+                    initialValue: _suggestion,
+                    decoration: const InputDecoration(labelText: 'Propuesta a partir de los servicios de la orden'),
+                    items: [
+                      for (var i = 0; i < widget.suggestions.length; i++)
+                        DropdownMenuItem(value: i, child: Text('Propuesta: ${widget.suggestions[i].serviceTypeName}')),
+                    ],
+                    onChanged: _saving ? null : (value) => setState(() => _applySuggestion(value ?? 0)),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                ],
                 TextFormField(
                   controller: _description,
                   autofocus: true,
