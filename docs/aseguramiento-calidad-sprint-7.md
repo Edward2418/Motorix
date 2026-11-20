@@ -85,21 +85,21 @@ Decisiones por defecto tomadas sin consulta (documentadas en `spec.md`, sección
 
 ## 6. Trazabilidad
 
-*Pendiente: se llena durante la implementación, con el resultado verificado de cada requisito.*
+*Se llena durante la implementación. Etapa 1 (historias 1 a 4) verificada con el punto de control `docs/evidencias/sprint-7/checkpoint-etapa1-backend.txt` y `checkpoint-etapa1-frontend.txt`.*
 
 | Requisito | Tareas de prueba | Tareas de implementación | Resultado |
 |---|---|---|---|
-| FR-001 y FR-002 | T017, T018, T023 | T019 a T022, T024, T025 | Pendiente |
-| FR-003 y FR-004 | T005, T026, T027, T031 | T028 a T030, T032 | Pendiente |
+| FR-001 y FR-002 | T017, T018, T023 | T019 a T022, T024, T025 | Verificado (etapa 1) |
+| FR-003 y FR-004 | T005, T026, T027, T031 | T028 a T030, T032 | Verificado (etapa 1) |
 | FR-005 a FR-007 | T067 a T073 | T074 a T079 | Pendiente |
 | FR-008 | T080, T081 | T082, T083 | Pendiente |
 | FR-009, FR-010 y FR-015 | T084 a T087, T112 | T088 a T091, T113 | Pendiente |
 | FR-011 a FR-013 | T099, T103 a T106 | T101, T107, T108 | Pendiente (etapa 3) |
 | FR-014 | T092 a T094 | T095, T096 | Pendiente |
-| FR-016 | T018, T034, T055, T068, T085 | T021, T047, T061, T074 | Pendiente |
-| FR-017 a FR-020 | T051 a T058 | T059 a T065 | Pendiente |
-| FR-021 a FR-023 | T006, T033 a T035 | T012, T042 a T047, T050 | Pendiente |
-| FR-024 a FR-027 | T036 a T041 | T048, T049, T116 | Pendiente |
+| FR-016 | T018, T034, T055, T068, T085 | T021, T047, T061, T074 | Parcial: administración verificada en configuración, bitácora y términos; faltan reportes (etapa 2) |
+| FR-017 a FR-020 | T051 a T058 | T059 a T065 | Verificado (etapa 1) |
+| FR-021 a FR-023 | T006, T033 a T035 | T012, T042 a T047, T050 | Verificado (etapa 1) |
+| FR-024 a FR-027 | T036 a T041 | T048, T049, T116 | Parcial: falta T116 (documentación de seguridad) |
 | FR-028 | T109 | T110, T111 | Pendiente |
 | FR-029 a FR-032 | todas las pruebas | todas las fases | Pendiente |
 
@@ -112,6 +112,10 @@ Decisiones por defecto tomadas sin consulta (documentadas en `spec.md`, sección
 | H-03 | Los disparadores de la bitácora eran inviables: MySQL tiene el registro binario activo (`log_bin=1`, `log_bin_trust_function_creators=0`) y el usuario dedicado del proyecto no tiene `SUPER`, así que `CREATE TRIGGER` falla (error 1419) y la migración `009` habría detenido el sprint; además chocaba con el principio III | Alta (crítica en el análisis) | G-07 (C1) | Corregido | La migración `009` no lleva disparadores; la inmutabilidad se garantiza desde la aplicación con una prueba automática, y los disparadores quedan como script opcional para un administrador con `SUPER` (`database/scripts/audit-log-protection.sql`) | Commit `f8d2183`, `research.md` D-11 |
 | H-04 | `resetTables` con `TRUNCATE` para las tablas nuevas habría sumado unos 350 ms por reinicio de la base y empeorado H-10 (Sprint 6) | Media | G-07 (P1) | Corregido | T013 usa `DELETE` en las tablas nuevas, como en el Sprint 6 | `specs/007-reportes-configuracion/tasks.md` T013 |
 | H-05 | Otros 6 hallazgos menores del análisis: el recorrido de rutas de la prueba de términos estaba subespecificado (U1), «cambios de precios» era ambiguo (A1), el seed que pre-acepta los términos no estaba en la especificación (I1), SC-001 no tenía medición (E1), la pantalla de términos quedaba fuera del cierre por inactividad (E2) y `validateLine` no recibía el tipo de línea (U2) | Media y baja | G-07 | Corregido | Se aplicaron las 18 ediciones del análisis antes de implementar | Commit `8596ef6` |
+| H-06 | Cuatro pruebas de la historia 4 pasaron en su primera ejecución, sin pasar antes por rojo, porque verifican comportamiento que ya existía y el sprint solo lo deja protegido: `passwords.policy` (política de contraseñas del Sprint 1, aplicada al crear usuario y al cambiarla), `session.expiry` (el servidor rechaza tokens vencidos, manipulados, con otra firma o de una cuenta desactivada), `injection.search` (todas las búsquedas usan parámetros, ninguna concatena) y `exposure` (ninguna respuesta lleva hash, token ni, según el rol, precio de compra) | Informativa | G-07 (T048) | Aceptado | No hizo falta ajustar servicios, modelos ni respuestas. Para no dar por buena una prueba que nunca falla, `exposure` y `auditImmutability` incluyen una verificación de eficacia que comprueba que la propia detección encuentra lo que debe | `server/tests/integration/{passwords.policy,session.expiry,injection.search,exposure}.test.js` |
+| H-07 | Al diseñar la prueba de integración de `audit.log` se anticipó un caso real al registrar la configuración (la prueba lo cubre desde el inicio): un teléfono largo (por ejemplo `+52 55 1234 5678 9012`) se parece a un número de tarjeta y la protección de la bitácora lo rechaza, lo que habría convertido un guardado válido en un error 500 | Media | G-07 (T044) | Corregido | `settingsService` anota solo «teléfono del taller: modificado» cuando el detalle parece un secreto, de modo que el guardado funciona y la bitácora nunca guarda ese valor | `server/services/settingsService.js`, `audit.log.test.js` |
+| H-08 | Las pruebas del cliente de la historia 4 (bitácora e inactividad) se escribieron antes que el código pero no se ejecutaron en rojo antes de implementar; pasaron todas al primer intento junto con la implementación | Baja | G-03 | Aceptado | Se deja constancia. La validez de las pruebas se apoya en que cada una comprueba un resultado visible (texto, solicitud enviada, vuelta al inicio de sesión) y no solo que no haya errores | `client/test/{audit_screen,inactivity_guard}_test.dart` |
+| H-09 | T049 pedía envolver con el guardia de inactividad `app_shell.dart` y, aparte, la pantalla de términos. Se colocó una sola vez en el `builder` de `MaterialApp`, por encima de todas las pantallas | Informativa | G-07 (T049) | Aceptado | Cubre la aplicación autenticada y, cuando exista, la pantalla de términos, sin duplicar el guardia ni olvidar una pantalla futura. El temporizador solo corre con una sesión abierta | `client/lib/main.dart`, `client/lib/widgets/inactivity_guard.dart` |
 
 **Pruebas inestables heredadas (no se modifican en este sprint):** H-10 (`orderParts.prices.concurrency`, roza su límite de 20 s) y H-14 (`payments.paidOrder`, sensible a la carga del equipo), ambas del Sprint 6. Si fallan en la regresión se repiten solas y se registra el resultado.
 

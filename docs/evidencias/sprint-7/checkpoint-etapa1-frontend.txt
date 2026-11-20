@@ -1,0 +1,3 @@
+Punto de control de la etapa 1, cliente, 2026-11-20 02:03.
+flutter analyze: No issues found.
+flutter test: 301 pruebas, todas en verde.
