@@ -6,6 +6,7 @@ import * as orderHistoryModel from '../models/orderHistoryModel.js';
 import * as orderItemModel from '../models/orderItemModel.js';
 import * as orderModel from '../models/orderModel.js';
 import * as orderPartModel from '../models/orderPartModel.js';
+import * as serviceTypeModel from '../models/serviceTypeModel.js';
 import * as userModel from '../models/userModel.js';
 import * as vehicleModel from '../models/vehicleModel.js';
 import { AppError } from '../utils/AppError.js';
@@ -373,11 +374,24 @@ async function loadEditableOrder(orderId, actor, conn) {
 
 // Agrega un servicio (kind = 'services') o una línea de mano de obra (kind = 'labor'). Se ejecuta en una transacción con
 // la orden bloqueada para que el límite del total nunca se supere, tampoco con solicitudes simultáneas.
+// El tipo de servicio de una línea debe existir y estar activo cuando se asigna o cambia (uno que ya tenía y luego se
+// desactivó se conserva, porque ese caso no pasa por aquí).
+async function assertServiceTypeUsable(serviceTypeId, conn) {
+  if (serviceTypeId === undefined || serviceTypeId === null) {
+    return;
+  }
+  const type = await serviceTypeModel.findById(serviceTypeId, conn);
+  if (!type || !type.active) {
+    throw fieldError('serviceTypeId', 'El tipo de servicio no existe o está desactivado.');
+  }
+}
+
 export async function addLine(kind, orderId, input, actor) {
   await withTransaction(async (conn) => {
     await orderModel.lockById(orderId, conn);
     const order = await loadEditableOrder(orderId, actor, conn);
     assertWithinLimit(toCents(order.total), toCents(input.amount));
+    await assertServiceTypeUsable(input.serviceTypeId, conn);
     await orderItemModel.insertLine(kind, orderId, input, conn);
   });
   return buildOrderDetail(await orderModel.findById(orderId), actor);
@@ -392,6 +406,9 @@ export async function updateLine(kind, orderId, lineId, input, actor) {
       throw AppError.notFound('La línea no existe en esta orden.');
     }
     assertWithinLimit(toCents(order.total), toCents(input.amount) - toCents(line.amount));
+    if (input.serviceTypeId !== undefined && input.serviceTypeId !== line.serviceTypeId) {
+      await assertServiceTypeUsable(input.serviceTypeId, conn);
+    }
     await orderItemModel.updateLine(kind, orderId, lineId, input, conn);
   });
   return buildOrderDetail(await orderModel.findById(orderId), actor);

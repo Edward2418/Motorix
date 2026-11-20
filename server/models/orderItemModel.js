@@ -5,13 +5,24 @@ import { query } from '../config/db.js';
 
 const toLine = (row) => ({ id: row.id, description: row.description, amount: Number(row.amount) });
 
+// Un servicio, además, puede estar ligado a un tipo del catálogo (Sprint 7); la mano de obra no.
+const toServiceLine = (row) => ({
+  ...toLine(row),
+  serviceTypeId: row.service_type_id ?? null,
+  serviceTypeName: row.service_type_name ?? null
+});
+
 export async function listServices(orderId, conn) {
   const rows = await query(
-    'SELECT id, description, cost AS amount FROM order_services WHERE order_id = ? ORDER BY id',
+    `SELECT s.id, s.description, s.cost AS amount, s.service_type_id, t.name AS service_type_name
+     FROM order_services s
+     LEFT JOIN service_types t ON t.id = s.service_type_id
+     WHERE s.order_id = ?
+     ORDER BY s.id`,
     [orderId],
     conn
   );
-  return rows.map(toLine);
+  return rows.map(toServiceLine);
 }
 
 export async function listLabor(orderId, conn) {
@@ -40,16 +51,29 @@ function lineTable(kind) {
 // Línea de una orden concreta (null si no existe o pertenece a otra orden).
 export async function findLine(kind, orderId, lineId, conn) {
   const { table, column } = lineTable(kind);
+  const typeColumn = kind === 'services' ? ', service_type_id' : '';
   const rows = await query(
-    `SELECT id, description, ${column} AS amount FROM ${table} WHERE id = ? AND order_id = ? LIMIT 1`,
+    `SELECT id, description, ${column} AS amount${typeColumn} FROM ${table} WHERE id = ? AND order_id = ? LIMIT 1`,
     [lineId, orderId],
     conn
   );
-  return rows[0] ? toLine(rows[0]) : null;
+  if (!rows[0]) {
+    return null;
+  }
+  return kind === 'services' ? toServiceLine(rows[0]) : toLine(rows[0]);
 }
 
-export async function insertLine(kind, orderId, { description, amount }, conn) {
+// `serviceTypeId` solo aplica a los servicios: indefinido o `null` la deja sin tipo y un número la liga al tipo.
+export async function insertLine(kind, orderId, { description, amount, serviceTypeId }, conn) {
   const { table, column } = lineTable(kind);
+  if (kind === 'services') {
+    const result = await query(
+      `INSERT INTO ${table} (order_id, description, ${column}, service_type_id) VALUES (?, ?, ?, ?)`,
+      [orderId, description, amount, serviceTypeId ?? null],
+      conn
+    );
+    return result.insertId;
+  }
   const result = await query(
     `INSERT INTO ${table} (order_id, description, ${column}) VALUES (?, ?, ?)`,
     [orderId, description, amount],
@@ -58,8 +82,17 @@ export async function insertLine(kind, orderId, { description, amount }, conn) {
   return result.insertId;
 }
 
-export async function updateLine(kind, orderId, lineId, { description, amount }, conn) {
+// En un servicio, `serviceTypeId` indefinido no toca el tipo, `null` lo quita y un número lo cambia.
+export async function updateLine(kind, orderId, lineId, { description, amount, serviceTypeId }, conn) {
   const { table, column } = lineTable(kind);
+  if (kind === 'services' && serviceTypeId !== undefined) {
+    await query(
+      `UPDATE ${table} SET description = ?, ${column} = ?, service_type_id = ? WHERE id = ? AND order_id = ?`,
+      [description, amount, serviceTypeId, lineId, orderId],
+      conn
+    );
+    return;
+  }
   await query(
     `UPDATE ${table} SET description = ?, ${column} = ? WHERE id = ? AND order_id = ?`,
     [description, amount, lineId, orderId],

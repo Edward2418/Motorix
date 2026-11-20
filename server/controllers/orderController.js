@@ -52,13 +52,13 @@ const lineId = (req) => parseId(req.params.lineId, 'El identificador de la líne
 
 export const addLine = (kind) => async (req, res) => {
   const id = orderId(req);
-  sendData(res, await orderService.addLine(kind, id, validateLine(req.body), req.user), 201);
+  sendData(res, await orderService.addLine(kind, id, validateLine(req.body, kind), req.user), 201);
 };
 
 export const updateLine = (kind) => async (req, res) => {
   const id = orderId(req);
   const line = lineId(req);
-  sendData(res, await orderService.updateLine(kind, id, line, validateLine(req.body), req.user));
+  sendData(res, await orderService.updateLine(kind, id, line, validateLine(req.body, kind), req.user));
 };
 
 export const removeLine = (kind) => async (req, res) => {

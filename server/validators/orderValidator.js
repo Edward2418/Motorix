@@ -167,12 +167,26 @@ export function validateServiceMileageCorrection(body) {
   return { serviceMileage, reason };
 }
 
-// Servicio o línea de mano de obra: descripción e importe (en la API siempre se llama `amount`).
-export function validateLine(body) {
+// Servicio o línea de mano de obra: descripción e importe (en la API siempre se llama `amount`). Un servicio puede
+// indicar además `serviceTypeId` (opcional; `null` lo quita); la mano de obra no acepta tipo. Si el cuerpo no trae
+// `serviceTypeId`, el resultado no lo incluye y el servicio no toca el tipo que la línea ya tenía.
+export function validateLine(body, kind = 'services') {
   const data = requireBody(body);
   const errors = new FieldErrors();
   const description = requiredText(errors, data, 'description', 'La descripción', 255);
   const amount = parseAmount(errors, data.amount, 'amount', 'El importe');
+  const line = { description, amount };
+  if (data.serviceTypeId !== undefined) {
+    if (kind !== 'services') {
+      errors.add('serviceTypeId', 'La mano de obra no lleva tipo de servicio.');
+    } else if (data.serviceTypeId === null) {
+      line.serviceTypeId = null;
+    } else if (!Number.isInteger(data.serviceTypeId) || data.serviceTypeId < 1) {
+      errors.add('serviceTypeId', 'El tipo de servicio debe ser un identificador válido.');
+    } else {
+      line.serviceTypeId = data.serviceTypeId;
+    }
+  }
   errors.throwIfAny();
-  return { description, amount };
+  return line;
 }

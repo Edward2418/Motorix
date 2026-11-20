@@ -3,6 +3,7 @@ import * as maintenanceController from '../controllers/maintenanceController.js'
 import * as orderController from '../controllers/orderController.js';
 import * as orderPartController from '../controllers/orderPartController.js';
 import * as paymentController from '../controllers/paymentController.js';
+import * as serviceTypeController from '../controllers/serviceTypeController.js';
 import * as ticketController from '../controllers/ticketController.js';
 import { authenticate } from '../middlewares/authenticate.js';
 import { authorize, ROLES } from '../middlewares/authorize.js';
@@ -29,6 +30,8 @@ router.put('/:id/service-mileage', authorize(ROLES.ADMIN), asyncHandler(orderCon
 router.patch('/:id', asyncHandler(orderController.updateContent));
 // Próximo mantenimiento del vehículo, programado desde la orden (la propiedad la valida el servicio).
 router.post('/:id/maintenance', asyncHandler(maintenanceController.createFromOrder));
+// Propuesta del próximo mantenimiento a partir de los tipos de servicio de la orden (la propiedad la valida el servicio).
+router.get('/:id/maintenance-suggestion', asyncHandler(serviceTypeController.suggestionForOrder));
 
 // Refacciones usadas: el servicio valida rol, propiedad y estado; cada cambio mueve el inventario.
 router.post('/:id/parts', asyncHandler(orderPartController.add));
