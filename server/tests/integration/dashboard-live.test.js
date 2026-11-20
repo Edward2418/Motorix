@@ -46,8 +46,11 @@ describe('el panel se calcula al consultar', () => {
     const [tablas] = await pool.query('SELECT table_name AS nombre FROM information_schema.tables WHERE table_schema = DATABASE()');
     // Sprint 6: client_notices (avisos hechos a clientes) y notification_reads (lecturas de avisos) son tablas de
     // negocio, no estadísticas ni copias del panel; los avisos en sí se calculan al consultar y no se guardan.
+    // Sprint 7 (ajuste declarado, T015): settings, service_types, terms_versions, terms_acceptances y audit_log son tablas
+    // de negocio (configuración, catálogo, términos y bitácora); los reportes se calculan al consultar y no se guardan.
     expect(tablas.map((t) => t.nombre.toLowerCase()).sort()).toEqual([
       'appointments',
+      'audit_log',
       'client_notices',
       'clients',
       'folio_counters',
@@ -63,6 +66,10 @@ describe('el panel se calcula al consultar', () => {
       'payments',
       'schema_migrations',
       'service_orders',
+      'service_types',
+      'settings',
+      'terms_acceptances',
+      'terms_versions',
       'ticket_folio_counters',
       'tickets',
       'users',

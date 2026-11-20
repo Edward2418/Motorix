@@ -17,6 +17,7 @@ const REPETITIONS = 5;
 const COUNTS = { clients: 200, vehicles: 400, parts: 60, orders: 2000, movements: 5000, tickets: 500, openOrders: 300 };
 
 const TABLES = [
+  'audit_log', 'terms_acceptances', 'terms_versions', 'settings', 'service_types',
   'notification_reads', 'client_notices', 'login_attempts', 'payments', 'tickets', 'ticket_folio_counters', 'maintenance', 'inventory_movements',
   'order_parts', 'parts', 'order_status_history', 'order_services', 'order_labor', 'service_orders', 'appointments',
   'folio_counters', 'vehicles', 'clients', 'users'

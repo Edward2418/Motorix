@@ -14,6 +14,12 @@ export async function resetTables() {
   // pruebas que reinician la base muchas veces dentro de un mismo caso y ya están cerca de su límite de 20 s.
   await pool.query('DELETE FROM notification_reads');
   await pool.query('DELETE FROM client_notices');
+  // Igual con las del Sprint 7. audit_log se vacía con DELETE porque la migración no crea disparadores (research D-11).
+  await pool.query('DELETE FROM audit_log');
+  await pool.query('DELETE FROM terms_acceptances');
+  await pool.query('DELETE FROM terms_versions');
+  await pool.query('DELETE FROM settings');
+  await pool.query('DELETE FROM service_types');
   const tables = [
     'login_attempts',
     'payments',
@@ -160,6 +166,56 @@ export async function createClientNotice({ clientId, reason = 'ORDEN_TERMINADA',
     [clientId, reason, factKey, note, notifiedBy]
   );
   return { id: result.insertId, clientId, reason, factKey };
+}
+
+// Crea un tipo de servicio del catálogo (Sprint 7). Por defecto, con un intervalo de 180 días y de 5,000 km.
+export async function createServiceType({ name = 'Cambio de aceite', intervalDays = 180, intervalKm = 5000, active = true } = {}) {
+  const [result] = await pool.query('INSERT INTO service_types (name, interval_days, interval_km, active) VALUES (?, ?, ?, ?)', [
+    name,
+    intervalDays,
+    intervalKm,
+    active ? 1 : 0
+  ]);
+  return { id: result.insertId, name, intervalDays, intervalKm, active };
+}
+
+// Publica una versión de los términos (Sprint 7). Sin número, toma el siguiente al de la última publicada.
+export async function createTermsVersion({
+  version,
+  termsText = 'Términos y condiciones de prueba.',
+  privacyText = 'Aviso de privacidad de prueba.'
+} = {}) {
+  const [[ultima]] = await pool.query('SELECT COALESCE(MAX(version), 0) AS ultima FROM terms_versions');
+  const numero = version ?? Number(ultima.ultima) + 1;
+  const [result] = await pool.query('INSERT INTO terms_versions (version, terms_text, privacy_text) VALUES (?, ?, ?)', [
+    numero,
+    termsText,
+    privacyText
+  ]);
+  return { id: result.insertId, version: numero };
+}
+
+// Registra que un usuario aceptó una versión de los términos (por defecto, la vigente). No hace nada si no hay ninguna.
+export async function acceptTerms(userId, versionId) {
+  let id = versionId;
+  if (id === undefined) {
+    const [[vigente]] = await pool.query('SELECT id FROM terms_versions ORDER BY version DESC LIMIT 1');
+    if (!vigente) {
+      return null;
+    }
+    id = vigente.id;
+  }
+  await pool.query('INSERT IGNORE INTO terms_acceptances (user_id, terms_version_id) VALUES (?, ?)', [userId, id]);
+  return id;
+}
+
+// Guarda un valor de configuración (Sprint 7) directamente en la tabla, sin pasar por las validaciones del servicio.
+export async function createSetting({ key, value, updatedBy }) {
+  await pool.query(
+    `INSERT INTO settings (setting_key, setting_value, updated_by) VALUES (?, ?, ?)
+     ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value), updated_by = VALUES(updated_by)`,
+    [key, String(value), updatedBy]
+  );
 }
 
 // Crea una refacción con su movimiento de ENTRADA «Stock inicial» (si el stock es mayor que cero).
