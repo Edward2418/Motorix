@@ -5,6 +5,8 @@ import { bearer } from '../helpers/auth.js';
 import { escenarioOrden } from '../helpers/orders.js';
 
 const lineaShape = { id: expect.any(Number), description: expect.any(String), amount: expect.any(Number) };
+// Desde el Sprint 7 un servicio incluye su tipo de servicio (nulo si no tiene); la mano de obra no.
+const servicioShape = { ...lineaShape, serviceTypeId: null, serviceTypeName: null };
 
 describe('contrato de edición de /api/orders', () => {
   beforeEach(resetTables);
@@ -37,7 +39,7 @@ describe('contrato de edición de /api/orders', () => {
       .set(bearer(tokens.mecanico))
       .send({ description: 'Cambio de balatas', amount: 1200.5 });
     expect(res.status).toBe(201);
-    expect(res.body.data.services).toEqual([lineaShape]);
+    expect(res.body.data.services).toEqual([servicioShape]);
     expect(res.body.data.servicesTotal).toBe(1200.5);
     expect(res.body.data.total).toBe(1200.5);
   });
@@ -55,7 +57,7 @@ describe('contrato de edición de /api/orders', () => {
       .set(bearer(tokens.mecanico))
       .send({ description: 'Alineación y balanceo', amount: 650 });
     expect(editada.status).toBe(200);
-    expect(editada.body.data.services[0]).toEqual({ id: lineId, description: 'Alineación y balanceo', amount: 650 });
+    expect(editada.body.data.services[0]).toEqual({ id: lineId, description: 'Alineación y balanceo', amount: 650, serviceTypeId: null, serviceTypeName: null });
 
     const borrada = await request(app)
       .delete(`/api/orders/${orden.id}/services/${lineId}`)

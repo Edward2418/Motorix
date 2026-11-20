@@ -29,7 +29,9 @@ describe('órdenes: servicios y mano de obra', () => {
         const lineId = alta.body.data[tipo][0].id;
         const edicion = await editar(tokens.mecanico, orden.id, tipo, lineId, { description: 'Cambio de balatas y discos', amount: 2500.5 });
         expect(edicion.status).toBe(200);
-        expect(edicion.body.data[tipo]).toEqual([{ id: lineId, description: 'Cambio de balatas y discos', amount: 2500.5 }]);
+        // Desde el Sprint 7 los servicios (no la mano de obra) incluyen su tipo de servicio, nulo si no tienen.
+        const esperada = { id: lineId, description: 'Cambio de balatas y discos', amount: 2500.5 };
+        expect(edicion.body.data[tipo]).toEqual([tipo === 'services' ? { ...esperada, serviceTypeId: null, serviceTypeName: null } : esperada]);
 
         const baja = await quitar(tokens.mecanico, orden.id, tipo, lineId);
         expect(baja.status).toBe(200);
