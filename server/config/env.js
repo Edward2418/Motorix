@@ -3,6 +3,7 @@
 // En pruebas, tests/helpers/setupEnv.js carga ../.env.test antes de importar este módulo.
 
 import { readPositiveInt } from '../utils/envNumbers.js';
+import { parseAllowedOrigins } from './cors.js';
 
 const required = ['DB_HOST', 'DB_PORT', 'DB_USER', 'DB_PASSWORD', 'DB_NAME', 'JWT_SECRET'];
 
@@ -20,6 +21,10 @@ export const env = {
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     name: process.env.DB_NAME
+  },
+  // Orígenes de navegador permitidos (CORS), separados por comas. Sin valor solo rigen los orígenes locales.
+  cors: {
+    origins: parseAllowedOrigins(process.env.CORS_ORIGINS)
   },
   jwt: {
     secret: process.env.JWT_SECRET,
