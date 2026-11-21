@@ -55,9 +55,10 @@ Future<List<http.Request>> abrirBitacora(
   String role = 'ADMIN',
   required FakeHandler handler,
   bool abrirPantalla = true,
+  Size size = const Size(2000, 1400),
   Future<void>? Function(http.Request request)? hold,
 }) async {
-  tester.view.physicalSize = const Size(2000, 1400);
+  tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   final log = <http.Request>[];
@@ -110,6 +111,23 @@ void main() {
       expect(find.text('bloqueo de 15 minutos'), findsOneWidget);
       expect(find.text('lucia'), findsOneWidget);
       expect(find.textContaining('2026'), findsWidgets);
+    });
+
+    testWidgets('un detalle largo salta de línea con un ancho máximo y se lee completo', (tester) async {
+      await abrirBitacora(
+        tester,
+        handler: servidor(
+          bitacora: (_) => pagina([
+            registro(1, accion: 'SETTINGS_CHANGED', detalle: 'nombre del taller: Taller Motorix (ejemplo) → Taller de Nacho'),
+          ]),
+        ),
+      );
+
+      final detalle = find.text('nombre del taller: Taller Motorix (ejemplo) → Taller de Nacho');
+
+      expect(detalle, findsOneWidget);
+      expect(tester.getSize(detalle).width, lessThanOrEqualTo(480), reason: 'el detalle debe saltar de línea y no alargar la tabla');
+      expect(tester.getSize(detalle).height, greaterThan(30), reason: 'al saltar de línea ocupa más de una línea');
     });
 
     testWidgets('un inicio fallido de una cuenta inexistente se muestra sin usuario', (tester) async {

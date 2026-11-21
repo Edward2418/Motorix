@@ -20,6 +20,10 @@ class AuditScreen extends StatefulWidget {
 }
 
 class _AuditScreenState extends State<AuditScreen> {
+  // El detalle salta de línea: ocupa el espacio que dejan las otras columnas, entre estos dos anchos.
+  static const _detailMinWidth = 180.0;
+  static const _detailMaxWidth = 480.0;
+  static const _otherColumnsWidth = 500.0;
   static const _dateMessage = 'Escribe la fecha como AAAA-MM-DD, por ejemplo 2026-11-01.';
 
   final _formKey = GlobalKey<FormState>();
@@ -191,8 +195,21 @@ class _AuditScreenState extends State<AuditScreen> {
     if (audit.items.isEmpty) {
       return const EmptyState(message: 'No hay registros con esos filtros.');
     }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final detailWidth = (constraints.maxWidth - _otherColumnsWidth).clamp(_detailMinWidth, _detailMaxWidth);
+        return _buildTable(audit, detailWidth);
+      },
+    );
+  }
+
+  Widget _buildTable(AuditProvider audit, double detailWidth) {
     return TableScroll(
       child: DataTable(
+        // La fila crece con el detalle en vez de recortarlo.
+        dataRowMaxHeight: double.infinity,
+        columnSpacing: AppSpacing.xl,
+        horizontalMargin: AppSpacing.lg,
         columns: const [
           DataColumn(label: Text('Fecha')),
           DataColumn(label: Text('Usuario')),
@@ -206,7 +223,15 @@ class _AuditScreenState extends State<AuditScreen> {
                 DataCell(Text(formatDateTime(entry.createdAt))),
                 DataCell(Text(entry.actor ?? 'Sin usuario')),
                 DataCell(Text(entry.actionLabel)),
-                DataCell(Text(entry.detail ?? '')),
+                DataCell(
+                  ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: detailWidth),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                      child: Text(entry.detail ?? ''),
+                    ),
+                  ),
+                ),
               ],
             ),
         ],
