@@ -24,9 +24,9 @@ Evidencia de calidad al cierre del Sprint 7: servidor con 158 suites y 1,588 pru
 | Viabilidad operativa (uso en el taller) | **Viable con reservas** | Cubre el flujo diario del taller. Faltan respaldos, despliegue y mensajería al cliente para operarlo sin supervisión. |
 | Viabilidad económica | **Viable** | Costo estimado del proyecto de **$4,991.00 MXN** (subtotal $4,340.00 más 15% de reserva), con alojamiento de $0.00 porque corre en local. Un despliegue real añadiría costo de alojamiento y dominio, aún sin estimar. |
 | Listo para demostración local y evaluación académica | **Sí** | Se ejecuta en local con datos de ejemplo y las cuentas documentadas en el README. |
-| **Listo para producción** | **No, todavía** | Quedan deudas bloqueantes (sección 3): despliegue, HTTPS, respaldos, pasarela de pagos en producción, cabeceras de seguridad y control de orígenes. |
+| **Listo para producción** | **No, todavía** | Quedan cuatro deudas bloqueantes (sección 3): despliegue, HTTPS, respaldos y pasarela de pagos en producción. Las cabeceras de seguridad y el control de orígenes ya se resolvieron el 21 de noviembre. |
 
-**Resumen:** Motorix es un producto funcional y bien probado para su alcance académico. Para pasar a producción hay que cerrar primero las deudas marcadas como **bloqueantes**; las demás pueden ir después.
+**Resumen:** Motorix es un producto funcional y bien probado para su alcance académico. Para pasar a producción hay que cerrar primero las cuatro deudas **bloqueantes** que siguen abiertas (D-01 a D-04); las demás pueden ir después.
 
 ## 3. Deuda técnica
 
@@ -39,8 +39,8 @@ Evidencia de calidad al cierre del Sprint 7: servidor con 158 suites y 1,588 pru
 | D-02 | **Sin HTTPS.** La API se sirve por HTTP. Con el token y las contraseñas viajando sin cifrar, no es aceptable fuera de una red local | Bloqueante | Código | Terminar TLS en el alojamiento o en un proxy inverso y redirigir todo a HTTPS |
 | D-03 | **Sin respaldos de la base de datos.** El repositorio solo trae el script de creación (`create-database.sql`) y el de protección opcional de la bitácora; no hay respaldo ni restauración probados | Bloqueante | Código | Respaldo automático diario con retención y una restauración de prueba documentada |
 | D-04 | **Mercado Pago solo en modo de pruebas.** El valor por defecto es el entorno de pruebas (`MERCADOPAGO_SANDBOX=true`). La aprobación tardía de un pago solo se probó con la pasarela simulada, no con un vendedor de prueba real | Bloqueante | Código y documento | Conseguir credenciales de producción, validar el flujo real (incluida la aprobación tardía) y guardar el token fuera del repositorio |
-| D-05 | **Sin cabeceras de seguridad.** La aplicación Express no usa `helmet` ni limitación general de peticiones; solo existe el bloqueo de cuenta tras intentos fallidos. El insumo del Sprint 7 decía lo contrario (ver H-24 del documento de calidad) | Bloqueante | Código | Añadir `helmet` y un limitador de peticiones, con pruebas |
-| D-06 | **Orígenes abiertos (CORS).** `cors()` se usa sin lista de orígenes y acepta cualquiera | Bloqueante | Código | Limitar a los orígenes de la aplicación publicada |
+| D-05 | **Cabeceras de seguridad. RESUELTA (21 nov):** `helmet` está instalado y activo en toda respuesta (H-24). Queda sin resolver la limitación general de peticiones: solo existe el bloqueo de cuenta tras intentos fallidos | Menor (lo restante) | Código y pruebas | Añadir un limitador de peticiones por IP cuando se despliegue |
+| D-06 | **Orígenes abiertos (CORS). RESUELTA (21 nov):** sin configuración solo se aceptan los orígenes locales; con `CORS_ORIGINS` solo los de la lista (H-24) | Resuelta | Código y pruebas | Al desplegar, definir `CORS_ORIGINS` con el origen real de la aplicación |
 | D-07 | **Sin revisión de seguridad formal.** Hay revisión interna (todas las consultas con parámetros, sin exposición de hashes ni tokens, permisos validados en el servidor), pero no una prueba de penetración ni una auditoría externa | Importante | Documento | Hacerla antes de abrir el sistema a usuarios reales |
 | D-08 | **Cuentas de demostración.** Los datos de ejemplo crean usuarios con contraseñas del estándar documentadas en el README | Importante | Código | En producción no cargar los seeds de ejemplo y crear cuentas propias con contraseñas nuevas |
 | D-09 | **El cierre por inactividad es solo del cliente (30 min).** El servidor únicamente vence el token a las 8 horas, de modo que un token robado sigue valiendo hasta entonces | Importante | Código | Acortar la vigencia del token o añadir renovación y revocación en el servidor |
@@ -56,7 +56,7 @@ Evidencia de calidad al cierre del Sprint 7: servidor con 158 suites y 1,588 pru
 
 ## 4. Plan sugerido para llegar a producción
 
-1. **Antes de abrir a usuarios (bloqueantes D-01 a D-06):** despliegue con HTTPS, respaldos probados, `helmet` y limitación de peticiones, CORS acotado y Mercado Pago en producción.
+1. **Antes de abrir a usuarios (bloqueantes D-01 a D-04):** despliegue con HTTPS, respaldos probados y Mercado Pago en producción; al desplegar, definir `CORS_ORIGINS` y añadir la limitación de peticiones (D-05, D-06).
 2. **Primer mes en producción (D-07 a D-09 y D-11):** revisión de seguridad, retirada de cuentas de demostración, token con renovación y términos definitivos.
 3. **Después (D-10 y D-12 a D-18):** protección de la bitácora en la base, mensajería, fotos, etapa 3 y deuda de pruebas y proceso.
 
