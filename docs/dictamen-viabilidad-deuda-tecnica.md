@@ -12,9 +12,9 @@
 
 ## 1. Qué se entrega
 
-Un sistema que corre **en local**: cliente Flutter, API Node.js con Express y base MySQL. Cubre usuarios y roles, clientes, vehículos, citas, órdenes de servicio, historial, mantenimiento, inventario, precios de refacciones, pagos (con Mercado Pago en modo de pruebas), tickets, panel, notificaciones internas, configuración del taller, catálogo de tipos de servicio, reportes de ingresos con exportación, términos y condiciones, bitácora de acciones sensibles, política de contraseñas y cierre de sesión por inactividad.
+Un sistema que corre **en local**: cliente Flutter, API Node.js con Express y base MySQL. Cubre usuarios y roles, clientes, vehículos, citas, órdenes de servicio, historial, mantenimiento, inventario, precios de refacciones, pagos (con Mercado Pago en modo de pruebas), tickets, panel, notificaciones internas, configuración del taller, catálogo de tipos de servicio, reportes (ingresos, servicios, productividad, margen y rotación) con exportación, términos y condiciones, bitácora de acciones sensibles, política de contraseñas y cierre de sesión por inactividad.
 
-Evidencia de calidad al cierre del Sprint 7: servidor con 158 suites y 1,588 pruebas, cliente con 359 pruebas, `flutter analyze` sin problemas, 25 de 25 comprobaciones del quickstart por la API y un recorrido manual de la aplicación con 19 capturas. Detalle en `docs/aseguramiento-calidad-sprint-7.md`.
+Evidencia de calidad al cierre del Sprint 7 (actualizada el 26 de noviembre): servidor con 165 suites y 1,671 pruebas, cliente con 383 pruebas, `flutter analyze` sin problemas, 27 de 27 comprobaciones del quickstart por la API y recorridos manuales de las tres etapas en la versión web. Detalle en `docs/aseguramiento-calidad-sprint-7.md`.
 
 ## 2. Dictamen de viabilidad
 
@@ -48,7 +48,7 @@ Evidencia de calidad al cierre del Sprint 7: servidor con 158 suites y 1,588 pru
 | D-11 | **Términos y aviso de privacidad de ejemplo.** Los textos lo dicen: son una plantilla del proyecto académico | Importante | Base | Revisión legal y publicación de la versión definitiva con `publish-terms.js` |
 | D-12 | **Sin mensajería al cliente** (WhatsApp, correo o SMS) ni portal del cliente. Las notificaciones son internas | Menor | Documento | Backlog posterior; requiere decisión de producto y proveedor |
 | D-13 | **Sin fotos del vehículo** | Menor | Documento | Backlog posterior; implica almacenamiento de archivos |
-| D-14 | **Etapa 3 del Sprint 7 sin construir** (servicios frecuentes, productividad por mecánico, margen y rotación; FR-011 a FR-013, T098 a T108). La exportación a CSV y el módulo de reportes ya están listos para reutilizarse | Menor | Documento | Construir si hay tiempo; no bloquea la entrega |
+| D-14 | **Etapa 3 del Sprint 7. RESUELTA (26 nov):** servicios frecuentes, productividad, margen y rotación construidos, probados y revisados en la versión web; la rotación no resta las devoluciones (H-25) | Resuelta | Código y pruebas | Restar las devoluciones en la rotación, si el taller lo pide |
 | D-15 | **Exportar e imprimir sin probar a mano.** La versión de escritorio de Windows no compila en el equipo del proyecto (falta el componente de C++ de Visual Studio); la exportación se probó con pruebas y una carpeta temporal, y el CSV no se abrió en una hoja de cálculo real | Menor | Documento | Instalar el componente y probar la exportación y la impresión en escritorio |
 | D-16 | **Pruebas inestables heredadas** del Sprint 6: `orderParts.prices.concurrency` (H-10) y `payments.paidOrder` (H-14), sensibles a la carga del equipo | Menor | Documento | Estabilizarlas o aislarlas antes de integrar en un flujo automático |
 | D-17 | **Principio I de la constitución desalineado** con el trabajo individual del equipo (H-01 y R-08) | Menor | Documento | Enmendar la redacción del principio I |
@@ -58,12 +58,11 @@ Evidencia de calidad al cierre del Sprint 7: servidor con 158 suites y 1,588 pru
 
 1. **Antes de abrir a usuarios (bloqueantes D-01 a D-04):** despliegue con HTTPS, respaldos probados y Mercado Pago en producción; al desplegar, definir `CORS_ORIGINS` y añadir la limitación de peticiones (D-05, D-06).
 2. **Primer mes en producción (D-07 a D-09 y D-11):** revisión de seguridad, retirada de cuentas de demostración, token con renovación y términos definitivos.
-3. **Después (D-10 y D-12 a D-18):** protección de la bitácora en la base, mensajería, fotos, etapa 3 y deuda de pruebas y proceso.
+3. **Después (D-10, D-12, D-13 y D-15 a D-18):** protección de la bitácora en la base, mensajería, fotos y deuda de pruebas y proceso.
 
 ## 5. Decisiones que necesitan al alumno o al docente
 
 - ¿Una demostración local cumple «sistema desplegado» (D-01)? Si no, hay que desplegar antes del 30 de noviembre o dentro de la holgura del 1 al 5 de diciembre, que solo se usa si el tiempo está justo.
-- ¿Se construye la etapa 3 (D-14) o queda como trabajo futuro, como hoy?
 - ¿Se enmienda el principio I de la constitución (D-17) antes del cierre?
 - Confirmar el texto de lecciones aprendidas (PMI-20).
 

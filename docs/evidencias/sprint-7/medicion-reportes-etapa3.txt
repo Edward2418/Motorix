@@ -1,0 +1,14 @@
+Datos de carga: 2000 órdenes, 5000 movimientos de inventario, 993 pagos y 500 tickets.
+ingresos de hoy (0 pagos, 0 días): mínimo 1 ms, promedio 3 ms, máximo 9 ms (límite 3000 ms).
+ingresos de la semana (228 pagos, 6 días): mínimo 3 ms, promedio 4 ms, máximo 5 ms (límite 3000 ms).
+ingresos del mes (993 pagos, 25 días): mínimo 3 ms, promedio 4 ms, máximo 6 ms (límite 3000 ms).
+ingresos de 366 días (993 pagos, 25 días): mínimo 4 ms, promedio 5 ms, máximo 6 ms (límite 3000 ms).
+Exportación a CSV de 366 días: mínimo 4 ms, promedio 4 ms, máximo 5 ms (límite 3000 ms).
+servicios frecuentes de 366 días (1 filas): mínimo 21 ms, promedio 23 ms, máximo 24 ms (límite 3000 ms).
+productividad de 366 días (1 filas): mínimo 23 ms, promedio 24 ms, máximo 26 ms (límite 3000 ms).
+margen de refacciones de 366 días (30 filas): mínimo 23 ms, promedio 27 ms, máximo 33 ms (límite 3000 ms).
+rotación de inventario de 366 días (60 filas): mínimo 32 ms, promedio 35 ms, máximo 42 ms (límite 3000 ms).
+Panel de control: mínimo 198 ms, promedio 228 ms, máximo 263 ms (límite 3000 ms).
+Centro de avisos: mínimo 17 ms, promedio 20 ms, máximo 24 ms (límite 2000 ms).
+Filtro de términos de authenticate (50 consultas): mínimo 1 ms, promedio 1 ms, máximo 2 ms.
+OK: los reportes y la exportación cargan en menos de 3 segundos, el centro de avisos en menos de 2, y el filtro de términos no los degrada.

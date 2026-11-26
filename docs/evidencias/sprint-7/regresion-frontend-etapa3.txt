@@ -1,0 +1,4 @@
+Regresión completa del cliente tras la etapa 3, 2026-11-26.
+flutter analyze: No issues found.
+flutter test: 382 pruebas, todas en verde (antes de la etapa 3: 359).
+Tras corregir H-28 (barra de desplazamiento): flutter analyze sin problemas y 383 pruebas, todas en verde.

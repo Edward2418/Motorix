@@ -99,9 +99,16 @@ Con 2,000 órdenes y 5,000 movimientos, cada reporte debe responder en menos de 
 - **Rendimiento (SC-003):** con 2,000 órdenes y 5,000 movimientos los reportes tardan de 3 a 5 ms, la exportación a CSV 4 ms, el panel 221 ms y el centro de avisos 21 ms; el filtro de términos cuesta 1 ms por petición (`medicion-reportes.txt`).
 - **Pendiente de revisar a mano:** abrir un CSV exportado en una hoja de cálculo.
 
+**Etapa 3 (2026-11-26). Resultado: Aprobado.**
+
+- **Escenarios por la API (1 a 28):** 27 de 27 comprobaciones aprobadas, incluidos el 27 y el 28 (`docs/evidencias/sprint-7/quickstart-api-etapa3.txt`).
+- **Pruebas automáticas:** servidor 165 suites y 1,671 pruebas; cliente 383 pruebas (`regresion-backend-etapa3.txt` y `regresion-frontend-etapa3.txt`).
+- **Rendimiento:** los cuatro reportes nuevos tardan 42 ms o menos con 2,000 órdenes y 5,000 movimientos (`medicion-reportes-etapa3.txt`).
+- **Recorrido manual:** las cuatro pestañas nuevas se revisaron en la versión web con los datos de ejemplo; salió H-28 (columnas ocultas en el margen), ya corregido. Exportar no se prueba en la web.
+
 ## 7. Limitaciones previstas
 
-- La etapa 3 (escenarios 27 y 28) solo se valida si se construye; si no, queda registrada como trabajo futuro (FR-032).
+- La rotación suma las salidas del periodo y no resta las devoluciones a inventario (FR-013).
 - El cierre por inactividad es del cliente (research D-13): un token copiado seguiría válido hasta sus 8 horas de vigencia aunque la aplicación se cierre.
 - El margen de refacciones usa el precio de compra vigente porque el costo de cada línea no se guardó al venderla (research D-06).
 - Los tickets anteriores al Sprint 5 no tienen contenido guardado y mostrarían los datos del taller vigentes.

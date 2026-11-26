@@ -1,0 +1,29 @@
+Regresión completa del servidor tras la etapa 3 (T098 a T108), 2026-11-26.
+Por partes (una base compartida, una ejecución a la vez, sin editar server/ ni database/ durante la corrida).
+
+[tests[\/]unit]
+exit 0
+Test Suites: 38 passed, 38 total
+Tests:       468 passed, 468 total
+Time:        9.376 s
+
+[tests[\/]contract]
+exit 0
+Test Suites: 33 passed, 33 total
+Tests:       205 passed, 205 total
+Time:        480.053 s
+
+[tests[\/]integration[\/][a-l]]
+exit 0
+Test Suites: 19 passed, 19 total
+Tests:       195 passed, 195 total
+Time:        308.429 s, estimated 409 s
+
+[tests[\/]integration[\/][m-z]]
+exit 0
+Test Suites: 75 passed, 75 total
+Tests:       803 passed, 803 total
+Time:        1483.801 s
+
+Total: 38 + 33 + 19 + 75 = 165 suites; 468 + 205 + 195 + 803 = 1671 pruebas, todas en verde.
+Antes de la etapa 3: 160 suites y 1610 pruebas.

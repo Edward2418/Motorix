@@ -418,8 +418,8 @@ Decisiones aclaradas:
 **Implementado en el Sprint 7** (rama `007-reportes-configuracion`; especificación en
 `specs/007-reportes-configuracion/`). El sprint se construyó por etapas (FR-032): primero las historias P1
 (configuración, márgenes, términos y protección de la información) y después las P2 (catálogo, ticket con próximo
-servicio, ingresos y exportación). Las P3 (servicios frecuentes, productividad, margen de refacciones y rotación de
-inventario) se registran como trabajo futuro si no se construyen.
+servicio, ingresos y exportación) y por último las P3 (servicios frecuentes, productividad, margen de refacciones y
+rotación de inventario), construidas el 26 de noviembre de 2026.
 
 -   **Configuración** (solo administración): datos del taller del encabezado del ticket y márgenes de «Próximo». Valor
     vigente: lo guardado en la tabla `settings` y válido, o el valor de respaldo del servidor (`WORKSHOP_*` y
@@ -436,7 +436,11 @@ inventario) se registran como trabajo futuro si no se construyen.
     cercano entre sus tipos) y ya no lo recalcula; sin tipos con intervalo, y en los tickets anteriores, no existe.
 -   **Reportes** (solo administración, solo lectura): ingresos por periodo con pagos `PAGADO` cuyo `paid_at` cae en el
     rango (máximo 366 días), por método y por día. Se calculan en **centavos enteros**. La exportación a CSV
-    (`format=csv`) se arma desde el mismo resultado que el JSON: BOM UTF-8, comas, encabezados y fila de totales.
+    (`format=csv`) se arma desde el mismo resultado que el JSON: BOM UTF-8, comas y encabezados, con fila de totales en
+    ingresos y margen. Además: **servicios frecuentes** (líneas de las órdenes terminadas en el rango, por tipo o
+    descripción), **productividad** (órdenes terminadas y mano de obra por mecánico), **margen de refacciones** (venta de
+    la línea menos precio de compra vigente; sin precio de compra, «sin costo» y fuera del margen) y **rotación**
+    (movimientos `SALIDA` entre la existencia promedio; no resta devoluciones).
 -   **Términos y condiciones**: versiones numeradas (`terms_versions`) y su aceptación por usuario
     (`terms_acceptances`, única por usuario y versión). El filtro vive en `authenticate`: sin aceptar la versión vigente
     toda ruta responde 403 `TERMS_NOT_ACCEPTED`, salvo leer y aceptar los términos. Sin versión publicada nadie se bloquea.

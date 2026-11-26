@@ -82,7 +82,7 @@ Sep ───────────── Oct ──────────�
 - **Tipo:** Historia · **Prioridad:** Alta · **Fechas:** 8 sep al 9 oct; actualizado el 19 nov · **Estado:** ✅ Hecho
 - **Historia:** Como gestor del proyecto, quiero un enunciado de alcance y un backlog de épicas e historias para controlar qué entra y qué no.
 - **Criterios de aceptación:**
-  - El backlog tiene 10 épicas y 44 historias de usuario con criterios de aceptación: 27 estaban hechas al 19 nov y los sprints 6 y 7 (20 nov) entregaron las demás, salvo la etapa 3 opcional del Sprint 7.
+  - El backlog tiene 10 épicas y 44 historias de usuario con criterios de aceptación: 27 estaban hechas al 19 nov y los sprints 6 y 7 (20 nov) entregaron las demás; la etapa 3 del Sprint 7 se completó el 26 nov.
   - **Entra:** usuarios y roles, clientes, vehículos, citas, órdenes, historial, mantenimiento, inventario, precios de refacciones, pagos, Mercado Pago de pruebas, tickets, panel, notificaciones internas y reportes.
   - **Queda fuera:** chatbot de WhatsApp y mensajería al cliente, portal del cliente, facturación electrónica, fotos del vehículo, hosting y puesta en producción.
 
@@ -118,7 +118,7 @@ Sep ───────────── Oct ──────────�
 | 4 | Falta de claridad en lo que se pide a la IA | A | Se implementa algo distinto de lo pedido | Aclarar decisiones antes de programar | Antes de programar | Mitigado |
 | 5 | Corrupción del alcance | A | El MVP no se termina de demostrar y el costo crece | Backlog cerrado y descartes por escrito | Continuo | Controlado |
 | 6 | Costos y tiempo sin registro de horas | M | Se subestima el costo y no hay reserva | Reserva del 15% y registro de horas | Desde el Sprint 6 (20 nov) | Abierto |
-| 7 | Cierre del 30 de noviembre con los sprints 6 y 7 sin construir | M | La auditoría final queda vacía | Construir primero el Sprint 6 y dividir el 7 si falta tiempo | Antes del 30 nov | Mitigado: ambos sprints construidos el 20 nov; la etapa 3 del Sprint 7 queda como trabajo futuro |
+| 7 | Cierre del 30 de noviembre con los sprints 6 y 7 sin construir | M | La auditoría final queda vacía | Construir primero el Sprint 6 y dividir el 7 si falta tiempo | Antes del 30 nov | Mitigado: ambos sprints construidos el 20 nov; la etapa 3 del Sprint 7 se completó el 26 nov |
 
 ---
 
@@ -163,14 +163,14 @@ Sep ───────────── Oct ──────────�
   - Centro de notificaciones, avisos por rol, marca de leído y lista de clientes por avisar.
 
 ### PMI-14 · Sprint 7: reportes, configuración, términos y seguridad
-- **Tipo:** Historia · **Prioridad:** Alta · **Fechas:** 20 nov (previsto 25 al 29) · **Estado:** ✅ Hecho (etapas 1 y 2) · **Producto:** MOT-39 a MOT-48
+- **Tipo:** Historia · **Prioridad:** Alta · **Fechas:** 20 nov (previsto 25 al 29) · **Estado:** ✅ Hecho (etapas 1 y 2 el 20 nov; etapa 3 el 26 nov) · **Producto:** MOT-39 a MOT-48
 - **Historia:** Como administrador, quiero reportes, configuración del taller, términos y condiciones y protección de la información para tomar decisiones, mantener los datos del ticket y operar con seguridad.
 - **Criterios de aceptación:**
   - Datos del taller, márgenes de mantenimiento, catálogo de servicios, reportes con exportación y "Próximo servicio" en el ticket.
   - Términos y condiciones con aceptación al ingresar, bitácora de acciones sensibles, política de contraseñas y cierre de sesión por inactividad.
   - Se construyó por etapas: configuración, catálogo, términos y seguridad primero (etapa 1) y reportes con exportación y "Próximo servicio" después (etapa 2).
-  - Evidencia (al 21 nov): 160 suites y 1,610 pruebas del servidor, 359 del cliente, análisis estático limpio, validación del quickstart 25 de 25 y recorrido manual con 19 capturas. Ver `docs/aseguramiento-calidad-sprint-7.md`.
-  - Queda como trabajo futuro la etapa 3 opcional (FR-011 a FR-013, T098 a T108).
+  - Evidencia (al 26 nov): 165 suites y 1,671 pruebas del servidor, 383 del cliente, análisis estático limpio, validación del quickstart 27 de 27 y recorridos manuales de las tres etapas en la versión web. Ver `docs/aseguramiento-calidad-sprint-7.md`.
+  - La etapa 3 (FR-011 a FR-013, T098 a T108: servicios, productividad, margen y rotación) se construyó el 26 nov.
 
 ---
 

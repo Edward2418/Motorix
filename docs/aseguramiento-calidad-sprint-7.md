@@ -1,8 +1,8 @@
 # Aseguramiento de la calidad - Sprint 7: Reportes y configuración
 
-Este documento es el registro de calidad del Sprint 7 de Motorix. Reúne las puertas de calidad, las decisiones, los riesgos, la trazabilidad de los requisitos, los hallazgos, la regresión de los sprints 1 a 6 y el control de calidad final. **Estado al 2026-11-20:** las etapas 1 y 2 están construidas, probadas y documentadas; la etapa 3 (historias 9 y 10) no se construyó y queda registrada como trabajo futuro (FR-032, sección 7).
+Este documento es el registro de calidad del Sprint 7 de Motorix. Reúne las puertas de calidad, las decisiones, los riesgos, la trazabilidad de los requisitos, los hallazgos, la regresión de los sprints 1 a 6 y el control de calidad final. **Estado al 2026-11-26:** las tres etapas están construidas, probadas y documentadas. Las etapas 1 y 2 se cerraron el 20 de noviembre y la etapa 3 (historias 9 y 10) el 26.
 
-Resultado general: **Aprobado** en las etapas 1 y 2 (historias 1 a 8, 29 de los 32 requisitos funcionales verificados). Los requisitos FR-011 a FR-013 (etapa 3) quedan como trabajo futuro. Detalle en la sección 10.
+Resultado general: **Aprobado** en las tres etapas (historias 1 a 10, 32 de los 32 requisitos funcionales verificados). Las cuatro pestañas de la etapa 3 se revisaron con la aplicación abierta (H-28). Detalle en la sección 10.
 
 ## 0. Datos del documento
 
@@ -13,8 +13,8 @@ Resultado general: **Aprobado** en las etapas 1 y 2 (historias 1 a 8, 29 de los 
 | Rama | `007-reportes-configuracion` |
 | Responsable | Edward Negrete Bustos, responsable del sprint |
 | Fecha de inicio | 2026-11-19 |
-| Fecha de cierre | 2026-11-20 (la entrega final del proyecto es el 30 de noviembre de 2026) |
-| Estado general | Cerrado: etapas 1 y 2 completas; etapa 3 como trabajo futuro |
+| Fecha de cierre | 2026-11-20 las etapas 1 y 2; 2026-11-26 la etapa 3 (la entrega final del proyecto es el 30 de noviembre de 2026) |
+| Estado general | Cerrado: las tres etapas completas, probadas y revisadas en la versión web |
 
 ## 1. Objetivo y alcance
 
@@ -40,8 +40,8 @@ Resultado general: **Aprobado** en las etapas 1 y 2 (historias 1 a 8, 29 de los 
 
 **Criterios de salida (para cerrar el sprint):**
 
-- [x] Los requisitos funcionales de las etapas construidas están verificados (sección 6); FR-011 a FR-013, de la etapa 3, están registrados como trabajo futuro (sección 7).
-- [x] Todas las pruebas de los sprints anteriores siguen pasando (sección 8: 158 suites y 1,588 pruebas del servidor, 358 del cliente).
+- [x] Los requisitos funcionales de las tres etapas están verificados (sección 6).
+- [x] Todas las pruebas de los sprints anteriores siguen pasando (sección 8: 165 suites y 1,671 pruebas del servidor, 383 del cliente).
 - [x] No hay defectos críticos ni altos abiertos (sección 7).
 - [x] La matriz de calidad final (sección 9) está completa, con evidencia.
 - [x] Reporte, análisis y matriz no se contradicen.
@@ -79,7 +79,7 @@ Decisiones por defecto tomadas sin consulta (documentadas en `spec.md`, sección
 | R-03 | Los márgenes configurables no llegan a la lista, el panel y los avisos | Medio: cifras que no coinciden | Los tres leen los márgenes por `maintenanceService` | `settings.maintenance` | Cerrado: 38 pruebas y regresión de las vistas que heredan los márgenes |
 | R-04 | La bitácora guarda un secreto sin querer | Alto: fuga de datos | Lista cerrada de campos, rechazo de contraseñas, hashes y tokens, y no guardar el texto de cuentas inexistentes | `audit.log`, `auditService` | Cerrado: lista cerrada de campos y prueba de que no hay secretos |
 | R-05 | El texto de los términos lleva un `;` y rompe el seed | Medio: seed que no carga | Regla escrita y prueba que carga los seeds completos | `seeds.sprint7` | Cerrado: el seed 012 carga completo y es idempotente |
-| R-06 | El sprint no alcanza en 10 días | Alto: entrega incompleta | Entrega por etapas con regresión al cierre de cada una | Puntos de control de cada etapa | Parcialmente cerrado: etapas 1 y 2 entregadas con regresión; la etapa 3 no alcanzó y queda como trabajo futuro |
+| R-06 | El sprint no alcanza en 10 días | Alto: entrega incompleta | Entrega por etapas con regresión al cierre de cada una | Puntos de control de cada etapa | Cerrado: las etapas 1 y 2 se entregaron el 20 nov y la etapa 3 el 26 nov, antes de la entrega final |
 | R-07 | La inactividad solo la mide el cliente: un token copiado sigue válido hasta sus 8 horas | Medio: ventana de uso indebido | Se acepta y se documenta; el servidor sigue rechazando tokens vencidos | `session.expiry` | Aceptado |
 | R-08 | El texto del principio I de la constitución nombra al director y el alcance se decide de forma individual | Bajo: diferencia entre norma y práctica | Se registra la aprobación del responsable (H-01); se mantiene la propuesta de enmienda | Revisión de H-01 | Abierto: la enmienda del principio I sigue pendiente |
 
@@ -94,7 +94,7 @@ Decisiones por defecto tomadas sin consulta (documentadas en `spec.md`, sección
 | FR-005 a FR-007 | T067 a T073 | T074 a T079 | Verificado (etapa 2) |
 | FR-008 | T080, T081 | T082, T083 | Verificado (etapa 2) |
 | FR-009, FR-010 y FR-015 | T084 a T087, T112 | T088 a T091, T113 | Verificado (etapa 2) |
-| FR-011 a FR-013 | T099, T103 a T106 | T101, T107, T108 | No construido (etapa 3): trabajo futuro, sección 7 |
+| FR-011 a FR-013 | T098 a T100, T103 a T106 | T101, T102, T107, T108 | Verificado (etapa 3) |
 | FR-014 | T092 a T094 | T095, T096 | Verificado (etapa 2) |
 | FR-016 | T018, T034, T055, T068, T085 | T021, T047, T061, T074 | Verificado (etapa 2): configuración, catálogo, bitácora, términos y reportes |
 | FR-017 a FR-020 | T051 a T058 | T059 a T065 | Verificado (etapa 1) |
@@ -130,7 +130,12 @@ Decisiones por defecto tomadas sin consulta (documentadas en `spec.md`, sección
 
 **Recorrido manual (2026-11-21, versión web con la API y la base locales).** Se probaron con el rol administrador: el menú con Configuración, Bitácora y Reportes; el guardado de los datos del taller; los márgenes en 0, que se rechazan con el mensaje de rango; los 7 tipos de servicio y el rechazo de «Cambio de aceite» repetido; la orden OS-2026-0009 con su servicio enlazado al tipo «Cambio de aceite», la propuesta de mantenimiento (19 may 2027 o 36,900 km, que son 180 días y 5,000 km del tipo) y el ticket TK-2026-0004 con «Próximo servicio»; el reporte de ingresos del mes (4,810.00 en 3 pagos, igual que el panel); la Bitácora con sus 6 registros; el alta de un usuario nuevo y su pantalla de términos; y con el rol recepcionista, un menú sin Configuración, Bitácora ni Reportes. Una segunda tanda de capturas, con la versión web ya recompilada con el arreglo de H-23, confirmó: el detalle de la Bitácora completo en varias líneas; el rango invertido del reporte (2026-11-20 a 2026-11-01) con el mensaje «La fecha inicial no puede ser posterior a la final.»; el rango de más de un año (2025-01-01 a 2026-11-21) con «El rango no puede pasar de 366 días.»; el filtro de la Bitácora por «Cambio de configuración» con 2 registros; y el usuario nuevo, que tras aceptar los términos entra a Clientes con un menú sin Configuración, Bitácora ni Reportes. Observación menor: con un rango inválido el mensaje de error aparece y se conservan en pantalla los resultados anteriores, y el selector «Mes» sigue marcado aunque las fechas escritas sean otras; no engaña con datos falsos (los resultados son los del último periodo consultado), y se deja como posible mejora. «Exportar» no se prueba en la versión web (usa `dart:io`) y, junto con la impresión, solo se puede probar en la versión de escritorio, que aquí no compila por falta del componente de C++ de Visual Studio.
 
-**Trabajo futuro (etapa 3, FR-011 a FR-013 y FR-032).** No se construyeron las historias 9 y 10 (servicios más frecuentes y productividad por mecánico, margen de refacciones y rotación de inventario) ni sus rutas `/reports/services`, `/productivity`, `/margin` y `/rotation`, que `contracts/api.yaml` ya describe. La exportación a CSV (`csvExport.js`) y el módulo de reportes (`reportRules`, `reportValidator`, pestañas de `reports_screen`) están hechos para reutilizarse. Motivo: la etapa 3 era opcional y se priorizó cerrar y documentar las etapas 1 y 2 antes de la entrega del 30 de noviembre. Las tareas T098 a T108 siguen sin marcar a propósito.
+| H-25 | La rotación suma los movimientos `SALIDA`, como piden FR-013 y el modelo de datos. Al quitar o reducir una refacción de una orden se registra una `ENTRADA` de devolución que no se resta, así que las salidas pueden quedar infladas | Baja | Etapa 3 (T105, T107) | Aceptado | Se respetó la especificación y la pantalla lo advierte: «Las devoluciones a inventario no se restan de las salidas». Restar las devoluciones queda como mejora posible | `server/models/reportModel.js`, `client/lib/screens/reports_screen.dart` |
+| H-26 | Una refacción puede venderse a precios distintos dentro de un mismo periodo, y el contrato solo preveía un precio de venta por fila | Baja | Etapa 3 (T107) | Corregido | El margen muestra una fila por refacción y precio de venta, para que cada importe sea exacto; se agregaron `salesTotal` y `costTotal` a la fila en `contracts/api.yaml` y en el CSV | `reports.partsMargin.test.js` |
+| H-27 | `validateReportPage`, escrita en la etapa 2 y aún sin usar, ponía 20 filas por página y el contrato y la investigación (D-07) piden 50 | Baja | Etapa 3 (T101) | Corregido | Se cambió a 50 antes de usarla | `server/validators/reportValidator.js`, `reports.contract.test.js` |
+| H-28 | Recorrido manual (26 nov): en «Margen de refacciones», con una ventana de unos 1,400 px, las columnas «Margen total» y «Observación» quedaban fuera de la pantalla sin ninguna barra que lo indicara | Baja | Recorrido manual | Corregido | Las tablas de los reportes nuevos muestran una barra de desplazamiento horizontal siempre visible. Prueba nueva en `reports_screen_test.dart`, en rojo sin el arreglo y en verde con él; cliente: 383 pruebas | `client/lib/screens/reports_screen.dart` |
+
+**Etapa 3 (2026-11-26, historias 9 y 10, FR-011 a FR-013).** Se construyeron las rutas `/reports/services`, `/reports/productivity`, `/reports/parts-margin` y `/reports/inventory-turnover`, sus exportaciones a CSV y las cuatro pestañas de Reportes, sin migraciones nuevas. Las pruebas se escribieron antes y se vieron fallar (servidor y cliente). Los escenarios 27 y 28 pasan por la API (`quickstart-api-etapa3.txt`, 27 de 27 comprobaciones) y cada reporte nuevo tarda 42 ms o menos con la carga de 2,000 órdenes y 5,000 movimientos (`medicion-reportes-etapa3.txt`). En esos datos de carga, servicios y productividad devuelven una sola fila; su orden y sus sumas se comprueban con las pruebas de integración y con los datos de ejemplo.
 
 **Otros pendientes sin impacto en el código:** la enmienda al principio I de la constitución (H-01, R-08), exportar e imprimir en la versión de escritorio, abrir el CSV exportado en una hoja de cálculo de verdad y publicar la rama.
 
@@ -144,6 +149,8 @@ Se ejecuta la suite completa **antes** de tocar el código y de nuevo **al cierr
 |---|---|---|---|---|---|
 | Backend | `npm test` en `server/` (por partes, con el resolvedor alterno) | 123 suites y 1,088 pruebas (regresión del Sprint 6; el código no cambió y las unitarias se repitieron: 27 suites y 287 pruebas) | 145 suites y 1,387 pruebas | 156 suites y 1,570 pruebas | `linea-base-backend.txt`, `checkpoint-etapa1-backend.txt`, `checkpoint-etapa2-backend.txt` |
 | Frontend | `flutter analyze` y `flutter test` en `client/` | `flutter analyze` sin problemas y 250 pruebas aprobadas | 301 pruebas | 358 pruebas | `linea-base-frontend.txt`, `checkpoint-etapa1-frontend.txt`, `checkpoint-etapa2-frontend.txt` |
+
+**Después de la etapa 3 (2026-11-26):** servidor 165 suites y 1,671 pruebas (unitarias 468, contrato 205, integración a–l 195 e integración m–z 803) y cliente 382 pruebas (383 tras corregir H-28), todas en verde, con `flutter analyze` sin problemas. Evidencia: `regresion-backend-etapa3.txt` y `regresion-frontend-etapa3.txt`.
 
 **Después de H-24:** servidor 160 suites y 1,610 pruebas (22 nuevas de cabeceras y CORS), todas en verde, ejecutadas por partes (unitarias 458, contrato 185, integración a–l 195 e integración m–z 772).
 
@@ -166,13 +173,13 @@ Los requisitos de catálogo, propuesta y ticket (FR-005 a FR-008) tienen pruebas
 
 ## 10. Cierre
 
-**Resultado: Aprobado** en las etapas 1 y 2.
+**Resultado: Aprobado** en las tres etapas.
 
 - **Qué está verificado:**
   - **Servidor:** configuración del taller y márgenes, aceptación de términos exigida en `authenticate`, bitácora inmutable desde la aplicación, protección (contraseñas, inyección, exposición, vigencia de sesión), catálogo de tipos de servicio, propuesta de mantenimiento, próximo servicio en el ticket, reporte de ingresos y su exportación a CSV, migraciones 009 y 010 y seed 012. Evidencia: 158 suites y 1,588 pruebas, 25 de 25 comprobaciones del quickstart por la API y rendimiento con amplio margen (reportes de 3 a 5 ms, límite 3,000 ms).
   - **Cliente:** Configuración (taller, márgenes, tipos de servicio y términos), Bitácora, pantalla de términos, Reportes con exportación, tipo de servicio en las líneas, propuesta en el diálogo de mantenimiento, próximo servicio en el ticket y cierre por inactividad. Evidencia: `flutter analyze` sin problemas y `flutter test` con 358 pruebas aprobadas, 108 de ellas nuevas.
-- **No construido:** la etapa 3 (historias 9 y 10, FR-011 a FR-013) queda como trabajo futuro (sección 7), como permite FR-032.
+- **Etapa 3 (26 nov):** servicios frecuentes, productividad, margen de refacciones y rotación, con su exportación. Evidencia: 165 suites y 1,671 pruebas del servidor, 383 del cliente, 27 de 27 comprobaciones del quickstart y recorrido manual de las cuatro pestañas en la versión web. Las cifras del punto anterior son las del cierre de las etapas 1 y 2.
 - **Observaciones menores:** el recorrido manual del 21 de noviembre (versión web, 14 capturas) confirmó lo probado y dejó el hallazgo H-23, ya corregido; una segunda tanda de capturas confirmó rangos inválidos, filtros y términos; solo falta exportar e imprimir en escritorio, y el CSV exportado no se abrió en una hoja de cálculo real; el cliente se verifica con pruebas de widgets. La escritura en la carpeta de Descargas se probó con una carpeta temporal.
 - **Cómo se llegó aquí:** las pruebas del cliente de varias historias se escribieron junto con el código y no se ejecutaron en rojo primero (H-08, H-22). Al ejecutarlas, varias fallaron por defectos de las propias pruebas (aritmética de importes, tiempos simulados que vencían una petición retenida, íconos fuera de pantalla y selectores que desbordaban) y se corrigieron; ninguno reveló un defecto del código del sprint salvo los desbordes de H-16.
-- **Hallazgos:** 19 (H-01 a H-09 y H-15 a H-24), ninguno crítico ni alto; H-23 y H-24 se corrigieron después de la regresión final (cliente 359 pruebas y servidor 160 suites y 1,610 pruebas). H-23 se corrigió después de la regresión final: el cliente quedó en 359 pruebas. Dos pruebas inestables heredadas del Sprint 6 (H-10 y H-14) no se modificaron: `orderParts.prices.concurrency` rozó su límite una vez bajo carga y pasó sola.
-- **Pendientes sin impacto en el código:** la enmienda al principio I de la constitución (R-08), las historias de la etapa 3, exportar e imprimir en escritorio y publicar la rama.
+- **Hallazgos:** 23 (H-01 a H-09 y H-15 a H-28), ninguno crítico ni alto; H-23 y H-24 se corrigieron después de la regresión final (cliente 359 pruebas y servidor 160 suites y 1,610 pruebas). H-23 se corrigió después de la regresión final: el cliente quedó en 359 pruebas. Dos pruebas inestables heredadas del Sprint 6 (H-10 y H-14) no se modificaron: `orderParts.prices.concurrency` rozó su límite una vez bajo carga y pasó sola.
+- **Pendientes sin impacto en el código:** la enmienda al principio I de la constitución (R-08), exportar e imprimir en escritorio y publicar la rama.

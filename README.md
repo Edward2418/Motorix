@@ -91,7 +91,7 @@ consecutivos la cuenta se bloquea 15 minutos.
 | Clientes por avisar: consultar y registrar el aviso | Sí | Sí | No |
 | Configuración del taller (datos y márgenes) y catálogo de tipos de servicio: modificar | Sí | No | No |
 | Catálogo de tipos de servicio: consultar (para elegirlo en una línea) | Sí | Sí | Sí |
-| Reportes (ingresos) y su exportación a CSV | Sí | No | No |
+| Reportes (ingresos, servicios, productividad, margen y rotación) y su exportación a CSV | Sí | No | No |
 | Bitácora de acciones sensibles y lista de aceptaciones de los términos | Sí | No | No |
 | Términos y condiciones: leer y aceptar | Sí | Sí | Sí |
 
@@ -163,7 +163,10 @@ Cancelación (con motivo): desde RECIBIDO, DIAGNOSTICO, EN_REPARACION o ESPERAND
   fecha y el kilometraje (se pueden corregir). El ticket nuevo muestra **«Próximo servicio»** y ya no cambia.
 - **Reportes** (solo administración): ingresos por periodo (hoy, semana, mes o un rango de hasta 366 días), por método
   de pago y por día, calculados en centavos para coincidir con los pagos. **Exportar** guarda un CSV en la carpeta de
-  Descargas con las mismas filas y totales de la pantalla.
+  Descargas con las mismas filas y totales de la pantalla. También muestra los **servicios más frecuentes**, la
+  **productividad por mecánico** (órdenes terminadas y mano de obra), el **margen de refacciones** (con el precio de
+  compra actual; sin precio de compra se marca «sin costo») y la **rotación de inventario** (salidas entre la
+  existencia promedio, sin restar devoluciones).
 - **Términos y condiciones**: tras iniciar sesión, nadie usa el sistema sin aceptar la versión vigente; una versión
   nueva se vuelve a exigir. El texto lo publica quien administra el servidor con
   `npm run terms:publish -- <archivo>` (desde `server/`), con una sección de términos y otra de aviso de privacidad

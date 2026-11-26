@@ -415,7 +415,8 @@ administración, salvo la de términos, que ve todo el mundo.
   tipos de servicio y términos. Cada tarjeta indica de dónde viene el valor (guardado, servidor o inicial), valida en el campo
   y confirma con un mensaje al guardar. La tabla de tipos de servicio usa el chip activo o inactivo y pide confirmación para
   desactivar; nunca ofrece borrar.
-- **Reportes**: una pestaña por reporte. Arriba, los atajos Hoy, Semana y Mes y el rango libre (AAAA-MM-DD) con «Consultar» y
+- **Reportes**: una pestaña por reporte (Ingresos, Servicios, Productividad, Margen de refacciones y Rotación) con un
+  periodo común; las listas largas se paginan. Arriba, los atajos Hoy, Semana y Mes y el rango libre (AAAA-MM-DD) con «Consultar» y
   «Exportar»; debajo, el total, el desglose en tablas y los estados de la sección 9. Un rango inválido se explica bajo los
   campos sin consultar.
 - **Bitácora**: tabla de solo lectura (fecha, usuario, acción en español y detalle) con filtros por fecha, usuario y acción, y
