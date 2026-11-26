@@ -216,7 +216,7 @@ Sep ───────────── Oct ──────────�
   - El dictamen final se escribe después de la auditoría de la fase 3.
 
 ### PMI-20 · Lecciones aprendidas
-- **Tipo:** Historia · **Prioridad:** Media · **Fechas:** 30 nov · **Estado:** 🔄 Borrador
+- **Tipo:** Historia · **Prioridad:** Media · **Fechas:** 30 nov · **Estado:** ✅ Hecho (texto confirmado el 26 nov)
 - **Historia:** Como gestor del proyecto, quiero reflexionar sobre el ciclo completo para dejar documentado qué funcionó y qué mejorar.
 - **Criterios de aceptación:**
   - Registra aciertos y mejoras de la gestión con IA, del alcance, de la calidad y de los costos.
@@ -228,6 +228,8 @@ Sep ───────────── Oct ──────────�
 | Fijar reglas del proyecto mantuvo el estilo y el idioma | Controlar antes el alcance |
 | Las pruebas detectaron errores de la IA | Fijar las versiones de dependencias desde el inicio |
 | Descartar a tiempo protegió el cierre | Mantener alineados el backlog y la documentación |
+| El recorrido con la aplicación abierta encontró defectos visuales que las pruebas no habían detectado (H-23 y H-28) | Verificar en el código lo que afirman los documentos: el insumo daba `helmet` por instalado y no lo estaba (H-24) |
+| Construir por etapas permitió tener siempre una versión entregable y completar después la última | Prever el despliegue desde la planificación y confirmar pronto qué exige la entrega |
 
 ---
 

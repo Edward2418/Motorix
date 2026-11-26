@@ -64,7 +64,6 @@ Evidencia de calidad al cierre del Sprint 7 (actualizada el 26 de noviembre): se
 
 - ¿Una demostración local cumple «sistema desplegado» (D-01)? Si no, hay que desplegar antes del 30 de noviembre o dentro de la holgura del 1 al 5 de diciembre, que solo se usa si el tiempo está justo.
 - ¿Se enmienda el principio I de la constitución (D-17) antes del cierre?
-- Confirmar el texto de lecciones aprendidas (PMI-20).
 
 ## 6. Pendiente para el dictamen final (30 de noviembre)
 
