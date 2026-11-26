@@ -21,10 +21,10 @@ export function validateReportQuery(query) {
   return { from: query.from, to: query.to, start: range.start, end: range.end, format };
 }
 
-/** Paginación de los reportes con lista: `page` desde 1 y `pageSize` de 1 a 200 (20 por defecto). */
+/** Paginación de los reportes con lista: `page` desde 1 y `pageSize` de 1 a 200 (50 por defecto). */
 export function validateReportPage(query) {
   const page = query.page === undefined ? 1 : Number(query.page);
-  const pageSize = query.pageSize === undefined ? 20 : Number(query.pageSize);
+  const pageSize = query.pageSize === undefined ? 50 : Number(query.pageSize);
   if (!Number.isInteger(page) || page < 1) {
     throw AppError.validation('El parámetro page debe ser un entero mayor o igual a 1.', [{ field: 'page', message: 'El parámetro page debe ser un entero mayor o igual a 1.' }]);
   }

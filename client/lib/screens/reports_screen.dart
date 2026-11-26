@@ -2,49 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/report_income.dart';
+import '../models/report_rows.dart';
 import '../providers/reports_provider.dart';
 import '../services/api_client.dart';
 import '../services/report_saver.dart';
 import '../utils/app_tokens.dart';
 import '../utils/formatters.dart';
 import '../widgets/section_navigator.dart';
+import '../widgets/table_footer.dart';
 import '../widgets/view_states.dart';
 
-/// Reportes de administración (solo ADMIN). Cada reporte es una pestaña; todo se calcula en el servidor y aquí solo se
-/// consulta y se muestra. Por ahora: Ingresos.
-class ReportsScreen extends StatelessWidget {
+/// Reportes de administración (solo ADMIN). Cada reporte es una pestaña y todas comparten el periodo; todo se calcula en
+/// el servidor y aquí solo se consulta y se muestra.
+class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 1,
-      child: PagePadding(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const TabBar(
-              isScrollable: true,
-              tabAlignment: TabAlignment.start,
-              tabs: [Tab(text: 'Ingresos')],
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            const Expanded(child: TabBarView(children: [_IncomeTab()])),
-          ],
-        ),
-      ),
-    );
-  }
+  State<ReportsScreen> createState() => _ReportsScreenState();
 }
 
-class _IncomeTab extends StatefulWidget {
-  const _IncomeTab();
-
-  @override
-  State<_IncomeTab> createState() => _IncomeTabState();
-}
-
-class _IncomeTabState extends State<_IncomeTab> {
+class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProviderStateMixin {
+  late final _tabs = TabController(length: ReportKind.values.length, vsync: this);
   final _from = TextEditingController();
   final _to = TextEditingController();
   String? _rangeError;
@@ -56,12 +34,14 @@ class _IncomeTabState extends State<_IncomeTab> {
       final reports = context.read<ReportsProvider>();
       _from.text = reports.from;
       _to.text = reports.to;
-      reports.loadIncome();
+      reports.open(ReportKind.values[_tabs.index]);
     });
+    _tabs.addListener(() => context.read<ReportsProvider>().show(ReportKind.values[_tabs.index]));
   }
 
   @override
   void dispose() {
+    _tabs.dispose();
     _from.dispose();
     _to.dispose();
     super.dispose();
@@ -88,7 +68,7 @@ class _IncomeTabState extends State<_IncomeTab> {
     final reports = context.read<ReportsProvider>();
     final saver = context.read<ReportSaver>();
     try {
-      final path = await reports.exportIncome(saver);
+      final path = await reports.exportActive(saver);
       if (mounted) {
         showFeedback(context, 'Reporte guardado en Descargas: ${path.split(RegExp(r'[\\/]')).last}.');
       }
@@ -107,60 +87,335 @@ class _IncomeTabState extends State<_IncomeTab> {
   Widget build(BuildContext context) {
     final reports = context.watch<ReportsProvider>();
     final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Wrap(
-          spacing: AppSpacing.lg,
-          runSpacing: AppSpacing.md,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            SegmentedButton<ReportShortcut>(
-              emptySelectionAllowed: true,
-              showSelectedIcon: false,
-              segments: [for (final shortcut in ReportShortcut.values) ButtonSegment(value: shortcut, label: Text(shortcut.label))],
-              selected: {if (reports.shortcut != null) reports.shortcut!},
-              onSelectionChanged: (selection) {
-                if (selection.isNotEmpty) {
-                  _selectShortcut(selection.first);
-                }
-              },
-            ),
-            SizedBox(width: 190, child: TextFormField(controller: _from, decoration: const InputDecoration(labelText: 'Desde (AAAA-MM-DD)'))),
-            SizedBox(width: 190, child: TextFormField(controller: _to, decoration: const InputDecoration(labelText: 'Hasta (AAAA-MM-DD)'))),
-            FilledButton(onPressed: reports.loading ? null : _query, child: const Text('Consultar')),
-            OutlinedButton(
-              onPressed: reports.loading || reports.exporting || reports.income == null ? null : _export,
-              child: const Text('Exportar'),
-            ),
+    final active = reports.stateOf(reports.active);
+    return PagePadding(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TabBar(
+            controller: _tabs,
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
+            tabs: [for (final kind in ReportKind.values) Tab(text: kind.title)],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Wrap(
+            spacing: AppSpacing.lg,
+            runSpacing: AppSpacing.md,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              SegmentedButton<ReportShortcut>(
+                emptySelectionAllowed: true,
+                showSelectedIcon: false,
+                segments: [for (final shortcut in ReportShortcut.values) ButtonSegment(value: shortcut, label: Text(shortcut.label))],
+                selected: {if (reports.shortcut != null) reports.shortcut!},
+                onSelectionChanged: (selection) {
+                  if (selection.isNotEmpty) {
+                    _selectShortcut(selection.first);
+                  }
+                },
+              ),
+              SizedBox(width: 190, child: TextFormField(controller: _from, decoration: const InputDecoration(labelText: 'Desde (AAAA-MM-DD)'))),
+              SizedBox(width: 190, child: TextFormField(controller: _to, decoration: const InputDecoration(labelText: 'Hasta (AAAA-MM-DD)'))),
+              FilledButton(onPressed: active.loading ? null : _query, child: const Text('Consultar')),
+              OutlinedButton(
+                onPressed: active.loading || reports.exporting || active.data == null ? null : _export,
+                child: const Text('Exportar'),
+              ),
+            ],
+          ),
+          if (_rangeError != null) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Text(_rangeError!, style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.danger)),
           ],
-        ),
-        if (_rangeError != null) ...[
-          const SizedBox(height: AppSpacing.sm),
-          Text(_rangeError!, style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.danger)),
+          const SizedBox(height: AppSpacing.lg),
+          Expanded(
+            child: TabBarView(
+              controller: _tabs,
+              children: [for (final kind in ReportKind.values) _ReportBody(kind: kind)],
+            ),
+          ),
         ],
-        const SizedBox(height: AppSpacing.lg),
-        Expanded(child: _body(context, reports)),
+      ),
+    );
+  }
+}
+
+/// Estados de un reporte (carga, error, vacío) y su contenido, con paginación en los que son listas.
+class _ReportBody extends StatelessWidget {
+  const _ReportBody({required this.kind});
+
+  final ReportKind kind;
+
+  @override
+  Widget build(BuildContext context) {
+    final reports = context.watch<ReportsProvider>();
+    final state = reports.stateOf(kind);
+    final data = state.data;
+    if (state.loading && data == null) {
+      return const LoadingState();
+    }
+    if (state.error != null && data == null) {
+      return ErrorState(message: state.error!, onRetry: () => reports.load(kind));
+    }
+    if (data == null) {
+      return const SizedBox.shrink();
+    }
+    final String? empty = switch (data) {
+      final IncomeReport income when income.isEmpty => 'No hay pagos cobrados en este periodo.',
+      final PartsMargin margin when margin.items.isEmpty && state.total == 0 =>
+        'No hay refacciones usadas en órdenes terminadas en este periodo.',
+      final List<Object?> rows when rows.isEmpty && state.total == 0 => switch (kind) {
+          ReportKind.services => 'No hay servicios en órdenes terminadas en este periodo.',
+          ReportKind.productivity => 'No hay órdenes terminadas en este periodo.',
+          _ => 'No hay existencias ni salidas en este periodo.',
+        },
+      _ => null,
+    };
+    if (empty != null) {
+      return EmptyState(message: empty);
+    }
+    final content = switch (kind) {
+      ReportKind.income => _IncomeContent(income: data as IncomeReport),
+      ReportKind.services => _ServicesContent(rows: data as List<ServiceFrequencyRow>),
+      ReportKind.productivity => _ProductivityContent(rows: data as List<ProductivityRow>),
+      ReportKind.partsMargin => _PartsMarginContent(report: data as PartsMargin),
+      ReportKind.turnover => _TurnoverContent(rows: data as List<TurnoverRow>),
+    };
+    if (!kind.paginated) {
+      return content;
+    }
+    return Column(
+      children: [
+        Expanded(child: content),
+        TableFooter(
+          page: state.page,
+          pageSize: state.pageSize,
+          total: state.total,
+          onPageChanged: (page) => reports.goToPage(kind, page),
+        ),
       ],
     );
   }
+}
 
-  Widget _body(BuildContext context, ReportsProvider reports) {
-    final income = reports.income;
-    if (reports.loading && income == null) {
-      return const LoadingState();
-    }
-    if (reports.error != null && income == null) {
-      return ErrorState(message: reports.error!, onRetry: reports.loadIncome);
-    }
-    if (income == null) {
-      return const SizedBox.shrink();
-    }
-    if (income.isEmpty) {
-      return const EmptyState(message: 'No hay pagos cobrados en este periodo.');
-    }
-    return _IncomeContent(income: income);
+/// Tarjeta con título, nota opcional y una tabla que, si no cabe, se desplaza en horizontal con una barra siempre
+/// visible (para que se note que hay más columnas).
+class _TableCard extends StatefulWidget {
+  const _TableCard({required this.title, required this.columns, required this.rows, this.note});
+
+  final String title;
+  final String? note;
+  final List<DataColumn> columns;
+  final List<DataRow> rows;
+
+  @override
+  State<_TableCard> createState() => _TableCardState();
+}
+
+class _TableCardState extends State<_TableCard> {
+  final _horizontal = ScrollController();
+
+  @override
+  void dispose() {
+    _horizontal.dispose();
+    super.dispose();
   }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final note = widget.note;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(widget.title, style: theme.textTheme.titleMedium),
+            if (note != null) ...[const SizedBox(height: AppSpacing.xs), Text(note, style: theme.textTheme.bodySmall)],
+            const SizedBox(height: AppSpacing.sm),
+            Scrollbar(
+              controller: _horizontal,
+              thumbVisibility: true,
+              child: SingleChildScrollView(
+                controller: _horizontal,
+                scrollDirection: Axis.horizontal,
+                // El espacio de abajo evita que la barra tape la última fila.
+                padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                child: DataTable(columns: widget.columns, rows: widget.rows),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+DataColumn _column(String label, {bool numeric = false}) => DataColumn(label: Text(label), numeric: numeric);
+
+DataRow _row(List<String> cells) => DataRow(cells: [for (final cell in cells) DataCell(Text(cell))]);
+
+String _optionalMoney(double? value) => value == null ? '—' : formatMoney(value);
+
+/// Contenido desplazable de un reporte.
+class _ReportScroll extends StatelessWidget {
+  const _ReportScroll({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) =>
+      SingleChildScrollView(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children));
+}
+
+class _ServicesContent extends StatelessWidget {
+  const _ServicesContent({required this.rows});
+
+  final List<ServiceFrequencyRow> rows;
+
+  @override
+  Widget build(BuildContext context) => _ReportScroll(
+        children: [
+          _TableCard(
+            title: 'Servicios más frecuentes',
+            note: 'Servicios de las órdenes terminadas en el periodo.',
+            columns: [_column('Servicio'), _column('Cantidad', numeric: true), _column('Importe', numeric: true)],
+            rows: [for (final row in rows) _row([row.name, '${row.count}', formatMoney(row.total)])],
+          ),
+        ],
+      );
+}
+
+class _ProductivityContent extends StatelessWidget {
+  const _ProductivityContent({required this.rows});
+
+  final List<ProductivityRow> rows;
+
+  @override
+  Widget build(BuildContext context) => _ReportScroll(
+        children: [
+          _TableCard(
+            title: 'Productividad por mecánico',
+            note: 'Cada orden cuenta una sola vez, en la fecha en que se terminó por primera vez.',
+            columns: [_column('Mecánico'), _column('Órdenes terminadas', numeric: true), _column('Mano de obra', numeric: true)],
+            rows: [for (final row in rows) _row([row.mechanicName, '${row.finishedOrders}', formatMoney(row.laborTotal)])],
+          ),
+        ],
+      );
+}
+
+class _PartsMarginContent extends StatelessWidget {
+  const _PartsMarginContent({required this.report});
+
+  final PartsMargin report;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final totals = report.totals;
+    Widget figure(String label, double value) => Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: theme.textTheme.bodySmall),
+            Text(formatMoney(value), style: theme.textTheme.headlineSmall),
+          ],
+        );
+    return _ReportScroll(
+      children: [
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Wrap(
+                  spacing: AppSpacing.xxl,
+                  runSpacing: AppSpacing.md,
+                  children: [
+                    figure('Ventas de refacciones', totals.salesTotal),
+                    figure('Costo', totals.costTotal),
+                    figure('Margen', totals.marginTotal),
+                  ],
+                ),
+                if (totals.withoutCostCount > 0) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  Text(
+                    '${totals.withoutCostCount} ${totals.withoutCostCount == 1 ? 'refacción sin costo' : 'refacciones sin costo'}: '
+                    'sus ventas se suman, pero no entran en el costo ni en el margen.',
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        _TableCard(
+          title: 'Margen por refacción',
+          note: 'Usa el precio de venta de cada orden y el precio de compra actual de la refacción.',
+          columns: [
+            _column('Código'),
+            _column('Refacción'),
+            _column('Piezas', numeric: true),
+            _column('Precio de venta', numeric: true),
+            _column('Precio de compra', numeric: true),
+            _column('Margen por pieza', numeric: true),
+            _column('Margen total', numeric: true),
+            _column('Observación'),
+          ],
+          rows: [
+            for (final row in report.items)
+              _row([
+                row.code,
+                row.name,
+                '${row.quantity}',
+                formatMoney(row.salePrice),
+                _optionalMoney(row.purchasePrice),
+                _optionalMoney(row.marginPerUnit),
+                _optionalMoney(row.marginTotal),
+                row.withoutCost ? 'Sin costo' : '',
+              ]),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _TurnoverContent extends StatelessWidget {
+  const _TurnoverContent({required this.rows});
+
+  final List<TurnoverRow> rows;
+
+  @override
+  Widget build(BuildContext context) => _ReportScroll(
+        children: [
+          _TableCard(
+            title: 'Rotación de inventario',
+            note: 'Salidas del periodo entre la existencia promedio (inicial y final). '
+                'Las devoluciones a inventario no se restan de las salidas.',
+            columns: [
+              _column('Código'),
+              _column('Refacción'),
+              _column('Unidades que salieron', numeric: true),
+              _column('Existencia promedio', numeric: true),
+              _column('Rotación', numeric: true),
+            ],
+            rows: [
+              for (final row in rows)
+                _row([
+                  row.code,
+                  row.name,
+                  '${row.unitsOut}',
+                  row.averageStock.toStringAsFixed(2),
+                  row.turnover?.toStringAsFixed(2) ?? 'Sin existencia',
+                ]),
+            ],
+          ),
+        ],
+      );
 }
 
 class _IncomeContent extends StatelessWidget {

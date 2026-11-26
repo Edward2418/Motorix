@@ -60,3 +60,39 @@ export function sumCents(amounts) {
 export function centsToPesos(cents) {
   return Math.round(cents) / 100;
 }
+
+/**
+ * Margen de las piezas de una refacción vendidas a un mismo precio, en centavos. Con precio de compra 0 o nulo la fila se
+ * marca `withoutCost` y no tiene costo ni margen (no se supone que costó cero).
+ */
+export function partMargins({ quantity, saleCents, purchaseCents, ...row }) {
+  const withoutCost = !purchaseCents;
+  const marginPerUnitCents = withoutCost ? null : saleCents - purchaseCents;
+  return {
+    ...row,
+    quantity,
+    saleCents,
+    purchaseCents: withoutCost ? null : purchaseCents,
+    marginPerUnitCents,
+    salesCents: saleCents * quantity,
+    costCents: withoutCost ? null : purchaseCents * quantity,
+    marginCents: withoutCost ? null : marginPerUnitCents * quantity,
+    withoutCost
+  };
+}
+
+/** Totales del margen: las ventas suman todo; el costo y el margen, solo lo que tiene costo. */
+export function marginTotals(rows) {
+  return {
+    salesCents: rows.reduce((sum, row) => sum + row.salesCents, 0),
+    costCents: rows.reduce((sum, row) => sum + (row.costCents ?? 0), 0),
+    marginCents: rows.reduce((sum, row) => sum + (row.marginCents ?? 0), 0),
+    withoutCostCount: new Set(rows.filter((row) => row.withoutCost).map((row) => row.partId)).size
+  };
+}
+
+/** Rotación: salidas entre la existencia promedio (inicial y final del rango); nula si el promedio es 0. */
+export function turnoverRow({ unitsOut, initialStock, finalStock }) {
+  const averageStock = (initialStock + finalStock) / 2;
+  return { averageStock, turnover: averageStock === 0 ? null : Math.round((unitsOut / averageStock) * 100) / 100 };
+}

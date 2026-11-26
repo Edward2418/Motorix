@@ -1,4 +1,4 @@
-// Recorre por la API los escenarios del quickstart del Sprint 7 (etapas 1 y 2, escenarios 1 a 26) con los datos de ejemplo
+// Recorre por la API los escenarios del quickstart del Sprint 7 (las tres etapas, escenarios 1 a 28) con los datos de ejemplo
 // reales (seeds) y escribe un resultado por escenario. Los pasos que dependen de ver la interfaz (rechazar los términos,
 // el cierre a los 30 minutos y abrir el CSV en una hoja de cálculo) no se pueden probar aquí: se informan aparte con la
 // prueba automática que los cubre.
@@ -245,7 +245,32 @@ export async function main() {
     await post(admin, '/api/terms/accept', { version: 2 });
     check('10b', 'tras aceptar la versión 2 el administrador vuelve a usar el sistema', (await get(admin, '/api/clients')).status === 200);
 
-    console.log('Escenarios de la etapa 3 (27 y 28): no se construyeron; quedan registrados como trabajo futuro (FR-032).');
+    // 27 y 28 (etapa 3): servicios, productividad, margen y rotación de los últimos 366 días.
+    const anio = `from=${iso(new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - 365))}&to=${iso(hoy)}`;
+    const servicios = (await get(admin, `/api/reports/services?${anio}&pageSize=200`)).body.data;
+    const productividad = (await get(admin, `/api/reports/productivity?${anio}`)).body.data;
+    const [[terminadas]] = await pool.query(
+      `SELECT COUNT(*) AS ordenes, COALESCE(ROUND(SUM((SELECT COALESCE(SUM(l.amount), 0) FROM order_labor l WHERE l.order_id = f.order_id)) * 100), 0) AS centavos
+       FROM (SELECT order_id FROM order_status_history WHERE to_status = 'TERMINADO' GROUP BY order_id
+             HAVING MIN(changed_at) >= ? AND MIN(changed_at) <= ?) f`,
+      [new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - 365, 0, 0, 0), new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 23, 59, 59, 999)]
+    );
+    const ordenados = servicios.every((fila, i) => i === 0 || servicios[i - 1].count >= fila.count);
+    check(27, 'servicios del más al menos frecuente y, por mecánico, las órdenes terminadas y la mano de obra', servicios.length > 0 && ordenados && productividad.reduce((s, m) => s + m.finishedOrders, 0) === Number(terminadas.ordenes) && Math.round(productividad.reduce((s, m) => s + m.laborTotal * 100, 0)) === Number(terminadas.centavos), `${servicios.length} servicios, ${productividad.length} mecánicos, ${terminadas.ordenes} órdenes`);
+
+    // Una refacción sin precio de compra entre las usadas, para ver la marca «sin costo».
+    const antesMargen = (await get(admin, `/api/reports/parts-margin?${anio}&pageSize=200`)).body.data;
+    await pool.query('UPDATE parts SET purchase_price = 0 WHERE id = ?', [antesMargen.items[0]?.partId ?? 0]);
+    const margen = (await get(admin, `/api/reports/parts-margin?${anio}&pageSize=200`)).body.data;
+    const sinCosto = margen.items.filter((f) => f.withoutCost);
+    const conCosto = margen.items.filter((f) => !f.withoutCost);
+    const centavos = (filas, campo) => filas.reduce((s, f) => s + Math.round(f[campo] * 100), 0);
+    const rotacion = (await get(admin, `/api/reports/inventory-turnover?${anio}&pageSize=200`)).body.data;
+    const [[salidas]] = await pool.query(
+      "SELECT COALESCE(SUM(-quantity), 0) AS unidades FROM inventory_movements WHERE type = 'SALIDA' AND created_at >= ? AND created_at <= ?",
+      [new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - 365, 0, 0, 0), new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 23, 59, 59, 999)]
+    );
+    check(28, 'margen por refacción con «sin costo» fuera del margen total, y rotación que coincide con las salidas', sinCosto.length > 0 && sinCosto.every((f) => f.marginTotal === null) && Math.round(margen.totals.marginTotal * 100) === centavos(conCosto, 'marginTotal') && Math.round(margen.totals.salesTotal * 100) === centavos(margen.items, 'salesTotal') && rotacion.reduce((s, f) => s + f.unitsOut, 0) === Number(salidas.unidades) && Number(salidas.unidades) > 0, `${margen.items.length} filas, ${sinCosto.length} sin costo, ${salidas.unidades} unidades`);
     const failed = results.filter((r) => !r.ok);
     console.log(`\nResumen: ${results.length - failed.length} de ${results.length} comprobaciones por la API aprobadas; 16, el rechazo de los términos (7, parte visual) y abrir el CSV en una hoja de cálculo se verifican con las pruebas del cliente y a mano.`);
     if (failed.length > 0) process.exitCode = 1;

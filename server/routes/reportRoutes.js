@@ -9,5 +9,9 @@ const router = Router();
 
 router.use(authenticate, authorize(ROLES.ADMIN));
 router.get('/income', asyncHandler(reportController.income));
+router.get('/services', asyncHandler(reportController.services));
+router.get('/productivity', asyncHandler(reportController.productivity));
+router.get('/parts-margin', asyncHandler(reportController.partsMargin));
+router.get('/inventory-turnover', asyncHandler(reportController.inventoryTurnover));
 
 export default router;

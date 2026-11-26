@@ -282,14 +282,14 @@ description: "Lista de tareas del Sprint 7: reportes y configuración"
 
 ### Pruebas de la historia 9 (se escriben primero)
 
-- [ ] T098 [P] [US9] Escribir `server/tests/integration/reports.services.test.js` (debe fallar): `GET /api/reports/services` cuenta las líneas de las órdenes cuyo primer paso a `TERMINADO` cae en el rango, agrupa por tipo de servicio y, si no tiene, por descripción, ordena del más al menos frecuente con cantidad e importe en centavos, pagina (`pageSize` 50 y 200 como máximo) y su CSV coincide con el JSON
-- [ ] T099 [P] [US9] Escribir `server/tests/integration/reports.productivity.test.js` (debe fallar): `GET /api/reports/productivity` devuelve por mecánico las órdenes terminadas en el rango (cada orden una vez, aunque pasara por `TERMINADO` más de una vez) y el importe de mano de obra de esas órdenes, un mecánico sin órdenes no aparece, coincide con la regla de «terminada en el periodo» del panel y su CSV coincide con el JSON
-- [ ] T100 [P] [US9] Escribir en `client/test/reports_screen_test.dart` (debe fallar) los casos de las pestañas «Servicios» y «Productividad» con sus estados de carga, vacío y error
+- [X] T098 [P] [US9] Escribir `server/tests/integration/reports.services.test.js` (debe fallar): `GET /api/reports/services` cuenta las líneas de las órdenes cuyo primer paso a `TERMINADO` cae en el rango, agrupa por tipo de servicio y, si no tiene, por descripción, ordena del más al menos frecuente con cantidad e importe en centavos, pagina (`pageSize` 50 y 200 como máximo) y su CSV coincide con el JSON
+- [X] T099 [P] [US9] Escribir `server/tests/integration/reports.productivity.test.js` (debe fallar): `GET /api/reports/productivity` devuelve por mecánico las órdenes terminadas en el rango (cada orden una vez, aunque pasara por `TERMINADO` más de una vez) y el importe de mano de obra de esas órdenes, un mecánico sin órdenes no aparece, coincide con la regla de «terminada en el periodo» del panel y su CSV coincide con el JSON
+- [X] T100 [P] [US9] Escribir en `client/test/reports_screen_test.dart` (debe fallar) los casos de las pestañas «Servicios» y «Productividad» con sus estados de carga, vacío y error
 
 ### Implementación de la historia 9
 
-- [ ] T101 [US9] Agregar a `server/models/reportModel.js` las consultas de servicios frecuentes y productividad (parametrizadas, en centavos), a `server/services/reportService.js` `services` y `productivity`, y las rutas `GET /services` y `GET /productivity` a `server/routes/reportRoutes.js`; confirmar con `npm test -- tests/integration/reports.services.test.js tests/integration/reports.productivity.test.js` y sumar sus casos a `tests/contract/reports.contract.test.js`
-- [ ] T102 [US9] Agregar a `client/lib/screens/reports_screen.dart`, `client/lib/providers/reports_provider.dart` y `client/lib/models/` las pestañas «Servicios» y «Productividad» con su exportación; confirmar con `flutter test test/reports_screen_test.dart`
+- [X] T101 [US9] Agregar a `server/models/reportModel.js` las consultas de servicios frecuentes y productividad (parametrizadas, en centavos), a `server/services/reportService.js` `services` y `productivity`, y las rutas `GET /services` y `GET /productivity` a `server/routes/reportRoutes.js`; confirmar con `npm test -- tests/integration/reports.services.test.js tests/integration/reports.productivity.test.js` y sumar sus casos a `tests/contract/reports.contract.test.js`
+- [X] T102 [US9] Agregar a `client/lib/screens/reports_screen.dart`, `client/lib/providers/reports_provider.dart` y `client/lib/models/` las pestañas «Servicios» y «Productividad» con su exportación; confirmar con `flutter test test/reports_screen_test.dart`
 
 **Punto de control**: `quickstart.md` escenario 27.
 
@@ -303,15 +303,15 @@ description: "Lista de tareas del Sprint 7: reportes y configuración"
 
 ### Pruebas de la historia 10 (se escriben primero)
 
-- [ ] T103 [P] [US10] Escribir `server/tests/unit/reportMargins.test.js` (debe fallar): margen por pieza (venta menos compra), margen total solo de las refacciones con costo, una refacción con precio de compra 0 o nulo se marca `withoutCost` y no entra en el total, rotación = salidas ÷ existencia promedio y, con existencia promedio 0, rotación nula, todo en centavos sin errores de redondeo
-- [ ] T104 [P] [US10] Escribir `server/tests/integration/reports.partsMargin.test.js` (debe fallar): `GET /api/reports/parts-margin` toma el precio de venta de la línea y el precio de compra vigente de la refacción, solo cuenta órdenes terminadas en el rango, marca «sin costo», devuelve `totals` coherentes con los renglones, pagina y su CSV coincide con el JSON; el precio de compra no aparece en ninguna ruta de otro rol
-- [ ] T105 [P] [US10] Escribir `server/tests/integration/reports.turnover.test.js` (debe fallar): `GET /api/reports/inventory-turnover` suma las salidas (`SALIDA`) del rango, calcula la existencia promedio con la inicial reconstruida con los movimientos y la final, informa rotación nula si no hubo existencia, y su CSV coincide con el JSON
-- [ ] T106 [P] [US10] Escribir en `client/test/reports_screen_test.dart` (debe fallar) los casos de las pestañas «Margen de refacciones» y «Rotación» (incluida la etiqueta «sin costo») con sus estados de carga, vacío y error
+- [X] T103 [P] [US10] Escribir `server/tests/unit/reportMargins.test.js` (debe fallar): margen por pieza (venta menos compra), margen total solo de las refacciones con costo, una refacción con precio de compra 0 o nulo se marca `withoutCost` y no entra en el total, rotación = salidas ÷ existencia promedio y, con existencia promedio 0, rotación nula, todo en centavos sin errores de redondeo
+- [X] T104 [P] [US10] Escribir `server/tests/integration/reports.partsMargin.test.js` (debe fallar): `GET /api/reports/parts-margin` toma el precio de venta de la línea y el precio de compra vigente de la refacción, solo cuenta órdenes terminadas en el rango, marca «sin costo», devuelve `totals` coherentes con los renglones, pagina y su CSV coincide con el JSON; el precio de compra no aparece en ninguna ruta de otro rol
+- [X] T105 [P] [US10] Escribir `server/tests/integration/reports.turnover.test.js` (debe fallar): `GET /api/reports/inventory-turnover` suma las salidas (`SALIDA`) del rango, calcula la existencia promedio con la inicial reconstruida con los movimientos y la final, informa rotación nula si no hubo existencia, y su CSV coincide con el JSON
+- [X] T106 [P] [US10] Escribir en `client/test/reports_screen_test.dart` (debe fallar) los casos de las pestañas «Margen de refacciones» y «Rotación» (incluida la etiqueta «sin costo») con sus estados de carga, vacío y error
 
 ### Implementación de la historia 10
 
-- [ ] T107 [US10] Agregar las reglas de margen y rotación a `server/services/reportRules.js`, las consultas a `server/models/reportModel.js`, `partsMargin` e `inventoryTurnover` a `server/services/reportService.js` y las rutas `GET /parts-margin` y `GET /inventory-turnover` a `server/routes/reportRoutes.js`; confirmar con `npm test -- tests/unit/reportMargins.test.js tests/integration/reports.partsMargin.test.js tests/integration/reports.turnover.test.js` y sumar sus casos a `tests/contract/reports.contract.test.js`
-- [ ] T108 [US10] Agregar a `client/lib/screens/reports_screen.dart`, `client/lib/providers/reports_provider.dart` y `client/lib/models/` las pestañas «Margen de refacciones» y «Rotación» con su exportación; confirmar con `flutter test test/reports_screen_test.dart`
+- [X] T107 [US10] Agregar las reglas de margen y rotación a `server/services/reportRules.js`, las consultas a `server/models/reportModel.js`, `partsMargin` e `inventoryTurnover` a `server/services/reportService.js` y las rutas `GET /parts-margin` y `GET /inventory-turnover` a `server/routes/reportRoutes.js`; confirmar con `npm test -- tests/unit/reportMargins.test.js tests/integration/reports.partsMargin.test.js tests/integration/reports.turnover.test.js` y sumar sus casos a `tests/contract/reports.contract.test.js`
+- [X] T108 [US10] Agregar a `client/lib/screens/reports_screen.dart`, `client/lib/providers/reports_provider.dart` y `client/lib/models/` las pestañas «Margen de refacciones» y «Rotación» con su exportación; confirmar con `flutter test test/reports_screen_test.dart`
 
 **Punto de control**: `quickstart.md` escenario 28.
 

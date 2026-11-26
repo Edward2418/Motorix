@@ -725,6 +725,8 @@ components:
               salePrice: { type: number, description: Precio de venta de la línea }
               purchasePrice: { type: number, nullable: true, description: Precio de compra vigente de la refacción }
               marginPerUnit: { type: number, nullable: true }
+              salesTotal: { type: number, description: Precio de venta por las piezas de la fila }
+              costTotal: { type: number, nullable: true }
               marginTotal: { type: number, nullable: true }
               withoutCost: { type: boolean }
         totals:

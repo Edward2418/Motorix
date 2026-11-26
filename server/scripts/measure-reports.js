@@ -13,7 +13,7 @@ import { pool, closePool } from '../config/db.js';
 import { env } from '../config/env.js';
 import { getDashboard } from '../services/dashboardService.js';
 import { notificationService } from '../services/notificationService.js';
-import { income, incomeToCsv } from '../services/reportService.js';
+import { income, incomeToCsv, inventoryTurnover, partsMargin, productivity, services } from '../services/reportService.js';
 import { dayEnd, dayStart } from '../services/reportRules.js';
 import { hasAcceptedCurrent } from '../services/termsService.js';
 import { describeTimes, loadData, refreshStatistics, truncateAll } from './measure-dashboard.js';
@@ -73,6 +73,13 @@ export async function main({ keep = false } = {}) {
     const range = { from, to, start: dayStart(from), end: dayEnd(to) };
     results['exportación a CSV (366 días)'] = await timeIt(async () => incomeToCsv(await income(range)));
     console.log(`Exportación a CSV de 366 días: ${describeTimes(results['exportación a CSV (366 días)'])} (límite ${REPORT_LIMIT_MS} ms).`);
+
+    const others = { 'servicios frecuentes': services, productividad: productivity, 'margen de refacciones': partsMargin, 'rotación de inventario': inventoryTurnover };
+    for (const [name, report] of Object.entries(others)) {
+      results[name] = await timeIt(() => report(range));
+      const sample = await report(range);
+      console.log(`${name} de 366 días (${(sample.items ?? sample).length} filas): ${describeTimes(results[name])} (límite ${REPORT_LIMIT_MS} ms).`);
+    }
 
     results['panel de control'] = await timeIt(() => getDashboard('month'));
     console.log(`Panel de control: ${describeTimes(results['panel de control'])} (límite ${REPORT_LIMIT_MS} ms).`);

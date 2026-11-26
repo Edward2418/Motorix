@@ -58,3 +58,37 @@ describe('contrato de GET /api/reports/income', () => {
     expect((await request(app).get('/api/reports/income?from=2026-10-01&to=2026-10-31').set(bearer(token))).status).toBe(403);
   });
 });
+
+describe.each(['services', 'productivity', 'parts-margin', 'inventory-turnover'])('contrato de GET /api/reports/%s', (reporte) => {
+  const url = `/api/reports/${reporte}?from=2026-10-01&to=2026-10-31`;
+  const meta = { page: 1, pageSize: 50, total: 0 };
+  const vacio = {
+    services: { data: [], meta },
+    productivity: { data: [] },
+    'parts-margin': { data: { items: [], totals: { salesTotal: 0, costTotal: 0, marginTotal: 0, withoutCostCount: 0 } }, meta },
+    'inventory-turnover': { data: [], meta }
+  };
+
+  test('responde 200 con la forma del contrato', async () => {
+    const { token } = await loginAs('ADMIN');
+    const res = await request(app).get(url).set(bearer(token));
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual(vacio[reporte]);
+  });
+
+  test('un rango inválido responde 400 REPORT_RANGE_INVALID', async () => {
+    const { token } = await loginAs('ADMIN');
+    const res = await request(app).get(`/api/reports/${reporte}?from=2026-10-31&to=2026-10-01`).set(bearer(token));
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('REPORT_RANGE_INVALID');
+  });
+
+  test('sin token responde 401', async () => {
+    expect((await request(app).get(url)).status).toBe(401);
+  });
+
+  test.each(['RECEPTIONIST', 'MECHANIC'])('con el rol %s responde 403', async (rol) => {
+    const { token } = await loginAs(rol);
+    expect((await request(app).get(url).set(bearer(token))).status).toBe(403);
+  });
+});

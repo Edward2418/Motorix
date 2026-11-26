@@ -57,6 +57,21 @@ describe('rendimiento de los reportes (SC-003)', () => {
     expect(ms).toBeLessThan(LIMITE_MS);
   });
 
+  test.each(['services', 'productivity', 'parts-margin', 'inventory-turnover'])(
+    'el reporte %s del máximo rango carga en menos de 3 segundos y trae datos de ejemplo',
+    async (reporte) => {
+      const token = await tokenAdmin();
+      const [desde, hasta] = RANGOS['el máximo permitido (366 días)'];
+
+      const { ms, resultado } = await medir(() => request(app).get(`/api/reports/${reporte}?from=${desde}&to=${hasta}`).set(bearer(token)));
+
+      expect(resultado.status).toBe(200);
+      const filas = reporte === 'parts-margin' ? resultado.body.data.items : resultado.body.data;
+      expect(filas.length).toBeGreaterThan(0);
+      expect(ms).toBeLessThan(LIMITE_MS);
+    }
+  );
+
   test('el panel y el centro de avisos siguen por debajo de sus límites con el filtro de términos activo', async () => {
     const token = await tokenAdmin();
 
