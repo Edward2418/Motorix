@@ -37,20 +37,21 @@ void main() {
 
 /// Aplicación raíz. [useGoogleFonts] se desactiva en las pruebas para no descargar la tipografía.
 class MotorixApp extends StatelessWidget {
-  const MotorixApp({super.key, required this.api, this.useGoogleFonts = true, this.reportSaver = const FileReportSaver()});
+  const MotorixApp({super.key, required this.api, this.useGoogleFonts = true, this.reportSaver});
 
   final ApiClient api;
   final bool useGoogleFonts;
 
   /// Dónde se guardan los reportes exportados; las pruebas usan un guardador falso.
-  final ReportSaver reportSaver;
+  /// Si es `null` se usa el guardador de la plataforma.
+  final ReportSaver? reportSaver;
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
         Provider<ApiClient>.value(value: api),
-        Provider<ReportSaver>.value(value: reportSaver),
+        Provider<ReportSaver>.value(value: reportSaver ?? createReportSaver()),
         ChangeNotifierProvider(create: (_) => AuthProvider(api)),
         ChangeNotifierProvider(create: (_) => SidebarProvider()),
         ChangeNotifierProvider(create: (_) => NavigationProvider()),

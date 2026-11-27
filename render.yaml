@@ -1,0 +1,58 @@
+# Definición de los servicios de Motorix en Render (planes gratuitos). La base de datos está en TiDB Cloud.
+# Los valores con `sync: false` se escriben en el panel de Render: nunca van en el repositorio.
+services:
+  - type: web
+    name: motorix-api
+    runtime: node
+    plan: free
+    region: oregon
+    branch: 007-reportes-configuracion
+    rootDir: server
+    buildCommand: npm ci --omit=dev
+    startCommand: node server.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: NODE_ENV
+        value: production
+      # Zona horaria del taller: los reportes y avisos cortan el día con ella.
+      - key: TZ
+        value: America/Mexico_City
+      - key: TRUST_PROXY
+        value: "1"
+      - key: DB_SSL
+        value: "true"
+      - key: DB_TIME_ZONE
+        value: "-06:00"
+      - key: DB_PORT
+        value: "4000"
+      - key: DB_NAME
+        value: motorix
+      - key: DB_HOST
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      # Origen de la aplicación web, por ejemplo https://motorix-web.onrender.com (sin barra final).
+      - key: CORS_ORIGINS
+        sync: false
+
+  - type: web
+    name: motorix-web
+    runtime: static
+    branch: 007-reportes-configuracion
+    rootDir: client
+    buildCommand: >-
+      git clone --depth 1 --branch 3.47.2 https://github.com/flutter/flutter.git "$HOME/flutter" &&
+      export PATH="$HOME/flutter/bin:$PATH" &&
+      flutter pub get &&
+      flutter build web --release --dart-define=API_URL="$API_URL"
+    staticPublishPath: build/web
+    envVars:
+      # Dirección de la API con /api al final, por ejemplo https://motorix-api.onrender.com/api
+      - key: API_URL
+        sync: false

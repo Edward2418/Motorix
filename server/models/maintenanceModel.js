@@ -47,18 +47,15 @@ export async function findById(id, conn) {
 }
 
 // Bloquea solo la fila del mantenimiento (no la de la orden) y trae el mecánico de su orden de origen.
-// Así no se invierte el orden de bloqueos con la cancelación de la orden, que bloquea la orden primero.
+// Así no se invierte el orden de bloqueos con la cancelación de la orden, que bloquea la orden primero. Son dos
+// consultas porque TiDB no admite `FOR UPDATE OF` con un alias.
 export async function lockById(id, conn) {
-  const rows = await query(
-    `SELECT m.id, m.vehicle_id, m.order_id, m.status, o.mechanic_id
-     FROM maintenance m
-     JOIN service_orders o ON o.id = m.order_id
-     WHERE m.id = ?
-     FOR UPDATE OF m`,
-    [id],
-    conn
-  );
-  return rows[0] ?? null;
+  const [locked] = await query('SELECT id, vehicle_id, order_id, status FROM maintenance WHERE id = ? FOR UPDATE', [id], conn);
+  if (!locked) {
+    return null;
+  }
+  const [order] = await query('SELECT mechanic_id FROM service_orders WHERE id = ?', [locked.order_id], conn);
+  return { ...locked, mechanic_id: order.mechanic_id };
 }
 
 export async function listByOrder(orderId, conn) {

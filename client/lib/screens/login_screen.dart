@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -18,8 +20,14 @@ class _LoginScreenState extends State<LoginScreen> {
   final _identifier = TextEditingController();
   final _password = TextEditingController();
 
+  // Si el inicio de sesión tarda, lo más probable es que el servidor gratuito estuviera dormido.
+  static const _slowAfter = Duration(seconds: 5);
+  Timer? _slowTimer;
+  bool _slow = false;
+
   @override
   void dispose() {
+    _slowTimer?.cancel();
     _identifier.dispose();
     _password.dispose();
     super.dispose();
@@ -29,7 +37,18 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!_formKey.currentState!.validate()) {
       return;
     }
-    await context.read<AuthProvider>().login(_identifier.text, _password.text);
+    final auth = context.read<AuthProvider>();
+    _slowTimer?.cancel();
+    _slowTimer = Timer(_slowAfter, () {
+      if (mounted) {
+        setState(() => _slow = true);
+      }
+    });
+    await auth.login(_identifier.text, _password.text);
+    _slowTimer?.cancel();
+    if (mounted && _slow) {
+      setState(() => _slow = false);
+    }
   }
 
   @override
@@ -99,6 +118,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               ),
                       ),
+                      if (_slow && auth.loading) ...[
+                        const SizedBox(height: AppSpacing.lg),
+                        Text(
+                          'El servidor se está iniciando. Puede tardar hasta un minuto.',
+                          style: theme.textTheme.bodySmall,
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
                       const SizedBox(height: AppSpacing.xl),
                       FilledButton(
                         onPressed: auth.loading ? null : _submit,

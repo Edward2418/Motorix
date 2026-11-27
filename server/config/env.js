@@ -4,6 +4,8 @@
 
 import { readPositiveInt } from '../utils/envNumbers.js';
 import { parseAllowedOrigins } from './cors.js';
+import { buildSsl } from './dbSsl.js';
+import { readTimeZone } from './dbTimeZone.js';
 
 const required = ['DB_HOST', 'DB_PORT', 'DB_USER', 'DB_PASSWORD', 'DB_NAME', 'JWT_SECRET'];
 
@@ -22,7 +24,10 @@ export const env = {
     port: Number(process.env.DB_PORT),
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
-    name: process.env.DB_NAME
+    name: process.env.DB_NAME,
+    // TLS hacia una base en la nube (DB_SSL=true).
+    ssl: buildSsl(process.env.DB_SSL),
+    timeZone: readTimeZone(process.env.DB_TIME_ZONE)
   },
   // Orígenes de navegador permitidos (CORS), separados por comas. Sin valor solo rigen los orígenes locales.
   cors: {

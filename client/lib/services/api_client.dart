@@ -25,12 +25,15 @@ class ApiException implements Exception {
 
 /// Cliente HTTP de la API de Motorix. Agrega el token y traduce los errores.
 class ApiClient {
-  ApiClient({http.Client? httpClient, String? baseUrl})
+  ApiClient({http.Client? httpClient, String? baseUrl, this.timeout = const Duration(seconds: 75)})
       : _http = httpClient ?? http.Client(),
         baseUrl = baseUrl ?? const String.fromEnvironment('API_URL', defaultValue: 'http://localhost:3000/api');
 
   final http.Client _http;
   final String baseUrl;
+
+  /// Cuánto se espera una respuesta. Un servidor gratuito dormido tarda cerca de un minuto en despertar.
+  final Duration timeout;
 
   String? _token;
 
@@ -110,7 +113,7 @@ class ApiClient {
         request.body = jsonEncode(body);
       }
       response = await http.Response.fromStream(
-        await _http.send(request).timeout(const Duration(seconds: 15)),
+        await _http.send(request).timeout(timeout),
       );
     } on TimeoutException {
       throw ApiException('El servidor tardó demasiado en responder. Inténtalo de nuevo.');
