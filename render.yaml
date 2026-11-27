@@ -19,8 +19,9 @@ services:
       # Zona horaria del taller: los reportes y avisos cortan el día con ella.
       - key: TZ
         value: America/Mexico_City
+      # Saltos de proxy de Render antes de la API: de ellos depende la dirección que usa el límite de intentos.
       - key: TRUST_PROXY
-        value: "1"
+        value: "2"
       - key: DB_SSL
         value: "true"
       - key: DB_TIME_ZONE
