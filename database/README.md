@@ -28,8 +28,9 @@ database/
 │                 de orden detenida) y un aviso ya hecho a un cliente (OS-2026-0008); con los seeds 004, 006,
 │                 007 y 008 el centro muestra los seis tipos de aviso,
 │                 012 Sprint 7: configuración inicial, tipos de servicio con intervalos (y el tipo de las líneas
-│                 de servicio que coinciden), términos versión 1 con su aceptación por los cuatro usuarios
-│                 sembrados y registros de bitácora de ejemplo
+│                 de servicio que coinciden), términos versión 1 (sin aceptaciones) y registros de bitácora
+│                 de ejemplo,
+│                 013 versión 2 de los términos y del aviso de privacidad, por secciones
 ├── scripts/      Creación de las bases y del usuario de la aplicación y, opcional, `audit-log-protection.sql`
 │                 (disparadores que impiden editar o borrar la bitácora; solo para quien tenga `SUPER`)
 ├── data/         (opcional, ignorada por Git) archivos físicos de MySQL

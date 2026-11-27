@@ -8,6 +8,7 @@ import '../services/api_client.dart';
 import '../services/report_saver.dart';
 import '../utils/app_tokens.dart';
 import '../utils/formatters.dart';
+import '../widgets/horizontal_scroll.dart';
 import '../widgets/section_navigator.dart';
 import '../widgets/table_footer.dart';
 import '../widgets/view_states.dart';
@@ -199,9 +200,8 @@ class _ReportBody extends StatelessWidget {
   }
 }
 
-/// Tarjeta con título, nota opcional y una tabla que, si no cabe, se desplaza en horizontal con una barra siempre
-/// visible (para que se note que hay más columnas).
-class _TableCard extends StatefulWidget {
+/// Tarjeta con título, nota opcional y una tabla que, si no cabe, se desplaza en horizontal con la barra visible.
+class _TableCard extends StatelessWidget {
   const _TableCard({required this.title, required this.columns, required this.rows, this.note});
 
   final String title;
@@ -210,42 +210,18 @@ class _TableCard extends StatefulWidget {
   final List<DataRow> rows;
 
   @override
-  State<_TableCard> createState() => _TableCardState();
-}
-
-class _TableCardState extends State<_TableCard> {
-  final _horizontal = ScrollController();
-
-  @override
-  void dispose() {
-    _horizontal.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final note = widget.note;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(widget.title, style: theme.textTheme.titleMedium),
-            if (note != null) ...[const SizedBox(height: AppSpacing.xs), Text(note, style: theme.textTheme.bodySmall)],
+            Text(title, style: theme.textTheme.titleMedium),
+            if (note != null) ...[const SizedBox(height: AppSpacing.xs), Text(note!, style: theme.textTheme.bodySmall)],
             const SizedBox(height: AppSpacing.sm),
-            Scrollbar(
-              controller: _horizontal,
-              thumbVisibility: true,
-              child: SingleChildScrollView(
-                controller: _horizontal,
-                scrollDirection: Axis.horizontal,
-                // El espacio de abajo evita que la barra tape la última fila.
-                padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                child: DataTable(columns: widget.columns, rows: widget.rows),
-              ),
-            ),
+            HorizontalScroll(child: DataTable(columns: columns, rows: rows)),
           ],
         ),
       ),

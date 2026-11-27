@@ -12,6 +12,7 @@ import '../utils/app_navigation.dart';
 import '../utils/app_tokens.dart';
 import 'confirm_dialog.dart';
 import 'notification_bell.dart';
+import 'terms_view.dart';
 
 /// Estructura general: sidebar colapsable, encabezado y contenido (docs/design-system.md §7).
 class AppShell extends StatefulWidget {
@@ -235,12 +236,15 @@ class _Header extends StatelessWidget {
             onSelected: (value) {
               if (value == 'password') {
                 showChangePasswordDialog(context);
+              } else if (value == 'terms') {
+                showTermsDialog(context);
               } else if (value == 'logout') {
                 onLogout();
               }
             },
             itemBuilder: (_) => const [
               PopupMenuItem(value: 'password', child: Text('Cambiar contraseña')),
+              PopupMenuItem(value: 'terms', child: Text('Términos y aviso de privacidad')),
               PopupMenuItem(value: 'logout', child: Text('Cerrar sesión')),
             ],
           ),

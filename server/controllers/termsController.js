@@ -6,6 +6,10 @@ export async function current(req, res) {
   sendData(res, await termsService.getCurrent(req.user.id));
 }
 
+export async function publicCurrent(req, res) {
+  sendData(res, await termsService.getPublic());
+}
+
 export async function accept(req, res) {
   const { version } = validateTermsAccept(req.body);
   sendData(res, await termsService.accept(req.user.id, version));

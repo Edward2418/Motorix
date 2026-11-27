@@ -71,7 +71,66 @@ Future<List<http.Request>> iniciarSesion(
 
 bool enLogin() => find.widgetWithText(TextFormField, 'Usuario o correo electrónico').evaluate().isNotEmpty;
 
+const casillaTerminos = 'He leído y acepto los términos y condiciones';
+const casillaAviso = 'He leído el aviso de privacidad';
+
+Future<void> marcarCasillas(WidgetTester tester) async {
+  await tester.tap(find.text(casillaTerminos));
+  await tester.tap(find.text(casillaAviso));
+  await tester.pump();
+}
+
+bool aceptarActivo(WidgetTester tester) => tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'Aceptar')).onPressed != null;
+
 void main() {
+  group('casillas de aceptación', () {
+    testWidgets('empiezan sin marcar y «Aceptar» está desactivado', (tester) async {
+      await iniciarSesion(tester, servidor());
+
+      final casillas = tester.widgetList<CheckboxListTile>(find.byType(CheckboxListTile));
+      expect(casillas.map((c) => c.value), [false, false]);
+      expect(aceptarActivo(tester), isFalse);
+    });
+
+    testWidgets('con una sola casilla sigue desactivado y con las dos se activa', (tester) async {
+      await iniciarSesion(tester, servidor());
+
+      await tester.tap(find.text(casillaTerminos));
+      await tester.pump();
+      expect(aceptarActivo(tester), isFalse);
+
+      await tester.tap(find.text(casillaAviso));
+      await tester.pump();
+      expect(aceptarActivo(tester), isTrue);
+
+      await tester.tap(find.text(casillaTerminos));
+      await tester.pump();
+      expect(aceptarActivo(tester), isFalse);
+    });
+
+    testWidgets('si se publica una versión nueva, las casillas vuelven a quedar sin marcar', (tester) async {
+      var nueva = false;
+      await iniciarSesion(
+        tester,
+        servidor(
+          alPedirTerminos: (_) => FakeResponse(200, {'data': terminos(version: nueva ? 4 : 3)}),
+          alAceptar: (_) {
+            nueva = true;
+            return apiError(409, 'TERMS_VERSION_OUTDATED', 'Se publicó una versión más nueva.');
+          },
+        ),
+      );
+      await marcarCasillas(tester);
+
+      await tester.tap(find.text('Aceptar'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Versión 4'), findsOneWidget);
+      expect(tester.widgetList<CheckboxListTile>(find.byType(CheckboxListTile)).map((c) => c.value), [false, false]);
+      expect(aceptarActivo(tester), isFalse);
+    });
+  });
+
   group('pantalla de términos tras iniciar sesión', () {
     testWidgets('con términos pendientes muestra los términos y el aviso de privacidad antes de cualquier módulo', (tester) async {
       await iniciarSesion(tester, servidor());
@@ -95,6 +154,8 @@ void main() {
 
     testWidgets('aceptar envía la versión mostrada y entra a la aplicación', (tester) async {
       final log = await iniciarSesion(tester, servidor());
+
+      await marcarCasillas(tester);
 
       await tester.tap(find.text('Aceptar'));
       await tester.pumpAndSettle();
@@ -128,6 +189,8 @@ void main() {
           },
         ),
       );
+
+      await marcarCasillas(tester);
 
       await tester.tap(find.text('Aceptar'));
       await tester.pumpAndSettle();

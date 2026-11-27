@@ -2,9 +2,8 @@
 -- arrancar con los datos de ejemplo.
 --   Configuración inicial guardada (los mismos valores que ya trae el servidor, para que nada cambie al cargar el seed).
 --   Tipos de servicio con sus intervalos y, en las líneas de servicio que ya existían sin tipo, el tipo que corresponde.
---   Términos y condiciones, versión 1 (una plantilla), con su aceptación por los cuatro usuarios sembrados: así la
---   demostración y las pruebas no se interrumpen. El flujo de aceptación se ve con un usuario nuevo (nace sin aceptar) o
---   publicando una versión 2 con npm run terms:publish.
+--   Términos y condiciones, versión 1 (una plantilla). No se registra ninguna aceptación: cada cuenta de ejemplo ve los
+--   términos vigentes en su primer inicio de sesión (la versión 2 llega con el seed 013).
 --   Unos registros de bitácora de ejemplo, con fechas relativas.
 -- Idempotente: cada fila se identifica por su clave, nombre, versión o detalle y solo se inserta si todavía no existe. Las
 -- líneas de servicio que ya tienen tipo no se tocan. Ningún texto lleva punto y coma, porque el ejecutor de seeds corta en
@@ -54,13 +53,6 @@ SELECT 1,
        'Términos y condiciones del servicio. Al usar Motorix aceptas que la información que registras, como clientes, vehículos, órdenes de servicio y pagos, se utilice solo para administrar el taller. Eres responsable de la confidencialidad de tu usuario y de tu contraseña, y de las acciones que se hagan con ellos. El taller puede revisar la bitácora de acciones sensibles para proteger la información. Estos términos son una plantilla de ejemplo del proyecto académico y deben revisarse antes de un uso real.',
        'Aviso de privacidad. Motorix guarda los datos de las personas que usan el sistema, como nombre, correo y rol, y los datos de los clientes y sus vehículos que el taller registra. No guarda números de tarjeta ni contraseñas en texto plano. Los datos se usan para operar el taller y no se comparten con terceros. Para corregir o eliminar tus datos habla con la administración del taller. Este aviso es una plantilla de ejemplo del proyecto académico.'
 WHERE NOT EXISTS (SELECT 1 FROM terms_versions v WHERE v.version = 1);
-
-INSERT INTO terms_acceptances (user_id, terms_version_id, accepted_at)
-SELECT u.id, v.id, DATE_SUB(NOW(), INTERVAL 1 DAY)
-FROM users u
-JOIN terms_versions v ON v.version = 1
-WHERE u.username IN ('admin', 'recepcion', 'mecanico', 'mecanico2')
-  AND NOT EXISTS (SELECT 1 FROM terms_acceptances a WHERE a.user_id = u.id AND a.terms_version_id = v.id);
 
 -- Registros de bitácora de ejemplo: un inicio fallido, el alta de un mecánico, un cambio de configuración, un cambio de
 -- precio de una refacción y un pago cancelado (si el seed 008 dejó uno).

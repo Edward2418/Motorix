@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../providers/auth_provider.dart';
 import '../utils/app_tokens.dart';
+import '../widgets/terms_view.dart';
 
 /// Pantalla de inicio de sesión: un solo campo para usuario o correo electrónico.
 class LoginScreen extends StatefulWidget {
@@ -108,6 +109,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                 child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.onPrimary),
                               )
                             : const Text('Iniciar sesión'),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      TextButton(
+                        onPressed: auth.loading ? null : () => showTermsDialog(context, public: true),
+                        child: const Text('Términos y aviso de privacidad'),
                       ),
                     ],
                   ),

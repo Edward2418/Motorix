@@ -1,6 +1,6 @@
 import request from 'supertest';
 import app from '../../app.js';
-import { pool, resetTables, closePool } from '../helpers/db.js';
+import { pool, resetTables, closePool, acceptTerms } from '../helpers/db.js';
 import { bearer } from '../helpers/auth.js';
 import { runSeeds } from '../../scripts/sqlRunner.js';
 import { signToken } from '../../utils/jwt.js';
@@ -27,6 +27,7 @@ const RANGOS = {
 
 async function tokenAdmin() {
   const [[admin]] = await pool.query("SELECT id, role FROM users WHERE username = 'admin'");
+  await acceptTerms(admin.id);
   return signToken({ sub: admin.id, role: admin.role });
 }
 

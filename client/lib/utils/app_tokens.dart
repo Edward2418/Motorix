@@ -80,6 +80,8 @@ class AppSizes {
   static const double sidebarCollapsed = 72;
   static const double sidebarAutoCollapseWidth = 1000;
   static const double formMaxWidth = 560;
+  static const double readingMaxWidth = 760;
+  static const double settingsMaxWidth = 960;
   static const double searchWidth = 320;
   static const double headerHeight = 64;
   static const double dialogWidth = 400;

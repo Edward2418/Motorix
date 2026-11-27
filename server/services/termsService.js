@@ -18,6 +18,15 @@ export async function getCurrent(userId) {
   };
 }
 
+/** Versión vigente para leerla sin sesión (pantalla de inicio): solo el documento, sin datos de ningún usuario. */
+export async function getPublic() {
+  const current = await termsModel.findCurrent();
+  if (!current) {
+    return null;
+  }
+  return { version: current.version, termsText: current.termsText, privacyText: current.privacyText, publishedAt: current.publishedAt };
+}
+
 /**
  * Registra que `userId` aceptó `version`. Una versión que no existe es un dato inválido (400); una que existe pero ya
  * no es la vigente es un conflicto (409), porque se publicó otra más nueva. Aceptar dos veces no duplica el registro.

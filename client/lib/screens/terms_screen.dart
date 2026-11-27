@@ -5,6 +5,7 @@ import '../providers/auth_provider.dart';
 import '../providers/terms_provider.dart';
 import '../utils/app_tokens.dart';
 import '../widgets/view_states.dart';
+import '../widgets/terms_view.dart';
 
 /// Términos y condiciones y aviso de privacidad. Se muestra después de iniciar sesión, antes de cualquier módulo, mientras
 /// la persona no haya aceptado la versión vigente. «Rechazar» cierra la sesión.
@@ -16,6 +17,10 @@ class TermsScreen extends StatefulWidget {
 }
 
 class _TermsScreenState extends State<TermsScreen> {
+  // Se guarda qué versión se marcó: si se publica otra, las casillas vuelven a quedar sin marcar.
+  int? _termsCheckedVersion;
+  int? _privacyCheckedVersion;
+
   @override
   void initState() {
     super.initState();
@@ -48,7 +53,7 @@ class _TermsScreenState extends State<TermsScreen> {
     return Scaffold(
       body: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: AppSizes.formMaxWidth),
+          constraints: const BoxConstraints(maxWidth: AppSizes.readingMaxWidth),
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.xl),
             child: Card(
@@ -68,6 +73,29 @@ class _TermsScreenState extends State<TermsScreen> {
                       const SizedBox(height: AppSpacing.md),
                       Text(terms.acceptError!, style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.danger)),
                     ],
+                    if (current != null) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      CheckboxListTile(
+                        value: _termsCheckedVersion == current.version,
+                        onChanged: terms.saving
+                            ? null
+                            : (checked) => setState(() => _termsCheckedVersion = checked == true ? current.version : null),
+                        title: const Text('He leído y acepto los términos y condiciones'),
+                        controlAffinity: ListTileControlAffinity.leading,
+                        contentPadding: EdgeInsets.zero,
+                        dense: true,
+                      ),
+                      CheckboxListTile(
+                        value: _privacyCheckedVersion == current.version,
+                        onChanged: terms.saving
+                            ? null
+                            : (checked) => setState(() => _privacyCheckedVersion = checked == true ? current.version : null),
+                        title: const Text('He leído el aviso de privacidad'),
+                        controlAffinity: ListTileControlAffinity.leading,
+                        contentPadding: EdgeInsets.zero,
+                        dense: true,
+                      ),
+                    ],
                     const SizedBox(height: AppSpacing.lg),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
@@ -79,7 +107,11 @@ class _TermsScreenState extends State<TermsScreen> {
                         if (current != null) ...[
                           const SizedBox(width: AppSpacing.md),
                           FilledButton(
-                            onPressed: terms.saving ? null : _accept,
+                            onPressed: terms.saving ||
+                                    _termsCheckedVersion != current.version ||
+                                    _privacyCheckedVersion != current.version
+                                ? null
+                                : _accept,
                             child: terms.saving
                                 ? const SizedBox(
                                     width: AppSizes.spinnerSmall,
@@ -102,7 +134,6 @@ class _TermsScreenState extends State<TermsScreen> {
   }
 
   Widget _body(BuildContext context, TermsProvider terms) {
-    final theme = Theme.of(context);
     if (terms.loading && terms.current == null) {
       return const LoadingState();
     }
@@ -113,19 +144,6 @@ class _TermsScreenState extends State<TermsScreen> {
     if (current == null) {
       return const LoadingState();
     }
-    return Scrollbar(
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(current.termsText, style: theme.textTheme.bodyMedium),
-            const SizedBox(height: AppSpacing.xl),
-            Text('Aviso de privacidad', style: theme.textTheme.titleMedium),
-            const SizedBox(height: AppSpacing.sm),
-            Text(current.privacyText, style: theme.textTheme.bodyMedium),
-          ],
-        ),
-      ),
-    );
+    return TermsText(terms: current);
   }
 }

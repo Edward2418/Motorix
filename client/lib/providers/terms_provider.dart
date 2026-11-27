@@ -39,14 +39,15 @@ class TermsProvider extends ChangeNotifier {
   String? get acceptancesError => _acceptancesError;
   int get acceptancesTotalPages => _acceptancesTotal == 0 ? 1 : (_acceptancesTotal / acceptancesPageSize).ceil();
 
-  /// Carga la versión vigente. Termina con `current == null` y sin error si no hay ninguna publicada.
-  Future<void> load() async {
+  /// Carga la versión vigente. Termina con `current == null` y sin error si no hay ninguna publicada. Con [public] la
+  /// pide sin sesión (pantalla de inicio).
+  Future<void> load({bool public = false}) async {
     _loading = true;
     _error = null;
     _acceptError = null;
     notifyListeners();
     try {
-      final response = await _api.get('/terms/current');
+      final response = await _api.get(public ? '/terms/public' : '/terms/current');
       final data = response['data'];
       _current = data is Map<String, dynamic> ? TermsInfo.fromJson(data) : null;
     } on ApiException catch (e) {

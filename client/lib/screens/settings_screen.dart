@@ -9,6 +9,8 @@ import '../providers/settings_provider.dart';
 import '../widgets/confirm_dialog.dart';
 import '../widgets/status_chip.dart';
 import '../providers/terms_provider.dart';
+import '../widgets/terms_view.dart';
+import '../widgets/horizontal_scroll.dart';
 import '../widgets/table_footer.dart';
 import '../services/api_client.dart';
 import '../utils/app_tokens.dart';
@@ -56,7 +58,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Align(
           alignment: Alignment.topLeft,
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: AppSizes.formMaxWidth),
+            constraints: const BoxConstraints(maxWidth: AppSizes.settingsMaxWidth),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -371,6 +373,13 @@ class _TermsCard extends StatelessWidget {
                   : 'Versión vigente: ${current.version}, publicada el ${formatDate(current.publishedAt)}.',
               style: theme.textTheme.bodySmall,
             ),
+            if (current != null) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: OutlinedButton(onPressed: () => showTermsDialog(context), child: const Text('Ver texto')),
+              ),
+            ],
             const SizedBox(height: AppSpacing.lg),
             Text('Aceptaciones', style: theme.textTheme.titleSmall),
             const SizedBox(height: AppSpacing.sm),
@@ -520,9 +529,9 @@ class _ServiceTypesCard extends StatelessWidget {
         ),
       );
     }
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
+    return HorizontalScroll(
       child: DataTable(
+        columnSpacing: AppSpacing.xl,
         columns: const [
           DataColumn(label: Text('Nombre')),
           DataColumn(label: Text('Cada (días)')),

@@ -238,6 +238,29 @@ paths:
         '403': { $ref: '#/components/responses/SinPermiso' }
         '404': { description: La orden no existe }
 
+  /terms/public:
+    get:
+      tags: [Términos]
+      summary: Versión vigente de los términos y del aviso de privacidad, sin sesión
+      description: Solo el documento vigente, sin datos de usuarios. Sin ninguna versión publicada devuelve data con null.
+      security: []
+      responses:
+        '200':
+          description: Versión vigente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    nullable: true
+                    properties:
+                      version: { type: integer }
+                      termsText: { type: string }
+                      privacyText: { type: string }
+                      publishedAt: { type: string, format: date-time }
+
   /terms/current:
     get:
       tags: [Términos]

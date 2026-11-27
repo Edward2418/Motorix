@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import request from 'supertest';
 import app from '../../app.js';
-import { pool, resetTables, closePool, createUser } from '../helpers/db.js';
+import { pool, resetTables, closePool, createUser, acceptTerms } from '../helpers/db.js';
 import { bearer } from '../helpers/auth.js';
 import { databaseDir, runSeeds, splitStatements } from '../../scripts/sqlRunner.js';
 import { settingsService } from '../../services/settingsService.js';
@@ -13,6 +13,12 @@ afterAll(closePool);
 const contar = async (tabla) => Number((await pool.query(`SELECT COUNT(*) AS total FROM ${tabla}`))[0][0].total);
 const usuario = async (username) => (await pool.query('SELECT id, role FROM users WHERE username = ?', [username]))[0][0];
 const tokenDe = ({ id, role }) => signToken({ sub: id, role });
+// Los seeds ya no registran aceptaciones: quien vaya a usar la API acepta primero la versión vigente.
+async function administrador() {
+  const admin = await usuario('admin');
+  await acceptTerms(admin.id);
+  return admin;
+}
 const TABLAS = ['settings', 'service_types', 'terms_versions', 'terms_acceptances', 'audit_log'];
 
 describe('datos de ejemplo del Sprint 7 (seed 012)', () => {
@@ -64,26 +70,27 @@ describe('datos de ejemplo del Sprint 7 (seed 012)', () => {
     expect(linea.service_type_id).toBe(otro.id);
   });
 
-  test('la versión 1 de los términos está completa y la aceptan los cuatro usuarios sembrados', async () => {
-    const [[version]] = await pool.query('SELECT version, terms_text, privacy_text FROM terms_versions');
-    expect(version.version).toBe(1);
+  test('la versión 1 de los términos está completa y ningún usuario sembrado la trae aceptada', async () => {
+    const [[version]] = await pool.query('SELECT version, terms_text, privacy_text FROM terms_versions WHERE version = 1');
     expect(version.terms_text).toMatch(/^Términos y condiciones del servicio\./);
     expect(version.terms_text).toMatch(/antes de un uso real\.$/);
     expect(version.privacy_text).toMatch(/^Aviso de privacidad\./);
     expect(version.privacy_text).toMatch(/proyecto académico\.$/);
-    const [aceptan] = await pool.query('SELECT u.username FROM terms_acceptances a JOIN users u ON u.id = a.user_id ORDER BY u.username');
-    expect(aceptan.map((fila) => fila.username)).toEqual(['admin', 'mecanico', 'mecanico2', 'recepcion']);
+    expect(await contar('terms_acceptances')).toBe(0);
   });
 
-  test('con los términos publicados los usuarios sembrados siguen entrando y uno nuevo debe aceptarlos', async () => {
-    for (const nombre of ['admin', 'recepcion', 'mecanico', 'mecanico2']) {
-      const res = await request(app).get('/api/clients').set(bearer(tokenDe(await usuario(nombre))));
-      expect({ nombre, status: res.status }).toEqual({ nombre, status: 200 });
-    }
+  test('cada usuario, sembrado o nuevo, debe aceptar los términos antes de usar el sistema', async () => {
     const nuevo = await createUser({ username: 'usuario.nuevo', role: 'RECEPTIONIST' });
-    const bloqueado = await request(app).get('/api/clients').set(bearer(tokenDe(nuevo)));
-    expect(bloqueado.status).toBe(403);
-    expect(bloqueado.body.error.code).toBe('TERMS_NOT_ACCEPTED');
+    const cuentas = [nuevo];
+    for (const nombre of ['admin', 'recepcion', 'mecanico', 'mecanico2']) {
+      cuentas.push(await usuario(nombre));
+    }
+    for (const cuenta of cuentas) {
+      const antes = await request(app).get('/api/clients').set(bearer(tokenDe(cuenta)));
+      expect({ id: cuenta.id, code: antes.body.error?.code }).toEqual({ id: cuenta.id, code: 'TERMS_NOT_ACCEPTED' });
+      await acceptTerms(cuenta.id);
+      expect((await request(app).get('/api/clients').set(bearer(tokenDe(cuenta)))).status).toBe(200);
+    }
   });
 
   test('hay registros de bitácora de ejemplo de varias acciones, sin datos sensibles', async () => {
@@ -94,7 +101,7 @@ describe('datos de ejemplo del Sprint 7 (seed 012)', () => {
   });
 
   test('el reporte de ingresos devuelve datos con los seeds', async () => {
-    const admin = await usuario('admin');
+    const admin = await administrador();
     const hoy = new Date();
     const desde = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - 30);
     const iso = (f) => `${f.getFullYear()}-${String(f.getMonth() + 1).padStart(2, '0')}-${String(f.getDate()).padStart(2, '0')}`;
@@ -108,7 +115,7 @@ describe('datos de ejemplo del Sprint 7 (seed 012)', () => {
   });
 
   test('las propuestas y los tickets nuevos usan los tipos sembrados', async () => {
-    const admin = await usuario('admin');
+    const admin = await administrador();
     const [[orden]] = await pool.query("SELECT id FROM service_orders WHERE folio = 'OS-2026-0009'");
 
     const res = await request(app).get(`/api/orders/${orden.id}/maintenance-suggestion`).set(bearer(tokenDe(admin)));
@@ -145,7 +152,7 @@ describe('el archivo del seed 012', () => {
 
     // Hay una sentencia por cada punto y coma que cierra una sentencia: ninguno quedó dentro de un texto.
     expect(sinComentarios.split(';').filter((t) => t.trim().length > 0)).toHaveLength(sentencias.length);
-    expect(sentencias).toHaveLength(6);
+    expect(sentencias).toHaveLength(5);
     for (const sentencia of sentencias) {
       expect({ inicio: sentencia.slice(0, 12), valida: /^(INSERT INTO|UPDATE )/.test(sentencia) }).toEqual({ inicio: sentencia.slice(0, 12), valida: true });
     }

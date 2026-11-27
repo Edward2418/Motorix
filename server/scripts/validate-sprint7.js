@@ -54,6 +54,12 @@ export async function main() {
     const token = async (username) => {
       const res = await login(username, passwords[username]);
       if (res.status !== 200) throw new Error(`No se pudo iniciar sesión con ${username} (${res.status}).`);
+      // En su primer inicio de sesión cada cuenta de ejemplo acepta la versión vigente, como en la aplicación.
+      if (res.body.data.termsAccepted === false) {
+        const sesionNueva = { Authorization: `Bearer ${res.body.data.token}` };
+        const vigente = await request(app).get('/api/terms/current').set(sesionNueva);
+        await request(app).post('/api/terms/accept').set(sesionNueva).send({ version: vigente.body.data.version });
+      }
       return res.body.data.token;
     };
     const auth = (t) => ({ Authorization: `Bearer ${t}` });
@@ -118,7 +124,7 @@ export async function main() {
 
     // 11: lista de aceptaciones.
     const aceptaciones = await get(admin, '/api/terms/acceptances?pageSize=50');
-    check(11, 'la lista de aceptaciones muestra usuario, versión y fecha', aceptaciones.status === 200 && aceptaciones.body.data.length >= 5 && aceptaciones.body.data.every((a) => a.username && a.version && a.acceptedAt), `${aceptaciones.body.meta.total} aceptaciones`);
+    check(11, 'la lista de aceptaciones muestra usuario, versión y fecha', aceptaciones.status === 200 && aceptaciones.body.data.length >= 4 && aceptaciones.body.data.every((a) => a.username && a.version && a.acceptedAt), `${aceptaciones.body.meta.total} aceptaciones`);
 
     // 12 y 13: bitácora.
     const [[usuarioNuevo]] = await pool.query("SELECT id FROM users WHERE username = 'validacion'");
@@ -237,13 +243,13 @@ export async function main() {
 
     // 10 (al final: publicar una versión nueva bloquea a todos hasta que la acepten).
     const archivo = path.join(carpeta, 'terminos-v2.txt');
-    await writeFile(archivo, 'Términos de la versión 2, con cambios.\n=== AVISO DE PRIVACIDAD ===\nAviso de privacidad de la versión 2.', 'utf8');
+    await writeFile(archivo, 'Términos de una versión nueva, con cambios.\n=== AVISO DE PRIVACIDAD ===\nAviso de privacidad de una versión nueva.', 'utf8');
     const publicada = await publishTerms({ file: archivo });
     const bloqueadoV2 = await get(admin, '/api/clients');
     const pideV2 = await get(admin, '/api/terms/current');
-    check(10, 'al publicar la versión 2 quien aceptó la 1 vuelve a ver los términos (403 hasta aceptar)', publicada.version === 2 && bloqueadoV2.status === 403 && bloqueadoV2.body.error.code === 'TERMS_NOT_ACCEPTED' && pideV2.body.data.version === 2 && pideV2.body.data.accepted === false);
-    await post(admin, '/api/terms/accept', { version: 2 });
-    check('10b', 'tras aceptar la versión 2 el administrador vuelve a usar el sistema', (await get(admin, '/api/clients')).status === 200);
+    check(10, 'al publicar una versión nueva quien aceptó la anterior vuelve a ver los términos (403 hasta aceptar)', publicada.version === 3 && bloqueadoV2.status === 403 && bloqueadoV2.body.error.code === 'TERMS_NOT_ACCEPTED' && pideV2.body.data.version === 3 && pideV2.body.data.accepted === false);
+    await post(admin, '/api/terms/accept', { version: 3 });
+    check('10b', 'tras aceptar la versión nueva el administrador vuelve a usar el sistema', (await get(admin, '/api/clients')).status === 200);
 
     // 27 y 28 (etapa 3): servicios, productividad, margen y rotación de los últimos 366 días.
     const anio = `from=${iso(new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - 365))}&to=${iso(hoy)}`;

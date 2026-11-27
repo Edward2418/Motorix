@@ -13,7 +13,7 @@ class TermsInfo {
         termsText: json['termsText'] as String,
         privacyText: json['privacyText'] as String,
         publishedAt: DateTime.parse(json['publishedAt'] as String).toLocal(),
-        accepted: json['accepted'] as bool,
+        accepted: json['accepted'] as bool? ?? false,
       );
 
   final int version;
@@ -21,7 +21,7 @@ class TermsInfo {
   final String privacyText;
   final DateTime publishedAt;
 
-  /// Si la persona con la sesión abierta ya aceptó esta versión.
+  /// Si la persona con la sesión abierta ya aceptó esta versión. La consulta pública, sin sesión, no lo informa.
   final bool accepted;
 }
 

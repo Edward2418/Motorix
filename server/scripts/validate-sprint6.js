@@ -51,6 +51,12 @@ export async function main() {
     const passwords = await standardPasswords();
     const login = async (username) => {
       const res = await request(app).post('/api/auth/login').send({ identifier: username, password: passwords[username] });
+      // Las cuentas de ejemplo aceptan los términos vigentes en su primer inicio de sesión.
+      if (res.body.data?.termsAccepted === false) {
+        const sesionNueva = { Authorization: `Bearer ${res.body.data.token}` };
+        const vigente = await request(app).get('/api/terms/current').set(sesionNueva);
+        await request(app).post('/api/terms/accept').set(sesionNueva).send({ version: vigente.body.data.version });
+      }
       if (res.status !== 200) throw new Error(`No se pudo iniciar sesión con ${username} (${res.status}).`);
       return res.body.data.token;
     };
