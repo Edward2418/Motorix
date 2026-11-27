@@ -206,14 +206,15 @@ Sep ───────────── Oct ──────────�
 - **Tipo:** Historia · **Prioridad:** Alta · **Fechas:** 30 nov · **Estado:** ⬜ Por hacer
 - **Historia:** Como gestor del proyecto, quiero entregar el sistema con todas las fases concluidas para que el docente lo evalúe.
 - **Criterios de aceptación:**
-  - El sistema funciona en local con todos los sprints entregados.
-  - Queda por confirmar con el docente que una demostración local cumple "sistema desplegado".
+  - El sistema está desplegado con todos los sprints entregados (aplicación y API en Render, base de datos en TiDB Cloud) y también funciona en local.
+  - La base en línea tiene datos de ejemplo para que el docente consulte y registre información desde la aplicación.
+  - Se entregan además Jira, el reporte en Notion y un video del funcionamiento.
 
 ### PMI-19 · Viabilidad y deuda técnica
 - **Tipo:** Historia · **Prioridad:** Media · **Fechas:** 30 nov · **Estado:** ⬜ Por hacer
 - **Historia:** Como gestor del proyecto, quiero un dictamen de viabilidad y de deuda técnica para decir si el sistema está listo para producción.
 - **Criterios de aceptación:**
-  - La deuda lista: sin despliegue, HTTPS ni respaldos; Mercado Pago solo de pruebas; sin fotos del vehículo; sin mensajería al cliente; sin revisión de seguridad formal.
+  - La deuda lista, como bloqueantes para producción, la falta de respaldos propios probados y Mercado Pago solo de pruebas; además, sin fotos del vehículo, sin mensajería al cliente, sin revisión de seguridad formal y con la suspensión de la API en el plan gratuito. El despliegue y HTTPS se resolvieron el 27 nov.
   - El dictamen final se escribe después de la auditoría de la fase 3.
 
 ### PMI-20 · Lecciones aprendidas
