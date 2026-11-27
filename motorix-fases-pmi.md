@@ -1,6 +1,6 @@
 # Motorix - Backlog en las 5 fases del PMI, con fechas
 
-> **Proyecto:** Motorix, sistema de gestión para taller mecánico. **Corte:** 2026-11-21.
+> **Proyecto:** Motorix, sistema de gestión para taller mecánico. **Corte:** 2026-11-27.
 > **Calendario:** inicio el **1 de septiembre de 2026**, entrega el **30 de noviembre** y holgura del **1 al 5 de diciembre**.
 > **Formato:** estilo Jira. Cada fase del PMI es una **épica** con su ventana de fechas y cada entregable es una **historia de usuario** con sus criterios de aceptación.
 > **Estado:** ✅ Listo · 🔄 En curso · ⬜ Por hacer.
@@ -79,12 +79,12 @@ Sep ───────────── Oct ──────────�
   - Los sprints 6 y 7 se especificaron antes de construirse (19 nov).
 
 ### PMI-5 · Alcance y Product Backlog
-- **Tipo:** Historia · **Prioridad:** Alta · **Fechas:** 8 sep al 9 oct; actualizado el 19 nov · **Estado:** ✅ Hecho
+- **Tipo:** Historia · **Prioridad:** Alta · **Fechas:** 8 sep al 9 oct; actualizado el 19 y el 27 nov · **Estado:** ✅ Hecho
 - **Historia:** Como gestor del proyecto, quiero un enunciado de alcance y un backlog de épicas e historias para controlar qué entra y qué no.
 - **Criterios de aceptación:**
   - El backlog tiene 10 épicas y 44 historias de usuario con criterios de aceptación: 27 estaban hechas al 19 nov y los sprints 6 y 7 (20 nov) entregaron las demás; la etapa 3 del Sprint 7 se completó el 26 nov.
-  - **Entra:** usuarios y roles, clientes, vehículos, citas, órdenes, historial, mantenimiento, inventario, precios de refacciones, pagos, Mercado Pago de pruebas, tickets, panel, notificaciones internas y reportes.
-  - **Queda fuera:** chatbot de WhatsApp y mensajería al cliente, portal del cliente, facturación electrónica, fotos del vehículo, hosting y puesta en producción.
+  - **Entra:** usuarios y roles, clientes, vehículos, citas, órdenes, historial, mantenimiento, inventario, precios de refacciones, pagos, Mercado Pago de pruebas, tickets, panel, notificaciones internas y reportes. Desde el 26 nov, también el hosting para la entrega y evaluación (Render y TiDB Cloud, planes gratuitos), desplegado el 27 nov.
+  - **Queda fuera:** chatbot de WhatsApp y mensajería al cliente, portal del cliente, facturación electrónica, fotos del vehículo y puesta en producción (respaldos propios y Mercado Pago de producción).
 
 ### PMI-6 · Presupuesto integral
 - **Tipo:** Historia · **Prioridad:** Media · **Fechas:** 1 al 9 oct · **Estado:** ✅ Hecho
@@ -163,13 +163,14 @@ Sep ───────────── Oct ──────────�
   - Centro de notificaciones, avisos por rol, marca de leído y lista de clientes por avisar.
 
 ### PMI-14 · Sprint 7: reportes, configuración, términos y seguridad
-- **Tipo:** Historia · **Prioridad:** Alta · **Fechas:** 20 nov (previsto 25 al 29) · **Estado:** ✅ Hecho (etapas 1 y 2 el 20 nov; etapa 3 el 26 nov) · **Producto:** MOT-39 a MOT-48
+- **Tipo:** Historia · **Prioridad:** Alta · **Fechas:** 20 nov (previsto 25 al 29) · **Estado:** ✅ Hecho (etapas 1 y 2 el 20 nov; etapa 3 el 26 nov; despliegue el 27 nov) · **Producto:** MOT-39 a MOT-48
 - **Historia:** Como administrador, quiero reportes, configuración del taller, términos y condiciones y protección de la información para tomar decisiones, mantener los datos del ticket y operar con seguridad.
 - **Criterios de aceptación:**
   - Datos del taller, márgenes de mantenimiento, catálogo de servicios, reportes con exportación y "Próximo servicio" en el ticket.
   - Términos y condiciones con aceptación al ingresar, bitácora de acciones sensibles, política de contraseñas y cierre de sesión por inactividad.
   - Se construyó por etapas: configuración, catálogo, términos y seguridad primero (etapa 1) y reportes con exportación y "Próximo servicio" después (etapa 2).
-  - Evidencia (al 26 nov): 168 suites y 1,704 pruebas del servidor, 400 del cliente, análisis estático limpio, validación del quickstart 27 de 27 y recorridos manuales de las tres etapas en la versión web. Ver `docs/aseguramiento-calidad-sprint-7.md`.
+  - Despliegue (27 nov): aplicación en https://motorix-web.onrender.com y API en Render, base de datos en TiDB Cloud, planes gratuitos.
+  - Evidencia (al 27 nov): en local, 172 suites y 1,731 pruebas del servidor (la única que falló en la corrida completa, H-10, pasó al repetirla) y 403 del cliente; en TiDB, los quickstart de los sprints 6 y 7 y las pruebas de las áreas sensibles, sin la suite completa. En línea: inicio de sesión, los 12 módulos del menú, exportación a CSV, impresión del ticket (vista previa) y límite de intentos. Hallazgos H-38 a H-43 corregidos. Ver `docs/aseguramiento-calidad-sprint-7.md`.
   - La etapa 3 (FR-011 a FR-013, T098 a T108: servicios, productividad, margen y rotación) se construyó el 26 nov.
 
 ---
