@@ -448,6 +448,10 @@ rotación de inventario), construidas el 26 de noviembre de 2026.
     de sesión y, con sesión, desde el menú de la cuenta; aceptar exige marcar una casilla para los términos y otra para el
     aviso. Las cuentas de ejemplo los aceptan en su primer inicio de sesión. El texto vigente (versión 2) es una plantilla
     con datos del responsable de ejemplo.
+-   **Endurecimiento previo al hosting** (26 de noviembre de 2026): los intentos de inicio de sesión se cuentan antes de
+    comprobar la contraseña (5 por cuenta y origen, 20 por cuenta y 20 por origen, 15 minutos), el token deja de servir al
+    cambiar la contraseña, el identificador admite 254 caracteres y los datos de ejemplo no se cargan en una base de
+    producción o remota sin permiso explícito y una contraseña propia.
 -   **Bitácora** (`audit_log`, solo administración y solo lectura): inicios fallidos y bloqueos, altas, activaciones y
     cambios de rol, cambios de configuración y de precios de refacciones, y pagos cancelados. Nunca guarda contraseñas,
     hashes, tokens ni datos de tarjeta. Es inmutable **desde la aplicación** (ninguna ruta ni función edita o borra y una

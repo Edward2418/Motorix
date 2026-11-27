@@ -58,7 +58,17 @@ contraseñas del MVP» de [`docs/project-context.md`](docs/project-context.md). 
 entornos locales; al cambiarlas rige la política mínima (8 caracteres, mayúscula, minúscula y número).
 
 El inicio de sesión acepta el usuario o el correo electrónico en el mismo campo. Tras 5 intentos fallidos
-consecutivos la cuenta se bloquea 15 minutos.
+consecutivos desde un mismo origen, la cuenta se bloquea 15 minutos para ese origen. También se bloquean 15 minutos la
+cuenta tras 20 fallos repartidos entre orígenes y un origen tras 20 fallos contra cualquier cuenta. Al cambiar la
+contraseña, las demás sesiones de esa cuenta dejan de servir.
+
+### En producción o con una base remota
+
+- Define `NODE_ENV=production`, un `JWT_SECRET` nuevo y largo, `CORS_ORIGINS` con el origen de la aplicación y, detrás
+  del proxy del hosting, `TRUST_PROXY` (de él depende el límite de intentos por origen).
+- `npm run db:seed` **no carga los datos de ejemplo** salvo que definas `ALLOW_DEMO_DATA=true` y `DEMO_PASSWORD`
+  (8 caracteres, mayúscula, minúscula y número). Esa contraseña sustituye a las publicadas de las cuentas de ejemplo.
+- Compila la aplicación con `--dart-define=API_URL=https://tu-api/api`.
 
 ## Permisos por rol
 

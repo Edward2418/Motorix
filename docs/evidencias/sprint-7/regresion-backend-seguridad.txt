@@ -1,0 +1,30 @@
+Regresión completa del servidor tras las correcciones de seguridad (H-32 a H-37), 2026-11-26.
+Por partes, una ejecución a la vez, sin editar server/ ni database/ durante la corrida.
+
+[tests[\/]unit]
+exit 0
+Test Suites: 38 passed, 38 total
+Tests:       468 passed, 468 total
+Time:        8.076 s
+
+[tests[\/]contract]
+exit 0
+Test Suites: 33 passed, 33 total
+Tests:       205 passed, 205 total
+Time:        348.706 s, estimated 447 s
+
+[tests[\/]integration[\/][a-l]]
+exit 0
+Test Suites: 20 passed, 20 total
+Tests:       205 passed, 205 total
+Time:        302.909 s, estimated 336 s
+
+[tests[\/]integration[\/][m-z]]
+exit 0
+Test Suites: 77 passed, 77 total
+Tests:       826 passed, 826 total
+Time:        1478.748 s, estimated 1546 s
+
+Total: 168 suites y 1,704 pruebas, todas en verde.
+Cliente: flutter analyze sin problemas y 400 pruebas en verde.
+npm audit --omit=dev: 0 vulnerabilidades.
