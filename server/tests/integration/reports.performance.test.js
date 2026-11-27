@@ -3,7 +3,7 @@ import app from '../../app.js';
 import { pool, resetTables, closePool, acceptTerms } from '../helpers/db.js';
 import { bearer } from '../helpers/auth.js';
 import { runSeeds } from '../../scripts/sqlRunner.js';
-import { signToken } from '../../utils/jwt.js';
+import { sessionStamp, signToken } from '../../utils/jwt.js';
 
 // SC-003: ningún reporte tarda 3 segundos o más con los datos de ejemplo. Las peticiones pasan por `authenticate`, así que
 // también cuentan el filtro de términos. La medición con 2 000 órdenes y 5 000 movimientos está en
@@ -26,9 +26,9 @@ const RANGOS = {
 };
 
 async function tokenAdmin() {
-  const [[admin]] = await pool.query("SELECT id, role FROM users WHERE username = 'admin'");
+  const [[admin]] = await pool.query("SELECT id, role, password_hash FROM users WHERE username = 'admin'");
   await acceptTerms(admin.id);
-  return signToken({ sub: admin.id, role: admin.role });
+  return signToken({ sub: admin.id, role: admin.role, pv: sessionStamp(admin.password_hash) });
 }
 
 const medir = async (accion) => {

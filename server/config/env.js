@@ -15,6 +15,8 @@ if (missing.length > 0) {
 export const env = {
   nodeEnv: process.env.NODE_ENV ?? 'development',
   port: Number(process.env.PORT ?? 3000),
+  // Proxies de confianza delante de la API (en un hosting suele ser 1). Sin valor no se confía en X-Forwarded-For.
+  trustProxy: readPositiveInt(process.env.TRUST_PROXY, 0, 'TRUST_PROXY'),
   db: {
     host: process.env.DB_HOST,
     port: Number(process.env.DB_PORT),

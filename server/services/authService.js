@@ -1,23 +1,16 @@
 import * as userModel from '../models/userModel.js';
-import * as loginAttemptModel from '../models/loginAttemptModel.js';
+import * as loginGuard from './loginGuard.js';
 import { toUser } from '../models/userModel.js';
 import { comparePassword, hashPassword } from '../utils/hash.js';
-import { decodeExpiresIn, signToken } from '../utils/jwt.js';
+import { decodeExpiresIn, sessionStamp, signToken } from '../utils/jwt.js';
 import { AppError } from '../utils/AppError.js';
 import { auditService } from './auditService.js';
 import * as termsService from './termsService.js';
 
 const INVALID_CREDENTIALS = 'Credenciales incorrectas.';
 
-// Bloqueo por intentos fallidos consecutivos (project-context.md §27).
-const MAX_FAILED_ATTEMPTS = 5;
-const LOCK_MINUTES = 15;
-
-// Clave de intentos: por cuenta si existe (aunque se alterne entre usuario y correo) y por texto si no existe,
-// de modo que el comportamiento es el mismo y no revela qué cuentas existen.
-function attemptKey(row, identifier) {
-  return row ? `u:${row.id}` : `i:${identifier.trim().toLowerCase()}`;
-}
+// Un token queda ligado a la contraseña con la que se emitió: al cambiarla, los anteriores dejan de servir.
+const tokenFor = (row) => signToken({ sub: row.id, role: row.role, pv: sessionStamp(row.password_hash) });
 
 function lockedMessage(lockedUntil) {
   const minutes = Math.max(1, Math.ceil((lockedUntil.getTime() - Date.now()) / 60000));
@@ -32,45 +25,29 @@ async function auditFailure(row, locked) {
     : { userId: null, actor: null, entity: null, entityId: null };
   await auditService.record({ ...who, action: 'LOGIN_FAILED' });
   if (locked) {
-    await auditService.record({ ...who, action: 'ACCOUNT_LOCKED', detail: `bloqueo de ${LOCK_MINUTES} minutos` });
+    await auditService.record({ ...who, action: 'ACCOUNT_LOCKED', detail: `bloqueo de ${loginGuard.LOCK_MINUTES} minutos` });
   }
-}
-
-async function registerFailure(key, row) {
-  const previous = await loginAttemptModel.get(key);
-  const lockExpired = previous?.lockedUntil && previous.lockedUntil.getTime() <= Date.now();
-  const count = (previous && !lockExpired ? previous.failedCount : 0) + 1;
-  // Se trunca a segundos porque DATETIME no guarda fracciones y MySQL redondearía hacia arriba.
-  const lockedUntil =
-    count >= MAX_FAILED_ATTEMPTS
-      ? new Date(Math.floor((Date.now() + LOCK_MINUTES * 60000) / 1000) * 1000)
-      : null;
-  await loginAttemptModel.save(key, count, lockedUntil);
-  await auditFailure(row, lockedUntil !== null);
 }
 
 // Inicia sesión con usuario o correo. Usa el mismo mensaje para usuario inexistente,
 // contraseña incorrecta o cuenta desactivada, para no revelar qué cuentas existen.
-// Tras 5 fallos consecutivos bloquea la cuenta 15 minutos (también con la contraseña correcta).
-export async function login({ identifier, password }) {
+// El intento se cuenta antes de comprobar la contraseña (ver loginGuard): 5 fallos desde un origen bloquean la cuenta
+// para ese origen durante 15 minutos, también con la contraseña correcta.
+export async function login({ identifier, password }, ip) {
   const row = await userModel.findAuthByIdentifier(identifier);
-  const key = attemptKey(row, identifier);
-
-  const attempt = await loginAttemptModel.get(key);
-  if (attempt?.lockedUntil && attempt.lockedUntil.getTime() > Date.now()) {
+  const attempt = await loginGuard.reserve(row, identifier, ip);
+  if (!attempt.allowed) {
     throw AppError.tooManyAttempts(lockedMessage(attempt.lockedUntil));
   }
 
   const valid = row && row.active && (await comparePassword(password, row.password_hash));
   if (!valid) {
-    await registerFailure(key, row);
+    await auditFailure(row, attempt.locksAccount);
     throw AppError.unauthenticated(INVALID_CREDENTIALS);
   }
 
-  if (attempt) {
-    await loginAttemptModel.reset(key);
-  }
-  const token = signToken({ sub: row.id, role: row.role });
+  await loginGuard.release(attempt);
+  const token = tokenFor(row);
   // `termsAccepted: false` indica al cliente que debe mostrar los términos antes de cualquier módulo.
   const termsAccepted = await termsService.hasAcceptedCurrent(row.id);
   return { token, expiresIn: decodeExpiresIn(token), user: toUser(row), termsAccepted };
@@ -94,5 +71,8 @@ export async function changePassword(userId, { currentPassword, newPassword }) {
       { field: 'currentPassword', message: 'La contraseña actual es incorrecta.' }
     ]);
   }
-  await userModel.updatePassword(userId, await hashPassword(newPassword));
+  const passwordHash = await hashPassword(newPassword);
+  await userModel.updatePassword(userId, passwordHash);
+  // Token nuevo para que quien hizo el cambio siga con su sesión; todos los anteriores quedan invalidados.
+  return tokenFor({ ...row, password_hash: passwordHash });
 }

@@ -117,6 +117,11 @@ class ApiClient {
     } catch (_) {
       throw ApiException('No se pudo conectar con el servidor. Verifica que esté en ejecución.');
     }
+    // Al cambiar la contraseña el servidor invalida los tokens anteriores y entrega uno nuevo en esta cabecera.
+    final renewed = response.headers['x-auth-token'];
+    if (renewed != null && renewed.isNotEmpty && _token != null) {
+      _token = renewed;
+    }
     return response;
   }
 

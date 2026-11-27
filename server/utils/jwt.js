@@ -1,5 +1,11 @@
+import { createHash } from 'node:crypto';
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env.js';
+
+/** Marca de la contraseña vigente que viaja en el token (`pv`). No permite recuperar ni comparar la contraseña. */
+export function sessionStamp(passwordHash) {
+  return createHash('sha256').update(passwordHash).digest('hex').slice(0, 16);
+}
 
 export function signToken(payload) {
   return jwt.sign(payload, env.jwt.secret, { algorithm: 'HS256', expiresIn: env.jwt.expiresIn });

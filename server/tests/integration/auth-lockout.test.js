@@ -73,7 +73,8 @@ describe('bloqueo por intentos de inicio de sesión fallidos', () => {
     await pool.query('UPDATE login_attempts SET locked_until = ?', [new Date(Date.now() - 60 * 1000)]);
 
     expect((await login(user.username)).status).toBe(200);
-    const [filas] = await pool.query('SELECT COUNT(*) AS total FROM login_attempts');
+    // El contador del origen (`o:`) sigue: solo se olvidan los de la cuenta.
+    const [filas] = await pool.query("SELECT COUNT(*) AS total FROM login_attempts WHERE attempt_key NOT LIKE 'o:%'");
     expect(filas[0].total).toBe(0);
   });
 

@@ -6,13 +6,13 @@ import { pool, resetTables, closePool, createUser, acceptTerms } from '../helper
 import { bearer } from '../helpers/auth.js';
 import { databaseDir, runSeeds, splitStatements } from '../../scripts/sqlRunner.js';
 import { settingsService } from '../../services/settingsService.js';
-import { signToken } from '../../utils/jwt.js';
+import { sessionStamp, signToken } from '../../utils/jwt.js';
 
 afterAll(closePool);
 
 const contar = async (tabla) => Number((await pool.query(`SELECT COUNT(*) AS total FROM ${tabla}`))[0][0].total);
-const usuario = async (username) => (await pool.query('SELECT id, role FROM users WHERE username = ?', [username]))[0][0];
-const tokenDe = ({ id, role }) => signToken({ sub: id, role });
+const usuario = async (username) => (await pool.query('SELECT id, role, password_hash FROM users WHERE username = ?', [username]))[0][0];
+const tokenDe = ({ id, role, password_hash: hash }) => signToken({ sub: id, role, pv: sessionStamp(hash) });
 // Los seeds ya no registran aceptaciones: quien vaya a usar la API acepta primero la versión vigente.
 async function administrador() {
   const admin = await usuario('admin');
@@ -80,8 +80,8 @@ describe('datos de ejemplo del Sprint 7 (seed 012)', () => {
   });
 
   test('cada usuario, sembrado o nuevo, debe aceptar los términos antes de usar el sistema', async () => {
-    const nuevo = await createUser({ username: 'usuario.nuevo', role: 'RECEPTIONIST' });
-    const cuentas = [nuevo];
+    await createUser({ username: 'usuario.nuevo', role: 'RECEPTIONIST' });
+    const cuentas = [await usuario('usuario.nuevo')];
     for (const nombre of ['admin', 'recepcion', 'mecanico', 'mecanico2']) {
       cuentas.push(await usuario(nombre));
     }

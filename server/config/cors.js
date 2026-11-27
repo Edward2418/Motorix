@@ -17,6 +17,8 @@ export function parseAllowedOrigins(text) {
 /** Opciones del paquete `cors`: permite el origen si cumple la regla y, si no, no envía las cabeceras de permiso. */
 export function buildCorsOptions(allowedOrigins = []) {
   return {
+    // El navegador puede leer el token nuevo que se entrega al cambiar la contraseña.
+    exposedHeaders: ['X-Auth-Token'],
     origin(origin, callback) {
       if (!origin) {
         callback(null, true);

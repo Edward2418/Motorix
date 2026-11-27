@@ -33,12 +33,17 @@ export function checkNewPassword(errors, value, field = 'newPassword') {
   return problems.length === 0 ? value : undefined;
 }
 
+// La longitud máxima de un correo electrónico.
+const MAX_IDENTIFIER_LENGTH = 254;
+
 export function validateLogin(body) {
   const data = requireBody(body);
   const errors = new FieldErrors();
   const identifier = typeof data.identifier === 'string' ? data.identifier.trim() : '';
   if (identifier.length === 0) {
     errors.add('identifier', 'Ingresa tu usuario o correo electrónico.');
+  } else if (identifier.length > MAX_IDENTIFIER_LENGTH) {
+    errors.add('identifier', `El usuario o correo no puede superar los ${MAX_IDENTIFIER_LENGTH} caracteres.`);
   }
   if (typeof data.password !== 'string' || data.password.length === 0) {
     errors.add('password', 'Ingresa tu contraseña.');

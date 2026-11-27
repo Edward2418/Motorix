@@ -8,8 +8,12 @@ import { notFound } from './middlewares/notFound.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 
 // Construye la aplicación Express sin escuchar en un puerto (supertest la usa directamente).
-export function createApp() {
+export function createApp({ trustProxy = env.trustProxy } = {}) {
   const app = express();
+  // Detrás de un proxy, la dirección real de quien pide llega en X-Forwarded-For (la usa el límite de intentos).
+  if (trustProxy > 0) {
+    app.set('trust proxy', trustProxy);
+  }
   // Cabeceras de seguridad en toda respuesta (también quita `x-powered-by`) y CORS solo para los orígenes permitidos.
   app.use(helmet());
   app.use(cors(buildCorsOptions(env.cors.origins)));
