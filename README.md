@@ -70,6 +70,17 @@ contraseña, las demás sesiones de esa cuenta dejan de servir.
   (8 caracteres, mayúscula, minúscula y número). Esa contraseña sustituye a las publicadas de las cuentas de ejemplo.
 - Compila la aplicación con `--dart-define=API_URL=https://tu-api/api`.
 
+### Hosting: TiDB Cloud y Render
+
+1. **Base:** crea un clúster Starter en TiDB Cloud. Copia los datos de «Connect» en un archivo `.env.tidb` (ignorado por
+   Git) con `DB_HOST`, `DB_PORT=4000`, `DB_USER`, `DB_PASSWORD`, `DB_NAME=motorix`, `DB_SSL=true`,
+   `DB_TIME_ZONE=-06:00`, `JWT_SECRET`, `ALLOW_DEMO_DATA=true` y `DEMO_PASSWORD`.
+2. Crea la base `motorix` y, desde `server/`, ejecuta `node --env-file=../.env.tidb scripts/migrate.js` y
+   `node --env-file=../.env.tidb scripts/seed.js`.
+3. **Servicios:** en Render crea un *Blueprint* a partir de `render.yaml` (API y aplicación web) y completa los valores
+   que pide. `CORS_ORIGINS` es la dirección de la aplicación web y `API_URL` la de la API terminada en `/api`.
+4. El plan gratuito de la API se duerme tras 15 minutos sin uso: abre la aplicación un minuto antes de una demostración.
+
 ## Permisos por rol
 
 | Recurso | Administrador | Recepcionista | Mecánico |

@@ -1,0 +1,39 @@
+Regresión previa al hosting, 2026-11-27.
+
+== Local (MySQL), suite completa por partes
+[tests[\/]unit]
+exit 0
+Test Suites: 41 passed, 41 total
+Tests:       493 passed, 493 total
+Time:        12.388 s
+
+[tests[\/]contract]
+exit 0
+Test Suites: 33 passed, 33 total
+Tests:       205 passed, 205 total
+Time:        401.976 s
+
+[tests[\/]integration[\/][a-l]]
+exit 0
+Test Suites: 20 passed, 20 total
+Tests:       205 passed, 205 total
+Time:        349.974 s, estimated 600 s
+
+[tests[\/]integration[\/][m-z]]
+exit 1
+  ● instantánea del precio con cambios simultáneos › si el precio cambia al mismo tiempo que el alta, la línea toma el precio anterior o el nuevo, nunca otro valor
+  ● instantánea del precio con cambios simultáneos › si el precio cambia al mismo tiempo que el alta, la línea toma el precio anterior o el nuevo, nunca otro valor
+Test Suites: 1 failed, 77 passed, 78 total
+Tests:       1 failed, 827 passed, 828 total
+Time:        1661.898 s, estimated 2185 s
+
+Total: 172 suites y 1,731 pruebas. Única falla: orderParts.prices.concurrency por exceder 20 s (H-10).
+Después de corregir H-42 se repitieron mantenimientos, cancelación de órdenes y esa prueba: 13 suites y 141 pruebas en verde.
+
+== TiDB Cloud (base de pruebas)
+Quickstart Sprint 7: 27 de 27. Quickstart Sprint 6: 15 de 15.
+Sesión, concurrencia, folios y reportes: 83 de 86 (los 3 fallos eran H-41); tras corregir, concurrencia 31 de 31.
+Órdenes, citas, pagos, inventario, panel y mantenimientos: 134 de 142 (los 8 fallos eran H-42); tras corregir, mantenimientos 22 de 22.
+
+== Cliente
+flutter analyze: sin problemas. flutter test: 403 pruebas en verde.
