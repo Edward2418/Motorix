@@ -1,6 +1,6 @@
 # Dictamen de viabilidad y deuda técnica - Motorix
 
-> **Estado: BORRADOR (actualizado el 2026-11-27, con el sistema desplegado).** El dictamen final se redacta y se firma después de la auditoría de calidad de la fase 3 (30 de noviembre de 2026). Lo que aquí figura como «verificado» se comprobó en el código, en la base o con las pruebas; lo que figura como «por confirmar» necesita la decisión del alumno o del docente.
+> **Estado: FINAL (firmado el 2026-11-27).** Lo que aquí figura como «verificado» se comprobó en el código, en la base, con las pruebas o en el sistema desplegado.
 
 | Campo | Valor |
 |---|---|
@@ -60,12 +60,17 @@ Evidencia de calidad (actualizada el 27 de noviembre): en local, servidor con 17
 2. **Primer mes en producción (D-07 a D-09 y D-11):** revisión de seguridad, retirada de cuentas de demostración, token con renovación y términos definitivos.
 3. **Después (D-10, D-12, D-13 y D-15 a D-18):** protección de la bitácora en la base, mensajería, fotos y deuda de pruebas y proceso.
 
-## 5. Decisiones que necesitan al alumno o al docente
+## 5. Decisiones tomadas al cierre
 
-- ¿Se enmienda el principio I de la constitución (D-17) antes del cierre?
+- El sistema se desplegó, así que deja de depender de que una demostración local se aceptara como «sistema desplegado».
+- El principio I de la constitución **no se enmienda** en este cierre; la diferencia queda declarada como deuda menor (D-17).
 
-## 6. Pendiente para el dictamen final (30 de noviembre)
+## 6. Auditoría de la fase 3 y firma
 
-- Resultado de la auditoría de la fase 3 (MOTX-22) y, si hay defectos nuevos, su prioridad.
-- Actualizar la tabla de deuda con lo que se resuelva hasta entonces.
-- Firma del responsable y fecha.
+- **Sprint 6:** aprobado, con la observación de que no se hizo un recorrido manual de su interfaz con capturas; 14 hallazgos, corregidos o aceptados (`docs/aseguramiento-calidad-sprint-6.md`).
+- **Sprint 7:** aprobado en las tres etapas; 38 hallazgos, corregidos, aceptados o informativos (`docs/aseguramiento-calidad-sprint-7.md`).
+- No queda abierto ningún defecto crítico ni alto. La deuda que permanece es la de la sección 3.
+
+| Responsable | Fecha | Resultado |
+|---|---|---|
+| Edward Negrete Bustos | 27 de noviembre de 2026 | Viable; apto para evaluación académica; no listo para producción (D-03 y D-04) |

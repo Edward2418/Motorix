@@ -18,8 +18,8 @@
 | Noviembre | 2 al 19 nov | Reporte, backlog y ajuste del alcance (se descarta el Sprint 8) | ✅ |
 | Noviembre | 20 nov (previsto 20 al 24) | Sprint 6: notificaciones internas | ✅ |
 | Noviembre | 20 nov (previsto 25 al 29) | Sprint 7: reportes, configuración, términos y seguridad (etapas 1 y 2) | ✅ |
-| Noviembre | 21 al 29 nov | Revisión visual, auditoría de calidad de la fase 3 y documentación final | 🔄 |
-| Noviembre | 30 nov | Auditoría final, cierre y **entrega** | ⬜ |
+| Noviembre | 21 al 27 nov | Revisión visual, despliegue, auditoría de calidad de la fase 3 y documentación final | ✅ |
+| Noviembre | 27 nov (previsto 30) | Auditoría final y cierre; **entrega** el 30 nov | ✅ |
 | Diciembre | 1 al 5 dic | **Holgura** (reserva: no se trabaja en nada, salvo que el tiempo esté muy justo) | ⬜ |
 
 ```text
@@ -35,8 +35,8 @@ Sep ───────────── Oct ──────────�
 | PMI-E1 | Inicio | 1 al 7 sep | PMI-1 a PMI-3 | ✅ |
 | PMI-E2 | Planificación | 8 sep al 9 oct | PMI-4 a PMI-7 | ✅ |
 | PMI-E3 | Ejecución | 10 oct al 20 nov | PMI-8 a PMI-14 | ✅ |
-| PMI-E4 | Monitoreo y control | 17 oct al 30 nov | PMI-15 a PMI-17 | 🔄 |
-| PMI-E5 | Cierre | 30 nov | PMI-18 a PMI-20 | ⬜ |
+| PMI-E4 | Monitoreo y control | 17 oct al 30 nov | PMI-15 a PMI-17 | ✅ |
+| PMI-E5 | Cierre | 30 nov | PMI-18 a PMI-20 | ✅ |
 
 **Roles:** gestor del proyecto (el alumno), docente, administrador, recepcionista y mecánico.
 
@@ -175,7 +175,7 @@ Sep ───────────── Oct ──────────�
 
 ---
 
-## PMI-E4 · Monitoreo y control (Monitoring & Controlling) · 17 oct al 30 nov · 🔄
+## PMI-E4 · Monitoreo y control (Monitoring & Controlling) · 17 oct al 30 nov · ✅
 
 ### PMI-15 · Auditoría de calidad del MVP
 - **Tipo:** Historia · **Prioridad:** Alta · **Fechas:** 17 al 26 oct · **Estado:** ✅ Hecho
@@ -192,7 +192,7 @@ Sep ───────────── Oct ──────────�
   - Los riesgos del sprint quedan mitigados.
 
 ### PMI-17 · Auditoría de calidad de la fase 3 (cierre, 30 de noviembre)
-- **Tipo:** Historia · **Prioridad:** Alta · **Fechas:** 20 al 30 nov · **Estado:** 🔄 En curso (documentos de calidad de los sprints 6 y 7 listos; falta la revisión visual y el dictamen final)
+- **Tipo:** Historia · **Prioridad:** Alta · **Fechas:** 20 al 30 nov · **Estado:** ✅ Hecho (cerrada el 27 nov)
 - **Historia:** Como gestor del proyecto, quiero auditar los sprints 6 y 7 para cerrar el semestre con las últimas integraciones verificadas.
 - **Criterios de aceptación:**
   - Cada criterio de MOT-32 a MOT-48 queda con prueba y resultado.
@@ -200,22 +200,22 @@ Sep ───────────── Oct ──────────�
 
 ---
 
-## PMI-E5 · Cierre (Closing) · 30 nov · ⬜
+## PMI-E5 · Cierre (Closing) · 30 nov · ✅
 
 ### PMI-18 · Entrega final del software
-- **Tipo:** Historia · **Prioridad:** Alta · **Fechas:** 30 nov · **Estado:** ⬜ Por hacer
+- **Tipo:** Historia · **Prioridad:** Alta · **Fechas:** 30 nov · **Estado:** ✅ Hecho (cerrada el 27 nov)
 - **Historia:** Como gestor del proyecto, quiero entregar el sistema con todas las fases concluidas para que el docente lo evalúe.
 - **Criterios de aceptación:**
   - El sistema está desplegado con todos los sprints entregados (aplicación y API en Render, base de datos en TiDB Cloud) y también funciona en local.
   - La base en línea tiene datos de ejemplo para que el docente consulte y registre información desde la aplicación.
-  - Se entregan además Jira, el reporte en Notion y un video del funcionamiento.
+  - Se entregan además Jira y el reporte en Notion. El video del funcionamiento no forma parte de la entrega del 30 de noviembre.
 
 ### PMI-19 · Viabilidad y deuda técnica
-- **Tipo:** Historia · **Prioridad:** Media · **Fechas:** 30 nov · **Estado:** ⬜ Por hacer
+- **Tipo:** Historia · **Prioridad:** Media · **Fechas:** 30 nov · **Estado:** ✅ Hecho (dictamen firmado el 27 nov)
 - **Historia:** Como gestor del proyecto, quiero un dictamen de viabilidad y de deuda técnica para decir si el sistema está listo para producción.
 - **Criterios de aceptación:**
   - La deuda lista, como bloqueantes para producción, la falta de respaldos propios probados y Mercado Pago solo de pruebas; además, sin fotos del vehículo, sin mensajería al cliente, sin revisión de seguridad formal y con la suspensión de la API en el plan gratuito. El despliegue y HTTPS se resolvieron el 27 nov.
-  - El dictamen final se escribe después de la auditoría de la fase 3.
+  - El dictamen final se escribe después de la auditoría de la fase 3. Ver `docs/dictamen-viabilidad-deuda-tecnica.md`.
 
 ### PMI-20 · Lecciones aprendidas
 - **Tipo:** Historia · **Prioridad:** Media · **Fechas:** 30 nov · **Estado:** ✅ Hecho (texto confirmado el 26 nov)
