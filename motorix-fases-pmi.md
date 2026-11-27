@@ -169,7 +169,7 @@ Sep ───────────── Oct ──────────�
   - Datos del taller, márgenes de mantenimiento, catálogo de servicios, reportes con exportación y "Próximo servicio" en el ticket.
   - Términos y condiciones con aceptación al ingresar, bitácora de acciones sensibles, política de contraseñas y cierre de sesión por inactividad.
   - Se construyó por etapas: configuración, catálogo, términos y seguridad primero (etapa 1) y reportes con exportación y "Próximo servicio" después (etapa 2).
-  - Evidencia (al 26 nov): 165 suites y 1,671 pruebas del servidor, 383 del cliente, análisis estático limpio, validación del quickstart 27 de 27 y recorridos manuales de las tres etapas en la versión web. Ver `docs/aseguramiento-calidad-sprint-7.md`.
+  - Evidencia (al 26 nov): 166 suites y 1,680 pruebas del servidor, 398 del cliente, análisis estático limpio, validación del quickstart 27 de 27 y recorridos manuales de las tres etapas en la versión web. Ver `docs/aseguramiento-calidad-sprint-7.md`.
   - La etapa 3 (FR-011 a FR-013, T098 a T108: servicios, productividad, margen y rotación) se construyó el 26 nov.
 
 ---

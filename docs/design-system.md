@@ -423,6 +423,12 @@ administración, salvo la de términos, que ve todo el mundo.
   paginación. No tiene columna de acciones: no se edita ni se borra.
 - **Términos y condiciones**: pantalla completa antes de cualquier módulo, con los términos, el aviso de privacidad y los
   botones «Aceptar» y «Rechazar» (cierra la sesión). Siempre se puede salir, aun si el texto no carga.
+- **Consulta de términos y aviso de privacidad**: diálogo de solo lectura con «Cerrar», que se abre desde el enlace del
+  inicio de sesión, el menú de la cuenta (todos los roles) y «Ver texto» en Configuración. Las líneas numeradas («1. …»)
+  se muestran como títulos de sección.
+- **Aceptación**: dos casillas sin marcar (términos y aviso); «Aceptar» se activa solo con ambas y se desmarcan si cambia
+  la versión.
+- **Tablas anchas**: barra de desplazamiento horizontal siempre visible (`HorizontalScroll`).
 - **Cierre por inactividad**: tras 30 minutos sin movimiento del puntero ni del teclado se cierra la sesión y la pantalla de
   inicio explica el motivo. Funciona también sobre la pantalla de términos.
 - **Selectores a todo el ancho**: los desplegables dentro de diálogos usan todo el ancho del campo para que un nombre largo no

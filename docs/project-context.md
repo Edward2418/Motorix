@@ -444,7 +444,10 @@ rotación de inventario), construidas el 26 de noviembre de 2026.
 -   **Términos y condiciones**: versiones numeradas (`terms_versions`) y su aceptación por usuario
     (`terms_acceptances`, única por usuario y versión). El filtro vive en `authenticate`: sin aceptar la versión vigente
     toda ruta responde 403 `TERMS_NOT_ACCEPTED`, salvo leer y aceptar los términos. Sin versión publicada nadie se bloquea.
-    No hay pantalla de edición: se publican con `npm run terms:publish -- <archivo>`.
+    No hay pantalla de edición: se publican con `npm run terms:publish -- <archivo>`. Se leen sin sesión desde el inicio
+    de sesión y, con sesión, desde el menú de la cuenta; aceptar exige marcar una casilla para los términos y otra para el
+    aviso. Las cuentas de ejemplo los aceptan en su primer inicio de sesión. El texto vigente (versión 2) es una plantilla
+    con datos del responsable de ejemplo.
 -   **Bitácora** (`audit_log`, solo administración y solo lectura): inicios fallidos y bloqueos, altas, activaciones y
     cambios de rol, cambios de configuración y de precios de refacciones, y pagos cancelados. Nunca guarda contraseñas,
     hashes, tokens ni datos de tarjeta. Es inmutable **desde la aplicación** (ninguna ruta ni función edita o borra y una

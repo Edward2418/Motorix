@@ -1,0 +1,3 @@
+Regresión completa del cliente tras H-30 y H-31, 2026-11-26.
+flutter analyze: No issues found.
+flutter test: 398 pruebas, todas en verde.

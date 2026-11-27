@@ -170,7 +170,9 @@ Cancelación (con motivo): desde RECIBIDO, DIAGNOSTICO, EN_REPARACION o ESPERAND
 - **Términos y condiciones**: tras iniciar sesión, nadie usa el sistema sin aceptar la versión vigente; una versión
   nueva se vuelve a exigir. El texto lo publica quien administra el servidor con
   `npm run terms:publish -- <archivo>` (desde `server/`), con una sección de términos y otra de aviso de privacidad
-  separadas por la línea `=== AVISO DE PRIVACIDAD ===`.
+  separadas por la línea `=== AVISO DE PRIVACIDAD ===`. Se aceptan marcando dos casillas y se pueden leer sin sesión
+  desde la pantalla de inicio. El texto de ejemplo usa datos del responsable ficticios. Se pueden volver a leer desde el menú de la cuenta
+  («Términos y aviso de privacidad») y, para administración, desde Configuración.
 - **Bitácora** (solo administración, solo lectura): inicios fallidos y bloqueos, altas, activaciones y cambios de rol de
   usuarios, cambios de configuración, de precios de refacciones y pagos cancelados. Nunca guarda contraseñas, hashes,
   tokens ni datos de tarjeta, y ninguna ruta la edita o la borra.

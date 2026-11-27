@@ -14,7 +14,7 @@
 
 Un sistema que corre **en local**: cliente Flutter, API Node.js con Express y base MySQL. Cubre usuarios y roles, clientes, vehículos, citas, órdenes de servicio, historial, mantenimiento, inventario, precios de refacciones, pagos (con Mercado Pago en modo de pruebas), tickets, panel, notificaciones internas, configuración del taller, catálogo de tipos de servicio, reportes (ingresos, servicios, productividad, margen y rotación) con exportación, términos y condiciones, bitácora de acciones sensibles, política de contraseñas y cierre de sesión por inactividad.
 
-Evidencia de calidad al cierre del Sprint 7 (actualizada el 26 de noviembre): servidor con 165 suites y 1,671 pruebas, cliente con 383 pruebas, `flutter analyze` sin problemas, 27 de 27 comprobaciones del quickstart por la API y recorridos manuales de las tres etapas en la versión web. Detalle en `docs/aseguramiento-calidad-sprint-7.md`.
+Evidencia de calidad al cierre del Sprint 7 (actualizada el 26 de noviembre): servidor con 166 suites y 1,680 pruebas, cliente con 398 pruebas, `flutter analyze` sin problemas, 27 de 27 comprobaciones del quickstart por la API y recorridos manuales de las tres etapas en la versión web. Detalle en `docs/aseguramiento-calidad-sprint-7.md`.
 
 ## 2. Dictamen de viabilidad
 
@@ -45,7 +45,7 @@ Evidencia de calidad al cierre del Sprint 7 (actualizada el 26 de noviembre): se
 | D-08 | **Cuentas de demostración.** Los datos de ejemplo crean usuarios con contraseñas del estándar documentadas en el README | Importante | Código | En producción no cargar los seeds de ejemplo y crear cuentas propias con contraseñas nuevas |
 | D-09 | **El cierre por inactividad es solo del cliente (30 min).** El servidor únicamente vence el token a las 8 horas, de modo que un token robado sigue valiendo hasta entonces | Importante | Código | Acortar la vigencia del token o añadir renovación y revocación en el servidor |
 | D-10 | **Bitácora inmutable «por diseño de la aplicación», no por la base.** MySQL tiene el registro binario activo y el usuario del proyecto no tiene `SUPER`, así que no se pudieron crear disparadores (H-03) | Menor | Documento | Aplicar el script opcional `audit-log-protection.sql` con un administrador de la base |
-| D-11 | **Términos y aviso de privacidad de ejemplo.** Los textos lo dicen: son una plantilla del proyecto académico | Importante | Base | Revisión legal y publicación de la versión definitiva con `publish-terms.js` |
+| D-11 | **Términos y aviso de privacidad de ejemplo.** La versión 2 (26 nov) sigue los elementos del artículo 15 de la ley, pero es una plantilla con datos del responsable ficticios y sin revisión legal. Los clientes del taller no ven el aviso en el sistema, y el personal no registra su entrega | Importante | Base | Datos reales, revisión legal, publicación con `publish-terms.js` y definir cómo se entrega el aviso a los clientes |
 | D-12 | **Sin mensajería al cliente** (WhatsApp, correo o SMS) ni portal del cliente. Las notificaciones son internas | Menor | Documento | Backlog posterior; requiere decisión de producto y proveedor |
 | D-13 | **Sin fotos del vehículo** | Menor | Documento | Backlog posterior; implica almacenamiento de archivos |
 | D-14 | **Etapa 3 del Sprint 7. RESUELTA (26 nov):** servicios frecuentes, productividad, margen y rotación construidos, probados y revisados en la versión web; la rotación no resta las devoluciones (H-25) | Resuelta | Código y pruebas | Restar las devoluciones en la rotación, si el taller lo pide |

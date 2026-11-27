@@ -1,0 +1,28 @@
+Regresión completa del servidor tras H-31 (términos y aviso de privacidad), 2026-11-26.
+Por partes, una ejecución a la vez, sin editar server/ ni database/ durante la corrida.
+
+[tests[\/]unit]
+exit 0
+Test Suites: 38 passed, 38 total
+Tests:       468 passed, 468 total
+Time:        7.721 s, estimated 9 s
+
+[tests[\/]contract]
+exit 0
+Test Suites: 33 passed, 33 total
+Tests:       205 passed, 205 total
+Time:        435.478 s, estimated 475 s
+
+[tests[\/]integration[\/][a-l]]
+exit 0
+Test Suites: 19 passed, 19 total
+Tests:       195 passed, 195 total
+Time:        276.266 s, estimated 308 s
+
+[tests[\/]integration[\/][m-z]]
+exit 0
+Test Suites: 76 passed, 76 total
+Tests:       812 passed, 812 total
+Time:        1448.925 s, estimated 1543 s
+
+Total: 166 suites y 1,680 pruebas, todas en verde.

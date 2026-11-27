@@ -34,11 +34,11 @@ Cada escenario indica el rol, la acción y el resultado esperado. La columna fin
 | 3 | Administrador | Escribir un nombre vacío o un margen de 0 días | Un mensaje claro por campo y no se guarda nada | FR-001, FR-003 |
 | 4 | Administrador | Cambiar el margen de «Próximo» de 30 a 15 días | Un mantenimiento a 20 días deja de ser «Próximo» en la lista de Mantenimientos, en el panel y en los avisos | FR-003 |
 | 5 | Administrador | Probar con una instalación sin configuración guardada (base nueva) | Se usan 30 días y 1,000 km, o los valores del servidor si existen; nada falla | FR-004, SC-010 |
-| 6 | Administrador | Crear un usuario nuevo e iniciar sesión con él | Ve la pantalla de términos y aviso de privacidad antes de usar el sistema | FR-017 |
+| 6 | Administrador | Crear un usuario nuevo e iniciar sesión con él | Ve la pantalla de términos y aviso de privacidad antes de usar el sistema, con dos casillas sin marcar y «Aceptar» desactivado hasta marcarlas; el texto también se lee desde el inicio de sesión y el menú de la cuenta | FR-017, FR-033 |
 | 7 | Usuario nuevo | Rechazar los términos | Se cierra su sesión y no entra | FR-017 |
 | 8 | Usuario nuevo | Aceptar los términos | Entra y queda registrado quién, qué versión y cuándo; al volver a entrar no se le piden | FR-018 |
 | 9 | Usuario sin aceptación | Llamar directamente a una ruta de la API (por ejemplo `GET /api/clients`) | El servidor responde 403 `TERMS_NOT_ACCEPTED`; solo funcionan ver los términos y aceptarlos | FR-020, SC-005 |
-| 10 | Administrador | Publicar una versión 2 con `node scripts/publish-terms.js <archivo>` y volver a iniciar sesión con un usuario que aceptó la 1 | Se le piden de nuevo los términos | FR-018 |
+| 10 | Administrador | Publicar una versión nueva con `node scripts/publish-terms.js <archivo>` y volver a iniciar sesión con un usuario que aceptó la anterior | Se le piden de nuevo los términos | FR-018 |
 | 11 | Administrador | Abrir Configuración, sección Términos | Ve la versión vigente y la lista de aceptaciones con usuario, versión y fecha | FR-019 |
 | 12 | Administrador | Cambiar el rol de un usuario, un precio de refacción y la configuración, y cancelar un pago | La bitácora muestra cada acción con quién, qué y cuándo, sin ningún secreto | FR-021, SC-006 |
 | 13 | Administrador | Abrir la bitácora y filtrar por fecha, usuario y acción | La lista se filtra y se pagina; no hay forma de editar ni borrar un registro desde la aplicación (la API responde 404 en `PUT`, `PATCH` y `DELETE`) | FR-022 |
@@ -102,9 +102,11 @@ Con 2,000 órdenes y 5,000 movimientos, cada reporte debe responder en menos de 
 **Etapa 3 (2026-11-26). Resultado: Aprobado.**
 
 - **Escenarios por la API (1 a 28):** 27 de 27 comprobaciones aprobadas, incluidos el 27 y el 28 (`docs/evidencias/sprint-7/quickstart-api-etapa3.txt`).
-- **Pruebas automáticas:** servidor 165 suites y 1,671 pruebas; cliente 383 pruebas (`regresion-backend-etapa3.txt` y `regresion-frontend-etapa3.txt`).
+- **Pruebas automáticas:** servidor 165 suites y 1,671 pruebas; cliente 391 pruebas (`regresion-backend-etapa3.txt` y `regresion-frontend-etapa3.txt`).
 - **Rendimiento:** los cuatro reportes nuevos tardan 42 ms o menos con 2,000 órdenes y 5,000 movimientos (`medicion-reportes-etapa3.txt`).
 - **Recorrido manual:** las cuatro pestañas nuevas se revisaron en la versión web con los datos de ejemplo; salió H-28 (columnas ocultas en el margen), ya corregido. Exportar no se prueba en la web.
+
+**Términos y aviso de privacidad (2026-11-26, FR-033).** Servidor 166 suites y 1,680 pruebas; cliente 398 pruebas; 27 de 27 comprobaciones del quickstart por la API. Desde esta fecha las cuentas de ejemplo aceptan los términos en su primer inicio de sesión.
 
 ## 7. Limitaciones previstas
 
